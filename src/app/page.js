@@ -1,12 +1,11 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
-import { signOut } from "next-auth/react"
+import { useState, useRef, useEffect } from "react";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { faImages, faTrashAlt, faUpload, faSearchPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ToastContainer } from "react-toast";
-import { toast } from "react-toast";
-import { useEffect } from 'react';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
@@ -102,7 +101,7 @@ export default function Home() {
   };
 
   const handleFileChange = (event) => {
-    const newFiles = event.files;
+    const newFiles = event.target.files;
     const filteredFiles = Array.from(newFiles).filter(file =>
       !selectedFiles.find(selFile => selFile.name === file.name));
     const uniqueFiles = filteredFiles.filter(file =>
@@ -407,11 +406,10 @@ export default function Home() {
           </div>
           <div className="flex flex-col sm:flex-col md:w-auto lg:flex-row xl:flex-row 2xl:flex-row mx-auto items-center">
             <span className="text-lg sm:text-sm md:text-sm lg:text-xl xl:text-xl 2xl:text-xl">上传接口：</span>
-            {/* 下拉框 文字左对齐 */}
             <select
               value={selectedOption}
               onChange={handleSelectChange}
-              className="text-lg p-2 border rounded w-52 text-left"
+              className="text-lg p-2 border rounded w-52 text-left pl-3"
             >
               <option value="tg">TG(临时，会失效)</option>
               <option value="tgchannel">TG_Channel</option>
