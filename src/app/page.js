@@ -26,14 +26,14 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(null); // 添加状态用于跟踪选中的放大图片
+  const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState('preview');
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel'); // 初始选择第一个选项
-  const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
-  const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState('tgchannel');
+  const [isAuthapi, setisAuthapi] = useState(false);
+  const [Loginuser, setLoginuser] = useState('');
   const [boxType, setBoxtype] = useState("img");
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -64,7 +64,6 @@ export default function Home() {
     }
   };
 
-  // ==========已修改鉴权函数==========
   const isAuth = async () => {
     try {
       const res = await fetch(`/api/enableauthapi/isauth`, {
@@ -78,13 +77,12 @@ export default function Home() {
         const data = await res.json();
         setisAuthapi(true)
         setLoginuser(data.role)
-        // 非管理员但选中R2，自动切58img
         if (data.role !== 'admin' && selectedOption === 'r2') {
-          setSelectedOption('58img')
+          setSelectedOption('tgchannel')
         }
       } else {
         setisAuthapi(false)
-        setSelectedOption("58img")
+        setSelectedOption("tgchannel")
       }
     } catch (error) {
       console.error('请求出错:', error);
@@ -110,7 +108,6 @@ export default function Home() {
     const newFiles = event.target.files;
     const filteredFiles = Array.from(newFiles).filter(file =>
       !selectedFiles.find(selFile => selFile.name === file.name));
-    // 过滤掉已经在 uploadedImages 数组中存在的文件
     const uniqueFiles = filteredFiles.filter(file =>
       !uploadedImages.find(upImg => upImg.name === file.name)
     );
@@ -120,13 +117,11 @@ export default function Home() {
 
   const handleClear = () => {
     setSelectedFiles([]);
-    // setUploadStatus('');
-    // setUploadedImages([]);
   };
 
   const getTotalSizeInMB = (files) => {
     const totalSizeInBytes = Array.from(files).reduce((acc, file) => acc + file.size, 0);
-    return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // 转换为MB并保留两位小数
+    return (totalSizeInBytes / (1024 * 1024)).toFixed(2);
   };
 
   const handleUpload = async (file = null) => {
@@ -146,7 +141,6 @@ export default function Home() {
     try {
       for (const file of filesToUpload) {
         const formData = new FormData();
-
         formData.append(formFieldName, file);
 
         try {
@@ -220,7 +214,7 @@ export default function Home() {
       if (item.kind === 'file' && item.type.includes('image')) {
         const file = item.getAsFile();
         setSelectedFiles([...selectedFiles, file]);
-        break; // 只处理第一个文件
+        break;
       }
     }
   };
@@ -403,9 +397,8 @@ export default function Home() {
     setSelectedOption(e.target.value);
   };
 
-  // ==========已修改登出函数，退出切58img==========
   const handleSignOut = () => {
-    setSelectedOption("58img");
+    setSelectedOption("tgchannel");
     signOut({ callbackUrl: '/' });
   };
 
@@ -454,7 +447,6 @@ export default function Home() {
           </div>
           <div className="flex  flex-col sm:flex-col   md:w-auto lg:flex-row xl:flex-row  2xl:flex-row  mx-auto items-center  ">
             <span className=" text-lg sm:text-sm   md:text-sm lg:text-xl xl:text-xl  2xl:text-xl">上传接口：</span>
-            {/* ==========下拉框已修改：仅admin+开启鉴权显示R2========== */}
             <select
               value={selectedOption}
               onChange={handleSelectChange}
@@ -462,7 +454,6 @@ export default function Home() {
               <option value="tg" >TG(会失效)</option>
               <option value="tgchannel">TG_Channel</option>
               {isAuthapi && Loginuser === "admin" && <option value="r2">R2</option>}
-              <option value="58img">58img</option>
             </select>
           </div>
         </div>
