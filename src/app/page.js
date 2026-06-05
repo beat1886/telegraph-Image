@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import { useEffect } from 'react';
-import Footer from '@/components/Footer'
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
@@ -31,7 +30,8 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel');
+  // 默认选中tg
+  const [selectedOption, setSelectedOption] = useState('tg');
   const [isAuthapi, setisAuthapi] = useState(false);
   const [Loginuser, setLoginuser] = useState('');
   const [boxType, setBoxtype] = useState("img");
@@ -77,12 +77,14 @@ export default function Home() {
         const data = await res.json();
         setisAuthapi(true)
         setLoginuser(data.role)
+        // 非admin选中R2自动切tg
         if (data.role !== 'admin' && selectedOption === 'r2') {
-          setSelectedOption('tgchannel')
+          setSelectedOption('tg')
         }
       } else {
+        // 鉴权失效未登录默认tg
         setisAuthapi(false)
-        setSelectedOption("tgchannel")
+        setSelectedOption("tg")
       }
     } catch (error) {
       console.error('请求出错:', error);
@@ -397,8 +399,9 @@ export default function Home() {
     setSelectedOption(e.target.value);
   };
 
+  // 登出切回tg
   const handleSignOut = () => {
-    setSelectedOption("tgchannel");
+    setSelectedOption("tg");
     signOut({ callbackUrl: '/' });
   };
 
@@ -451,7 +454,7 @@ export default function Home() {
               value={selectedOption}
               onChange={handleSelectChange}
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
-              <option value="tg" >TG(会失效)</option>
+              <option value="tg" >TG(临时，会失效)</option>
               <option value="tgchannel">TG_Channel</option>
               {isAuthapi && Loginuser === "admin" && <option value="r2">R2</option>}
             </select>
@@ -633,9 +636,6 @@ export default function Home() {
           </div>
         </div>
       )}
-      <div className="fixed inset-x-0 bottom-0 h-[50px] bg-slate-200  w-full  flex  z-50 justify-center items-center ">
-        <Footer />
-      </div>
     </main>
   );
 }
