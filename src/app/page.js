@@ -36,7 +36,7 @@ export default function Home() {
   const parentRef = useRef(null);
 
   let headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0, Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
   };
 
   useEffect(() => {
@@ -203,8 +203,6 @@ export default function Home() {
   const handleImageClick = (index) => {
     if (selectedFiles[index].type.startsWith('image/')) {
       setBoxtype("img");
-    } else if (selectedFiles[index].type.startsWith('video/')) {
-      setBoxtype("video");
     } else {
       setBoxtype("other");
     }
@@ -256,18 +254,6 @@ export default function Home() {
           className="object-cover w-36 h-40 m-2"
           onClick={() => handlerenderImageClick(fileUrl, "img")}
         />
-      );
-    } else if (data.type.startsWith('video/')) {
-      return (
-        <video
-          key={`video-${index}`}
-          src={data.url}
-          className="object-cover w-36 h-40 m-2"
-          onClick={() => handlerenderImageClick(fileUrl, "video")}
-          controls
-        >
-          浏览器不支持视频播放
-        </video>
       );
     } else {
       return (
@@ -399,9 +385,9 @@ export default function Home() {
       <div className="mt-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
         <div className="flex flex-row">
           <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">图片或视频上传</div>
+            <div className="text-gray-800 text-lg">图片上传</div>
             <div className="mb-4 text-sm text-gray-500">
-              上传文件最大 5 MB;本站已托管 <span className="text-cyan-600">{Total}</span> 张图片; 你访问本站的IP是：<span className="text-cyan-600">{IP}</span>
+              上传文件最大 5 MB，本站已托管 <span className="text-cyan-600">{Total}</span> 张图片
             </div>
           </div>
           <div className="flex flex-col sm:flex-col md:w-auto lg:flex-row xl:flex-row 2xl:flex-row mx-auto items-center">
@@ -438,14 +424,7 @@ export default function Home() {
                       style={{ objectFit: "cover" }}
                     />
                   )}
-                  {file.type.startsWith('video/') && (
-                    <video
-                      src={URL.createObjectURL(file)}
-                      controls
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  {!file.type.startsWith('image/') && !file.type.startsWith('video/') && (
+                  {!file.type.startsWith('image/') && (
                     <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700">
                       <p>{file.name}</p>
                     </div>
@@ -553,12 +532,6 @@ export default function Home() {
                 src={selectedImage}
                 alt="Selected"
                 className="object-cover w-9/10 h-auto rounded-lg"
-              />
-            ) : boxType === "video" ? (
-              <video
-                src={selectedImage}
-                className="object-cover w-9/10 h-auto rounded-lg"
-                controls
               />
             ) : (
               <div className="p-4 bg-white text-black rounded">
