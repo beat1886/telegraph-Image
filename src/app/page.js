@@ -38,68 +38,54 @@ export default function Home() {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-
   const parentRef = useRef(null);
 
-
-
-
-
-
   let headers = {
-
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-
   }
   useEffect(() => {
     ip();
     getTotal();
     isAuth();
-
-
   }, []);
+
   const ip = async () => {
     try {
-
       const res = await fetch(`/api/ip`, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json'
         }
-
       });
       const data = await res.json();
       setIP(data.ip);
-
-
-
     } catch (error) {
       console.error('请求出错:', error);
     }
   };
+
+  // ==========已修改鉴权函数==========
   const isAuth = async () => {
     try {
-
       const res = await fetch(`/api/enableauthapi/isauth`, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json'
         }
-
       });
 
       if (res.ok) {
         const data = await res.json();
         setisAuthapi(true)
         setLoginuser(data.role)
-
+        // 非管理员但选中R2，自动切58img
+        if (data.role !== 'admin' && selectedOption === 'r2') {
+          setSelectedOption('58img')
+        }
       } else {
         setisAuthapi(false)
         setSelectedOption("58img")
       }
-
-
-
     } catch (error) {
       console.error('请求出错:', error);
     }
@@ -107,19 +93,14 @@ export default function Home() {
 
   const getTotal = async () => {
     try {
-
       const res = await fetch(`/api/total`, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json'
         }
-
       });
       const data = await res.json();
       setTotal(data.total);
-
-
-
     } catch (error) {
       console.error('请求出错:', error);
     }
@@ -139,7 +120,7 @@ export default function Home() {
 
   const handleClear = () => {
     setSelectedFiles([]);
-    setUploadStatus('');
+    // setUploadStatus('');
     // setUploadedImages([]);
   };
 
@@ -147,8 +128,6 @@ export default function Home() {
     const totalSizeInBytes = Array.from(files).reduce((acc, file) => acc + file.size, 0);
     return (totalSizeInBytes / (1024 * 1024)).toFixed(2); // 转换为MB并保留两位小数
   };
-
-
 
   const handleUpload = async (file = null) => {
     setUploading(true);
@@ -175,7 +154,6 @@ export default function Home() {
             ? `/api/enableauthapi/${selectedOption}`
             : `/api/${selectedOption}`;
 
-          // const response = await fetch("https://img.131213.xyz/api/tencent", {
           const response = await fetch(targetUrl, {
             method: 'POST',
             body: formData,
@@ -184,26 +162,20 @@ export default function Home() {
 
           if (response.ok) {
             const result = await response.json();
-            // console.log(result);
-
             file.url = result.url;
 
-            // 更新 uploadedImages 和 selectedFiles
             setUploadedImages((prevImages) => [...prevImages, file]);
             setSelectedFiles((prevFiles) => prevFiles.filter(f => f !== file));
             successCount++;
           } else {
-            // 尝试从响应中提取错误信息
             let errorMsg;
             try {
               const errorData = await response.json();
               errorMsg = errorData.message || `上传 ${file.name} 图片时出错`;
             } catch (jsonError) {
-              // 如果解析 JSON 失败，使用默认错误信息
               errorMsg = `上传 ${file.name} 图片时发生未知错误`;
             }
 
-            // 细化状态码处理
             switch (response.status) {
               case 400:
                 toast.error(`请求无效: ${errorMsg}`);
@@ -240,10 +212,6 @@ export default function Home() {
     }
   };
 
-
-
-
-
   const handlePaste = (event) => {
     const clipboardItems = event.clipboardData.items;
 
@@ -271,15 +239,12 @@ export default function Home() {
     event.preventDefault();
   };
 
-  // 根据图片数量动态计算容器高度
   const calculateMinHeight = () => {
     const rows = Math.ceil(selectedFiles.length / 4);
     return `${rows * 100}px`;
   };
 
-  // 处理点击图片放大
   const handleImageClick = (index) => {
-
     if (selectedFiles[index].type.startsWith('image/')) {
       setBoxtype("img");
     } else if (selectedFiles[index].type.startsWith('video/')) {
@@ -287,7 +252,6 @@ export default function Home() {
     } else {
       setBoxtype("other");
     }
-
     setSelectedImage(URL.createObjectURL(selectedFiles[index]));
   };
 
@@ -303,7 +267,6 @@ export default function Home() {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      // alert('已成功复制到剪贴板');
       toast.success(`链接复制成功`);
     } catch (err) {
       toast.error("链接复制失败")
@@ -316,7 +279,6 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(values.join("\n"));
       toast.success(`链接复制成功`);
-
     } catch (error) {
       toast.error(`链接复制失败\n${error}`)
     }
@@ -326,7 +288,6 @@ export default function Home() {
     setBoxtype(type);
     setSelectedImage(imageUrl);
   };
-
 
   const renderFile = (data, index) => {
     const fileUrl = data.url;
@@ -340,7 +301,6 @@ export default function Home() {
           onClick={() => handlerenderImageClick(fileUrl, "img")}
         />
       );
-
     } else if (data.type.startsWith('video/')) {
       return (
         <video
@@ -353,9 +313,7 @@ export default function Home() {
           Your browser does not support the video tag.
         </video>
       );
-
     } else {
-      // 其他文件类型
       return (
         <img
           key={`image-${index}`}
@@ -366,11 +324,7 @@ export default function Home() {
         />
       );
     }
-
-
-
   };
-
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -397,7 +351,6 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-
             ))}
           </div>
         );
@@ -447,11 +400,12 @@ export default function Home() {
   };
 
   const handleSelectChange = (e) => {
-    setSelectedOption(e.target.value); // 更新选择框的值
+    setSelectedOption(e.target.value);
   };
 
-
+  // ==========已修改登出函数，退出切58img==========
   const handleSignOut = () => {
+    setSelectedOption("58img");
     signOut({ callbackUrl: '/' });
   };
 
@@ -500,28 +454,24 @@ export default function Home() {
           </div>
           <div className="flex  flex-col sm:flex-col   md:w-auto lg:flex-row xl:flex-row  2xl:flex-row  mx-auto items-center  ">
             <span className=" text-lg sm:text-sm   md:text-sm lg:text-xl xl:text-xl  2xl:text-xl">上传接口：</span>
+            {/* ==========下拉框已修改：仅admin+开启鉴权显示R2========== */}
             <select
-              value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
-              onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
+              value={selectedOption}
+              onChange={handleSelectChange}
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
               <option value="tg" >TG(会失效)</option>
               <option value="tgchannel">TG_Channel</option>
-              <option value="r2">R2</option>
-              {/* <option value="vviptuangou">vviptuangou</option> */}
+              {isAuthapi && Loginuser === "admin" && <option value="r2">R2</option>}
               <option value="58img">58img</option>
-              {/* <option value="tencent">tencent</option> */}
-
             </select>
           </div>
-
-
         </div>
         <div
           className="border-2 border-dashed border-slate-400 rounded-md relative"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onPaste={handlePaste}
-          style={{ minHeight: calculateMinHeight() }} // 动态设置最小高度
+          style={{ minHeight: calculateMinHeight() }}
         >
           <div className="flex flex-wrap gap-3 min-h-[240px]">
             <LoadingOverlay loading={uploading} />
@@ -563,7 +513,6 @@ export default function Home() {
                   </button>
                   <button
                     className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
-
                     onClick={() => handleUpload(file)}
                   >
                     <FontAwesomeIcon icon={faUpload} />
@@ -571,18 +520,13 @@ export default function Home() {
                 </div>
               </div>
             ))}
-
-
             {selectedFiles.length === 0 && (
               <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
-
                 <div className="text-gray-500">
-
                   拖拽文件到这里或将屏幕截图复制并粘贴到此处上传
                 </div>
               </div>
             )}
-
           </div>
         </div>
         <div className="w-full rounded-md shadow-sm overflow-hidden mt-4 grid grid-cols-8">
@@ -619,8 +563,6 @@ export default function Home() {
           <div className="md:col-span-1 col-span-5">
             <div
               className={`w-full bg-green-500 cursor-pointer h-10 flex items-center justify-center text-white ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-              // className={`bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-
               onClick={() => handleUpload()}
             >
               <FontAwesomeIcon icon={faUpload} style={{ width: '20px', height: '20px' }} className="mr-2" />
@@ -628,11 +570,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-
         <ToastContainer />
         <div className="w-full mt-4 min-h-[200px] mb-[60px] ">
-
           {
             uploadedImages.length > 0 && (<>
               <div className="flex flex-wrap gap-3 mb-4 border-b border-gray-300 ">
@@ -667,7 +606,6 @@ export default function Home() {
             )
           }
         </div>
-
       </div>
       {selectedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseImage}>
@@ -678,7 +616,6 @@ export default function Home() {
             >
               &times;
             </button>
-
             {boxType === "img" ? (
               <img
                 src={selectedImage}
@@ -696,20 +633,15 @@ export default function Home() {
                 controls
               />
             ) : boxType === "other" ? (
-              // 这里可以渲染你想要的其他内容或组件
               <div className="p-4 bg-white text-black rounded">
                 <p>Unsupported file type</p>
               </div>
             ) : (
-              // 你可以选择一个默认的内容或者返回 null
               <div>未知类型</div>
             )}
           </div>
-
         </div>
-
       )}
-
       <div className="fixed inset-x-0 bottom-0 h-[50px] bg-slate-200  w-full  flex  z-50 justify-center items-center ">
         <Footer />
       </div>
