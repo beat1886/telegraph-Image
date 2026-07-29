@@ -8,6 +8,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
+// 引入底部组件
+import Footer from "@/components/Footer";
 
 const LoginButton = ({ onClick, href, children }) => (
   <button
@@ -518,6 +520,10 @@ export default function Home() {
           </div>
         )}
       </div>
+      
+      {/* =========新增Footer底部组件========= */}
+      <Footer />
+
       {selectedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseImage}>
           <div className="relative flex flex-col items-center justify-between">
