@@ -75,12 +75,14 @@ export default function Home() {
         const data = await res.json();
         setisAuthapi(true);
         setLoginuser(data.role);
-        if (data.role !== 'admin' && selectedOption === 'r2') {
-          setSelectedOption('tg');
+        // 非 admin 用户：如果之前选择了 r2，则回退到 tg
+        if (data.role !== 'admin') {
+          setSelectedOption((prev) => (prev === "r2" ? "tg" : prev));
         }
       } else {
         setisAuthapi(false);
-        setSelectedOption("tg");
+        // 未登录：保留用户可能选择的 tgchannel，仅将 r2 回退为 tg
+        setSelectedOption((prev) => (prev === "r2" ? "tg" : prev));
       }
     } catch (error) {
       console.error('请求出错:', error);
@@ -139,8 +141,9 @@ export default function Home() {
         const formData = new FormData();
         formData.append(formFieldName, file);
 
-        const targetUrl = selectedOption === "tgchannel" || selectedOption === "r2"
-          ? `/api/enableauthapi/${selectedOption}`
+        // 修改点：只有 r2 走认证接口，tgchannel 走公开接口
+        const targetUrl = selectedOption === "r2"
+          ? `/api/enableauthapi/r2`
           : `/api/${selectedOption}`;
 
         const response = await fetch(targetUrl, {
