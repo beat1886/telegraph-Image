@@ -8,7 +8,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
-// 引入底部组件
 import Footer from "@/components/Footer";
 
 const LoginButton = ({ onClick, href, children }) => (
@@ -34,7 +33,6 @@ export default function Home() {
   const [Loginuser, setLoginuser] = useState('');
   const [boxType, setBoxtype] = useState("img");
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const parentRef = useRef(null);
 
   let headers = {
@@ -51,9 +49,7 @@ export default function Home() {
     try {
       const res = await fetch(`/api/ip`, {
         method: "GET",
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       setIP(data.ip);
@@ -66,9 +62,7 @@ export default function Home() {
     try {
       const res = await fetch(`/api/enableauthapi/isauth`, {
         method: "GET",
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (res.ok) {
@@ -93,9 +87,7 @@ export default function Home() {
     try {
       const res = await fetch(`/api/total`, {
         method: "GET",
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       setTotal(data.total);
@@ -141,7 +133,7 @@ export default function Home() {
         const formData = new FormData();
         formData.append(formFieldName, file);
 
-        // 修改点：只有 r2 走认证接口，tgchannel 走公开接口
+        // 关键修改：只有 r2 走认证接口，tgchannel 走公开接口
         const targetUrl = selectedOption === "r2"
           ? `/api/enableauthapi/r2`
           : `/api/${selectedOption}`;
@@ -524,7 +516,6 @@ export default function Home() {
         )}
       </div>
       
-      {/* =========新增Footer底部组件========= */}
       <Footer />
 
       {selectedImage && (
