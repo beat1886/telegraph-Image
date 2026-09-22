@@ -60,34 +60,32 @@ export async function GET(request, { params }) {
     })
   }
 
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket?.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
   const Referer = request.headers.get('Referer') || "Referer";
+  const isAllowedReferer = Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`;
 
   const cacheKey = new Request(req_url.toString(), request);
   const cache = caches.default;
 
-  let rating
+  // 缓存优先：命中边缘缓存时直接返回，不做 D1 查询，日志异步记录不阻塞响应
+  const cachedResponse = await cache.match(cacheKey);
+  if (cachedResponse) {
+    if (!isAllowedReferer) {
+      ctx.waitUntil(logRequest(env, name, Referer, clientIp));
+    }
+    return cachedResponse
+  }
 
+  // 未命中缓存才查鉴黄（D1），失败不阻塞图片展示
   try {
-    rating = await getRating(env.IMG, `/cfile/${name}`);
-    if (rating === 3 && !(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
-      await logRequest(env, name, Referer, clientIp);
+    const rating = await getRating(env.IMG, `/cfile/${name}`);
+    if (rating === 3 && !isAllowedReferer) {
+      ctx.waitUntil(logRequest(env, name, Referer, clientIp));
       return Response.redirect(`${req_url.origin}/img/blocked.png`, 302);
     }
-
   } catch (error) {
     console.log(error);
-
-  }
-  // 检查缓存
-  let cachedResponse = await cache.match(cacheKey);
-  if (cachedResponse) {
-    if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
-      await logRequest(env, name, Referer, clientIp);
-    }
-    // 如果缓存中存在，直接返回缓存响应
-    return cachedResponse
   }
 
 
@@ -107,48 +105,38 @@ export async function GET(request, { params }) {
         })
 
     } else {
-      const res = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      });
+      const res = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`);
 
       if (res.ok) {
         const fileBuffer = await res.arrayBuffer();
 
-
-
         const contentType = getContentType(fileName);
+        const isImage = contentType.startsWith('image/');
         const responseHeaders = {
-          "Content-Disposition": `attachment; filename=${fileName}`,
+          // 图片内联直接显示，其他类型走下载
+          "Content-Disposition": `${isImage ? 'inline' : 'attachment'}; filename=${fileName}`,
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": contentType
+          "Content-Type": contentType,
+          // 浏览器缓存 1 天，CDN/边缘缓存 7 天，二次访问秒开
+          "Cache-Control": "public, max-age=86400, s-maxage=604800"
         };
         const response_img = new Response(fileBuffer, {
           headers: responseHeaders
         });
 
         ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
-
-        if (Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`) {
-          return response_img;
-
-        } else if (!env.IMG) {
-          return response_img
-
-        } else {
-          await logRequest(env, name, Referer, clientIp);
-          return response_img
-
+        if (!isAllowedReferer && env.IMG) {
+          ctx.waitUntil(logRequest(env, name, Referer, clientIp));
         }
+        return response_img;
       } else {
         return Response.json({
           status: 500,
-          message: ` ${error.message}`,
+          message: `Telegram file download failed: ${res.status}`,
           success: false
         }
           , {
-            status: 500,
+            status: 502,
             headers: corsHeaders,
           })
       }

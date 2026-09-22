@@ -272,27 +272,25 @@ export default function HomePage({ initialRole, authButton }) {
 
   const renderFile = (data, index) => {
     const fileUrl = data.url;
-    if (data.type.startsWith('image/')) {
-      return (
-        <img
-          key={`image-${index}`}
-          src={data.url}
-          alt={`Uploaded ${index}`}
-          className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg cursor-pointer"
-          onClick={() => handlerenderImageClick(fileUrl, "img")}
-        />
-      );
-    } else {
-      return (
-        <img
-          key={`image-${index}`}
-          src={data.url}
-          alt={`Uploaded ${index}`}
-          className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg cursor-pointer"
-          onClick={() => handlerenderImageClick(fileUrl, "other")}
-        />
-      );
-    }
+    const isImage = data.type && data.type.startsWith('image/');
+    // 图片优先用本地已生成的 blob 预览，上传完成后立即显示，不必回源拉取；
+    // blob 失效（如清除选区）时 onError 自动回退到远程 URL
+    const localUrl = isImage ? getPreviewUrl(data) : null;
+    return (
+      <img
+        key={`image-${index}`}
+        src={localUrl || fileUrl}
+        alt={`Uploaded ${index}`}
+        loading="lazy"
+        className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg cursor-pointer"
+        onClick={() => handlerenderImageClick(fileUrl, isImage ? "img" : "other")}
+        onError={(e) => {
+          if (localUrl && e.currentTarget.src !== fileUrl) {
+            e.currentTarget.src = fileUrl;
+          }
+        }}
+      />
+    );
   };
 
   const renderTabContent = () => {
