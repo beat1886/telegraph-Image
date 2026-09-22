@@ -30,6 +30,7 @@ export default function Home() {
   const [Total, setTotal] = useState('?');
   const [selectedOption, setSelectedOption] = useState('tg');
   const [isAuthapi, setisAuthapi] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [Loginuser, setLoginuser] = useState('');
   const [boxType, setBoxtype] = useState("img");
 
@@ -80,6 +81,10 @@ export default function Home() {
       }
     } catch (error) {
       console.error('请求出错:', error);
+      setisAuthapi(false);
+    } finally {
+      // 鉴权状态确定后再显示按钮，避免已登录用户先看到“登录”闪现
+      setAuthReady(true);
     }
   };
 
@@ -365,29 +370,39 @@ export default function Home() {
   };
 
   const renderButton = () => {
+    // 鉴权状态未确定时：渲染同尺寸透明占位，保持布局稳定，避免闪现错误按钮
+    if (!authReady) {
+      return <div className="w-28 md:w-20 lg:w-16 h-9 mx-2" aria-hidden="true" />;
+    }
+    let button;
     if (!isAuthapi) {
-      return (
+      button = (
         <Link href="/login">
           <LoginButton>登录</LoginButton>
         </Link>
       );
+    } else {
+      switch (Loginuser) {
+        case 'user':
+          button = <LoginButton onClick={handleSignOut}>登出</LoginButton>;
+          break;
+        case 'admin':
+          button = (
+            <Link href="/admin">
+              <LoginButton>管理</LoginButton>
+            </Link>
+          );
+          break;
+        default:
+          button = (
+            <Link href="/login">
+              <LoginButton>登录</LoginButton>
+            </Link>
+          );
+      }
     }
-    switch (Loginuser) {
-      case 'user':
-        return <LoginButton onClick={handleSignOut}>登出</LoginButton>;
-      case 'admin':
-        return (
-          <Link href="/admin">
-            <LoginButton>管理</LoginButton>
-          </Link>
-        );
-      default:
-        return (
-          <Link href="/login">
-            <LoginButton>登录</LoginButton>
-          </Link>
-        );
-    }
+    // 状态确定后按钮淡入，消除突兀切换
+    return <div className="transition-opacity duration-300 opacity-100">{button}</div>;
   };
 
   return (
