@@ -1,5 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+// FontAwesome SVG 图标的尺寸全靠该样式表中的 .svg-inline--fa { height: 1em }，
+// 缺失时图标会按 SVG 默认内在尺寸渲染（异常巨大）
+import '@fortawesome/fontawesome-svg-core/styles.css';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/ReactToastify.min.css';
 import 'react-photo-view/dist/react-photo-view.css';

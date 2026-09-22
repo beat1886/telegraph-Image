@@ -478,7 +478,7 @@ export default function HomePage({ initialRole }) {
               className={`w-full bg-green-500 cursor-pointer h-10 flex items-center justify-center text-white text-xs sm:text-sm ${uploading ? 'pointer-events-none opacity-50' : ''}`}
               onClick={() => handleUpload()}
             >
-              <FontAwesomeIcon icon={faUpload} className="mr-1 sm:mr-2" />
+              <FontAwesomeIcon icon={faUpload} className="mr-1 sm:mr-2 text-xs sm:text-sm" />
               上传
             </div>
           </div>
