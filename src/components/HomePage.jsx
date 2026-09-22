@@ -6,9 +6,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
-import AuthButton from "@/components/AuthButton";
 
-export default function HomePage({ initialRole }) {
+export default function HomePage({ initialRole, authButton }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
@@ -378,7 +377,7 @@ export default function HomePage({ initialRole }) {
       <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
         <div className="flex justify-between items-center w-full max-w-4xl px-3 sm:px-4">
           <nav className="text-base sm:text-lg font-medium">图床</nav>
-          <AuthButton />
+          {authButton}
         </div>
       </header>
       <div className="mt-[60px] w-[92%] sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
