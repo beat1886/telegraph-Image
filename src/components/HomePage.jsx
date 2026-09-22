@@ -407,24 +407,27 @@ export default function HomePage({ initialRole }) {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-row items-center justify-center w-full mt-3">
+                <div className="flex flex-row items-center justify-center w-full mt-2 sm:mt-3 gap-2 sm:gap-0">
                   <button
-                    className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
+                    className="bg-blue-500 text-white rounded-full w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center cursor-pointer sm:mx-2 active:opacity-70"
                     onClick={() => handleImageClick(index)}
+                    aria-label="预览"
                   >
-                    <FontAwesomeIcon icon={faSearchPlus} />
+                    <FontAwesomeIcon icon={faSearchPlus} className="text-xs sm:text-[13px]" />
                   </button>
                   <button
-                    className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
+                    className="bg-red-500 text-white rounded-full w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center cursor-pointer sm:mx-2 active:opacity-70"
                     onClick={() => handleRemoveImage(index)}
+                    aria-label="删除"
                   >
-                    <FontAwesomeIcon icon={faTrashAlt} />
+                    <FontAwesomeIcon icon={faTrashAlt} className="text-xs sm:text-[13px]" />
                   </button>
                   <button
-                    className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer mx-2"
+                    className="bg-green-500 text-white rounded-full w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center cursor-pointer sm:mx-2 active:opacity-70"
                     onClick={() => handleUpload(file)}
+                    aria-label="上传"
                   >
-                    <FontAwesomeIcon icon={faUpload} />
+                    <FontAwesomeIcon icon={faUpload} className="text-xs sm:text-[13px]" />
                   </button>
                 </div>
               </div>
@@ -445,7 +448,7 @@ export default function HomePage({ initialRole }) {
               htmlFor="file-upload"
               className="w-full h-10 bg-blue-500 cursor-pointer flex items-center justify-center text-white text-xs sm:text-sm"
             >
-              <FontAwesomeIcon icon={faImages} className="mr-1 sm:mr-2" />
+              <FontAwesomeIcon icon={faImages} className="mr-1 sm:mr-2 text-xs sm:text-sm" />
               选择图片
             </label>
             <input
@@ -466,7 +469,7 @@ export default function HomePage({ initialRole }) {
               className="w-full bg-red-500 cursor-pointer h-10 flex items-center justify-center text-white text-xs sm:text-sm"
               onClick={handleClear}
             >
-              <FontAwesomeIcon icon={faTrashAlt} className="mr-1 sm:mr-2" />
+              <FontAwesomeIcon icon={faTrashAlt} className="mr-1 sm:mr-2 text-xs sm:text-sm" />
               清除
             </div>
           </div>
