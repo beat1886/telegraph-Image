@@ -138,11 +138,27 @@ export default function Home() {
           ? `/api/enableauthapi/r2`
           : `/api/${selectedOption}`;
 
-        const response = await fetch(targetUrl, {
-          method: 'POST',
-          body: formData,
-          headers: headers
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        let response;
+        try {
+          response = await fetch(targetUrl, {
+            method: 'POST',
+            body: formData,
+            headers: headers,
+            signal: controller.signal
+          });
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          if (fetchErr.name === 'AbortError') {
+            toast.error(`上传 ${file.name} 超时（60秒无响应），请检查网络或稍后重试`);
+          } else {
+            toast.error(`上传 ${file.name} 网络错误: ${fetchErr.message}`);
+          }
+          continue;
+        }
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const result = await response.json();

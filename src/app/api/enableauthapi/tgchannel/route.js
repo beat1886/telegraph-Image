@@ -12,7 +12,7 @@ const corsHeaders = {
 
 export async function POST(request) {
 	const { env, cf, ctx } = getRequestContext();
-
+	
 	if (!env.TG_BOT_TOKEN || !env.TG_CHAT_ID) {
 		return Response.json({
 			status: 500,
@@ -71,6 +71,7 @@ export async function POST(request) {
 				"User-Agent": " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
 			},
 			body: newformData,
+			signal: AbortSignal.timeout(30000),
 		});
 
 
@@ -126,18 +127,24 @@ export async function POST(request) {
 
 
 			} catch (error) {
-				console.log(error);
-				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown');
-
+				// 鉴黄/写库失败不影响上传结果（文件已到 Telegram），仍返回成功
+				console.log('rating/db error (ignored):', error.message);
+				try {
+					await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown');
+				} catch (e) {}
 
 				return Response.json({
-					"msg": error.message
+					...data,
+					msg: "1",
+					rating_error: error.message
 				}, {
-					status: 500,
+					status: 200,
 					headers: corsHeaders,
 				})
 			}
 		}
+
+
 
 
 
@@ -163,6 +170,7 @@ async function getFile_path(env, file_id) {
 			headers: {
 				"User-Agent": " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome"
 			},
+			signal: AbortSignal.timeout(15000),
 		})
 
 		let responseData = await res.json();
@@ -258,7 +266,9 @@ async function getRating(env, url) {
 		const ratingApi = env.RATINGAPI ? `${env.RATINGAPI}?` : ModerateContentUrl;
 
 		if (ratingApi) {
-			const res = await fetch(`${ratingApi}url=https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`);
+			const res = await fetch(`${ratingApi}url=https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
+				signal: AbortSignal.timeout(15000),
+			});
 			const data = await res.json();
 			const rating_index = data.hasOwnProperty('rating_index') ? data.rating_index : -1;
 
