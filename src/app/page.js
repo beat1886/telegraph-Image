@@ -411,11 +411,11 @@ export default function Home() {
             <select
               value={selectedOption}
               onChange={handleSelectChange}
-              className="text-sm sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 sm:flex-none sm:w-52 text-left pl-3"
+              className="text-xs sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 text-left pl-3"
             >
               <option value="tg">TG(临时，会失效)</option>
-              <option value="tgchannel">TG_Channel</option>
-              {isAuthapi && Loginuser === "admin" && <option value="r2">R2</option>}
+              <option value="tgchannel">TG_Channel(较长期)</option>
+              {isAuthapi && Loginuser === "admin" && <option value="r2">cloudflare的R2 对象存储（长期，可能会付费）</option>}
             </select>
           </div>
         </div>
