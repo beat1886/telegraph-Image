@@ -12,7 +12,7 @@ const corsHeaders = {
 
 export async function POST(request) {
 	const { env, cf, ctx } = getRequestContext();
-	
+
 	if (!env.TG_BOT_TOKEN || !env.TG_CHAT_ID) {
 		return Response.json({
 			status: 500,
@@ -138,8 +138,6 @@ export async function POST(request) {
 				})
 			}
 		}
-
-
 
 
 
