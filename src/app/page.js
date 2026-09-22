@@ -209,8 +209,9 @@ export default function Home() {
   };
 
   const calculateMinHeight = () => {
-    const rows = Math.ceil(selectedFiles.length / 4);
-    return `${rows * 100}px`;
+    const perRow = typeof window !== 'undefined' && window.innerWidth >= 640 ? 4 : 2;
+    const rows = Math.ceil(selectedFiles.length / perRow);
+    return `${rows * 210 + 24}px`;
   };
 
   const handleImageClick = (index) => {
@@ -264,7 +265,7 @@ export default function Home() {
           key={`image-${index}`}
           src={data.url}
           alt={`Uploaded ${index}`}
-          className="object-cover w-36 h-40 m-2"
+          className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg cursor-pointer"
           onClick={() => handlerenderImageClick(fileUrl, "img")}
         />
       );
@@ -274,7 +275,7 @@ export default function Home() {
           key={`image-${index}`}
           src={data.url}
           alt={`Uploaded ${index}`}
-          className="object-cover w-36 h-40 m-2"
+          className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg cursor-pointer"
           onClick={() => handlerenderImageClick(fileUrl, "other")}
         />
       );
@@ -287,9 +288,9 @@ export default function Home() {
         return (
           <div className="flex flex-col">
             {uploadedImages.map((data, index) => (
-              <div key={index} className="m-2 rounded-2xl ring-offset-2 ring-2 ring-slate-100 flex flex-row">
+              <div key={index} className="m-1 sm:m-2 rounded-2xl ring-offset-2 ring-2 ring-slate-100 flex flex-col sm:flex-row">
                 {renderFile(data, index)}
-                <div className="flex flex-col justify-center w-4/5">
+                <div className="flex flex-col justify-center w-full sm:w-4/5 p-2 sm:p-0">
                   {[
                     { text: data.url, onClick: () => handleCopy(data.url) },
                     { text: `![${data.name}](${data.url})`, onClick: () => handleCopy(`![${data.name}](${data.url})`) },
@@ -301,7 +302,7 @@ export default function Home() {
                       readOnly
                       value={item.text}
                       onClick={item.onClick}
-                      className="px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-800 focus:outline-none"
+                      className="px-2 sm:px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none w-full"
                     />
                   ))}
                 </div>
@@ -392,23 +393,25 @@ export default function Home() {
   return (
     <main className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
       <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
-        <nav className="flex justify-between items-center w-full max-w-4xl px-4">图床</nav>
-        {renderButton()}
+        <div className="flex justify-between items-center w-full max-w-4xl px-3 sm:px-4">
+          <nav className="text-base sm:text-lg font-medium">图床</nav>
+          {renderButton()}
+        </div>
       </header>
-      <div className="mt-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
-        <div className="flex flex-row">
+      <div className="mt-[60px] w-[92%] sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-0">
           <div className="flex flex-col">
             <div className="text-gray-800 text-lg">图片上传</div>
-            <div className="mb-4 text-sm text-gray-500">
+            <div className="mb-1 sm:mb-4 text-xs sm:text-sm text-gray-500">
               上传文件最大 5 MB，本站已托管 <span className="text-cyan-600">{Total}</span> 张图片
             </div>
           </div>
-          <div className="flex flex-col sm:flex-col md:w-auto lg:flex-row xl:flex-row 2xl:flex-row mx-auto items-center">
-            <span className="text-lg sm:text-sm md:text-sm lg:text-xl xl:text-xl 2xl:text-xl">上传接口：</span>
+          <div className="flex flex-row items-center gap-2">
+            <span className="text-sm sm:text-base md:text-sm lg:text-xl xl:text-xl 2xl:text-xl whitespace-nowrap">上传接口：</span>
             <select
               value={selectedOption}
               onChange={handleSelectChange}
-              className="text-lg p-2 border rounded w-52 text-left pl-3"
+              className="text-sm sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 sm:flex-none sm:w-52 text-left pl-3"
             >
               <option value="tg">TG(临时，会失效)</option>
               <option value="tgchannel">TG_Channel</option>
@@ -424,11 +427,11 @@ export default function Home() {
           onPaste={handlePaste}
           style={{ minHeight: calculateMinHeight() }}
         >
-          <div className="flex flex-wrap gap-3 min-h-[240px]">
+          <div className="flex flex-wrap gap-3 min-h-[240px] justify-center sm:justify-start p-2">
             <LoadingOverlay loading={uploading} />
             {selectedFiles.map((file, index) => (
-              <div key={index} className="relative rounded-2xl w-44 h-48 ring-offset-2 ring-2 mx-3 my-3 flex flex-col items-center">
-                <div className="relative w-36 h-36" onClick={() => handleImageClick(index)}>
+              <div key={index} className="relative rounded-2xl w-36 h-44 sm:w-44 sm:h-48 ring-offset-2 ring-2 flex flex-col items-center">
+                <div className="relative w-28 h-28 sm:w-36 sm:h-36" onClick={() => handleImageClick(index)}>
                   {file.type.startsWith('image/') && (
                     <Image
                       src={URL.createObjectURL(file)}
@@ -438,8 +441,8 @@ export default function Home() {
                     />
                   )}
                   {!file.type.startsWith('image/') && (
-                    <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700">
-                      <p>{file.name}</p>
+                    <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700 p-1">
+                      <p className="text-xs text-center break-all line-clamp-3">{file.name}</p>
                     </div>
                   )}
                 </div>
@@ -475,13 +478,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full rounded-md shadow-sm overflow-hidden mt-4 grid grid-cols-8">
-          <div className="md:col-span-1 col-span-8">
+        <div className="w-full rounded-md shadow-sm overflow-hidden mt-4 grid grid-cols-8 text-sm select-none">
+          <div className="md:col-span-1 col-span-3">
             <label
               htmlFor="file-upload"
-              className="w-full h-10 bg-blue-500 cursor-pointer flex items-center justify-center text-white"
+              className="w-full h-10 bg-blue-500 cursor-pointer flex items-center justify-center text-white text-xs sm:text-sm"
             >
-              <FontAwesomeIcon icon={faImages} className="mr-2" />
+              <FontAwesomeIcon icon={faImages} className="mr-1 sm:mr-2" />
               选择图片
             </label>
             <input
@@ -492,40 +495,40 @@ export default function Home() {
               multiple
             />
           </div>
-          <div className="md:col-span-5 col-span-8">
-            <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
+          <div className="md:col-span-5 col-span-5">
+            <div className="w-full h-10 bg-slate-200 flex items-center px-2 sm:px-4 text-xs sm:text-sm justify-center md:justify-start truncate">
               已选择 {selectedFiles.length} 张，共 {getTotalSizeInMB(selectedFiles)} M
             </div>
           </div>
           <div className="md:col-span-1 col-span-3">
             <div
-              className="w-full bg-red-500 cursor-pointer h-10 flex items-center justify-center text-white"
+              className="w-full bg-red-500 cursor-pointer h-10 flex items-center justify-center text-white text-xs sm:text-sm"
               onClick={handleClear}
             >
-              <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+              <FontAwesomeIcon icon={faTrashAlt} className="mr-1 sm:mr-2" />
               清除
             </div>
           </div>
           <div className="md:col-span-1 col-span-5">
             <div
-              className={`w-full bg-green-500 cursor-pointer h-10 flex items-center justify-center text-white ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+              className={`w-full bg-green-500 cursor-pointer h-10 flex items-center justify-center text-white text-xs sm:text-sm ${uploading ? 'pointer-events-none opacity-50' : ''}`}
               onClick={() => handleUpload()}
             >
-              <FontAwesomeIcon icon={faUpload} className="mr-2" />
+              <FontAwesomeIcon icon={faUpload} className="mr-1 sm:mr-2" />
               上传
             </div>
           </div>
         </div>
 
-        <ToastContainer />
+        <ToastContainer position="top-center" />
         {uploadedImages.length > 0 && (
           <div className="w-full mt-4 min-h-[200px] mb-[60px]">
-            <div className="flex flex-wrap gap-3 mb-4 border-b border-gray-300">
-              <button onClick={() => setActiveTab('preview')} className={`px-4 py-2 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Preview</button>
-              <button onClick={() => setActiveTab('htmlLinks')} className={`px-4 py-2 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>HTML</button>
-              <button onClick={() => setActiveTab('markdownLinks')} className={`px-4 py-2 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Markdown</button>
-              <button onClick={() => setActiveTab('bbcodeLinks')} className={`px-4 py-2 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>BBCode</button>
-              <button onClick={() => setActiveTab('viewLinks')} className={`px-4 py-2 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Links</button>
+            <div className="flex flex-nowrap sm:flex-wrap gap-2 mb-4 border-b border-gray-300 overflow-x-auto sm:overflow-visible pb-1">
+              <button onClick={() => setActiveTab('preview')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Preview</button>
+              <button onClick={() => setActiveTab('htmlLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>HTML</button>
+              <button onClick={() => setActiveTab('markdownLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Markdown</button>
+              <button onClick={() => setActiveTab('bbcodeLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>BBCode</button>
+              <button onClick={() => setActiveTab('viewLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Links</button>
             </div>
             {renderTabContent()}
           </div>
@@ -535,10 +538,10 @@ export default function Home() {
       <Footer />
 
       {selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseImage}>
-          <div className="relative flex flex-col items-center justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCloseImage}>
+          <div className="relative flex flex-col items-center justify-between max-w-full">
             <button
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              className="absolute -top-2 -right-2 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center z-10"
               onClick={handleCloseImage}
             >
               &times;
@@ -547,7 +550,7 @@ export default function Home() {
               <img
                 src={selectedImage}
                 alt="Selected"
-                className="object-cover w-9/10 h-auto rounded-lg"
+                className="object-contain w-[92%] sm:w-9/10 max-h-[85vh] h-auto rounded-lg"
               />
             ) : (
               <div className="p-4 bg-white text-black rounded">
