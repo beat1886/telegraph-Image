@@ -1,6 +1,5 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import { faImages, faTrashAlt, faUpload, faSearchPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ToastContainer, toast } from "react-toastify";
@@ -19,6 +18,25 @@ export default function HomePage({ initialRole }) {
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
   const [selectedOption, setSelectedOption] = useState('tg');
+  // 以 File 对象为键缓存预览 URL，保证同一文件多次渲染时 blob 地址稳定，
+  // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
+  const previewUrlsRef = useRef(new WeakMap());
+  const getPreviewUrl = (file) => {
+    if (!file || !file.type || !file.type.startsWith('image/')) return null;
+    let url = previewUrlsRef.current.get(file);
+    if (!url) {
+      url = URL.createObjectURL(file);
+      previewUrlsRef.current.set(file, url);
+    }
+    return url;
+  };
+  const revokePreviewUrl = (file) => {
+    const url = previewUrlsRef.current.get(file);
+    if (url) {
+      URL.revokeObjectURL(url);
+      previewUrlsRef.current.delete(file);
+    }
+  };
   // 初始登录态由服务端组件通过 initialRole 注入，首屏即正确，不闪不等
   const [isAuthapi, setisAuthapi] = useState(!!initialRole);
   const [Loginuser, setLoginuser] = useState(initialRole || '');
@@ -99,6 +117,7 @@ export default function HomePage({ initialRole }) {
   };
 
   const handleClear = () => {
+    selectedFiles.forEach(revokePreviewUrl);
     setSelectedFiles([]);
   };
 
@@ -207,12 +226,14 @@ export default function HomePage({ initialRole }) {
   };
 
   const handleImageClick = (index) => {
-    if (selectedFiles[index].type.startsWith('image/')) {
+    const file = selectedFiles[index];
+    if (file.type.startsWith('image/')) {
       setBoxtype("img");
+      setSelectedImage(getPreviewUrl(file));
     } else {
       setBoxtype("other");
+      setSelectedImage("other");
     }
-    setSelectedImage(URL.createObjectURL(selectedFiles[index]));
   };
 
   const handleCloseImage = () => {
@@ -220,6 +241,7 @@ export default function HomePage({ initialRole }) {
   };
 
   const handleRemoveImage = (index) => {
+    revokePreviewUrl(selectedFiles[index]);
     const updatedFiles = selectedFiles.filter((_, idx) => idx !== index);
     setSelectedFiles(updatedFiles);
   };
@@ -393,15 +415,13 @@ export default function HomePage({ initialRole }) {
             {selectedFiles.map((file, index) => (
               <div key={index} className="relative rounded-2xl w-36 h-44 sm:w-44 sm:h-48 ring-offset-2 ring-2 flex flex-col items-center">
                 <div className="relative w-28 h-28 sm:w-36 sm:h-36" onClick={() => handleImageClick(index)}>
-                  {file.type.startsWith('image/') && (
-                    <Image
-                      src={URL.createObjectURL(file)}
+                  {file.type.startsWith('image/') ? (
+                    <img
+                      src={getPreviewUrl(file)}
                       alt={`Preview ${file.name}`}
-                      fill
-                      style={{ objectFit: "cover" }}
+                      className="w-full h-full object-cover rounded-lg cursor-pointer"
                     />
-                  )}
-                  {!file.type.startsWith('image/') && (
+                  ) : (
                     <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700 p-1">
                       <p className="text-xs text-center break-all line-clamp-3">{file.name}</p>
                     </div>
