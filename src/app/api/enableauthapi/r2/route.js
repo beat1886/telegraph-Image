@@ -1,19 +1,19 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { auth } from "@/auth";
 
 export async function POST(request) {
 
     const { env, cf, ctx } = getRequestContext();
 
     // ==============================================
-    // 👇 👇 这里加了【必须登录才能上传 R2】的验证
+    // 必须登录才能上传 R2（使用 NextAuth v5 标准会话校验）
+    // 注意：v5 的 cookie 名为 authjs.session-token /
+    // __Secure-authjs.session-token，不能再用 v4 的
+    // next-auth.session-token 字符串匹配
     // ==============================================
-    const cookieHeader = request.headers.get('cookie') || '';
-    const isLoggedIn = cookieHeader.includes('next-auth.session-token=') 
-                     || cookieHeader.includes('__Secure-next-auth.session-token=');
-
-    // 未登录 → 直接拒绝！
-    if (!isLoggedIn) {
+    const session = await auth();
+    if (!session?.user) {
         return Response.json({
             status: 401,
             success: false,
@@ -27,7 +27,7 @@ export async function POST(request) {
         });
     }
     // ==============================================
-    // 👆 👆 登录验证结束
+    // 登录验证结束
     // ==============================================
 
     if (!env.IMGRS) {
