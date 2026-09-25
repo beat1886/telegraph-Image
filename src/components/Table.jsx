@@ -108,8 +108,8 @@ export default function Table({ data: initialData = [] }) {
             'ogv', 'm4v', '3gp', '3g2', 'mpg', 'mpeg', 'mxf', 'vob'
         ];
 
-        // 缩略图固定方块尺寸：手机 56px / 桌面 80px，不随单元格内边距和行高变化
-        const thumbClass = "w-14 h-14 sm:w-20 sm:h-20 object-cover rounded block mx-auto";
+        // 缩略图固定方块尺寸：手机 56px / 桌面 80px；min-width 防止 table 自动布局压缩列宽
+        const thumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] object-cover rounded block mx-auto";
 
         if (imageExtensions.includes(fileExtension)) {
 
