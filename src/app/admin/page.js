@@ -15,6 +15,48 @@ export default function Admin() {
   const [searchTotal, setSearchTotal] = useState(0); // 初始化为0，因为初始时还没有搜索结果
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cleaning, setCleaning] = useState(false);
+
+  // 一键清空失效图片：分批检测所有记录的源文件，删除确认 404 的
+  const handleCleanInvalid = async () => {
+    if (cleaning) return;
+    const ok = window.confirm(
+      '将逐张检测所有图片的源文件，删除确认已失效（源文件 404）的记录及其访问日志。\n\n网络超时或无法确认的图片会自动跳过，不会误删。\n\n图片较多时检测需要一些时间，确定开始吗？'
+    );
+    if (!ok) return;
+    setCleaning(true);
+    const tid = toast.loading('正在检测失效图片…');
+    try {
+      let offset = 0;
+      let totalDeleted = 0;
+      let rounds = 0;
+      while (rounds < 500) {
+        const res = await fetch('/api/admin/cleaninvalid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offset }),
+        });
+        const data = await res.json();
+        if (!data?.success) {
+          toast.update(tid, { render: data.message || '清理失败', type: 'error', isLoading: false, autoClose: 3000 });
+          return;
+        }
+        totalDeleted += data.deleted.length;
+        toast.update(tid, { render: `正在检测…已清理 ${totalDeleted} 张失效图片` });
+        if (data.done) break;
+        offset = data.nextOffset;
+        rounds++;
+      }
+      toast.update(tid, { render: `清理完成，共删除 ${totalDeleted} 张失效图片`, type: 'success', isLoading: false, autoClose: 4000 });
+      setCurrentPage(1);
+      setInputPage(1);
+      getListdata(1);
+    } catch (error) {
+      toast.update(tid, { render: '清理失败：' + error.message, type: 'error', isLoading: false, autoClose: 3000 });
+    } finally {
+      setCleaning(false);
+    }
+  };
 
 
 
@@ -124,6 +166,16 @@ export default function Admin() {
         </header>
 
         <main className="mt-[104px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
+
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex justify-end">
+            <button
+              onClick={handleCleanInvalid}
+              disabled={cleaning}
+              className="text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
+            >
+              {cleaning ? '正在清理…' : '一键清空失效图片'}
+            </button>
+          </div>
 
           <Table data={listData} />
 
