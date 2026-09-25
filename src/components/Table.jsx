@@ -6,6 +6,15 @@ import TooltipItem from '@/components/Tooltip';
 import FullScreenIcon from "@/components/FullScreenIcon"
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 
+// 源文件失效（如 telegra.ph 临时链接 404）时的占位图
+const brokenPlaceholder = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#f1f5f9" rx="6"/><text x="40" y="45" font-size="13" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">已失效</text></svg>'
+)}`;
+const handleImgError = (e) => {
+  e.currentTarget.onerror = null;
+  e.currentTarget.src = brokenPlaceholder;
+};
+
 export default function Table({ data: initialData = [] }) {
 
     const [data, setData] = useState(initialData); // 初始化状态
@@ -119,6 +128,7 @@ export default function Table({ data: initialData = [] }) {
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
                     className={thumbClass}
+                    onError={handleImgError}
                 />
             );
         }
@@ -130,6 +140,7 @@ export default function Table({ data: initialData = [] }) {
                     className={thumbClass}
                     muted
                     preload="metadata"
+                    onError={handleImgError}
                 >
                     Your browser does not support the video tag.
                 </video>
@@ -142,6 +153,7 @@ export default function Table({ data: initialData = [] }) {
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
                     className={thumbClass}
+                    onError={handleImgError}
                 />
             );
         }
