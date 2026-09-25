@@ -179,138 +179,170 @@ export default function Table({ data: initialData = [] }) {
     }
 
     const elementSize = 400;
+
+    // 点击缩略图放大预览（图片/视频两种模式），桌面表格与手机卡片共用
+    const renderPreview = (item, index) => {
+        const url = getImgUrl(item.url);
+        return isVideo(url) ? (
+            <PhotoView
+                key={item.url}
+                width={elementSize}
+                height={elementSize}
+                render={({ scale, attrs }) => {
+                    const width = attrs.style.width;
+                    const offset = (width - elementSize) / elementSize;
+                    const childScale = scale === 1 ? scale + offset : 1 + offset;
+                    return (
+                        <div {...attrs} className={`flex-none bg-white ${attrs.className || ''}`}>
+                            {renderFile(url, index)}
+                        </div>
+                    );
+                }}
+            >
+                {renderFile(url, index)}
+            </PhotoView>
+        ) : (
+            <PhotoView key={item.url} src={url}>
+                {renderFile(url, index)}
+            </PhotoView>
+        );
+    };
+
+    // 手机端：单条记录卡片
+    const renderMobileCard = (item, index) => (
+        <div key={`mcard-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+            <div className="flex gap-3">
+                <div className="shrink-0">{renderPreview(item, index)}</div>
+                <div className="min-w-0 flex-1">
+                    <p
+                        onClick={() => handleNameClick(item)}
+                        className="text-sm font-medium text-blue-600 truncate cursor-pointer"
+                        title={item.url}
+                    >
+                        {item.url}
+                    </p>
+                    <div className="mt-1 space-y-0.5 text-xs text-gray-500">
+                        <p className="truncate">时间：{item.time || '-'}</p>
+                        <p className="truncate">来源：{item.referer || '-'}</p>
+                        <p className="truncate">IP：{item.ip || '-'}</p>
+                        <p>PV：{item.total ?? '-'}　分级：{item.rating ?? '-'}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-500 flex items-center gap-2">
+                    限制访问
+                    <Switcher initialChecked={item.rating} initName={item.url} />
+                </span>
+                <button
+                    onClick={() => handleDelete(item.url)}
+                    className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 whitespace-nowrap"
+                >
+                    删除
+                </button>
+            </div>
+        </div>
+    );
+
+    const photoViewToolbar = ({ rotate, onRotate, onScale, scale }) => (
+        <>
+            <svg
+                className="PhotoView-Slider__toolbarIcon"
+                width="44"
+                height="44"
+                viewBox="0 0 768 768"
+                fill="white"
+                onClick={() => onScale(scale + 0.5)}
+            >
+                <path d="M384 640.5q105 0 180.75-75.75t75.75-180.75-75.75-180.75-180.75-75.75-180.75 75.75-75.75 180.75 75.75 180.75 180.75 75.75zM384 64.5q132 0 225.75 93.75t93.75 225.75-93.75 225.75-225.75 93.75-225.75-93.75-93.75-225.75 93.75-225.75 225.75-93.75zM415.5 223.5v129h129v63h-129v129h-63v-129h-129v-63h129v-129h63z" />
+            </svg>
+            <svg
+                className="PhotoView-Slider__toolbarIcon"
+                width="44"
+                height="44"
+                viewBox="0 0 768 768"
+                fill="white"
+                onClick={() => onScale(scale - 0.5)}
+            >
+                <path d="M384 640.5q105 0 180.75-75.75t75.75-180.75-75.75-180.75-180.75-75.75-180.75 75.75-75.75 180.75 75.75 180.75 180.75 75.75zM384 64.5q132 0 225.75 93.75t93.75 225.75-93.75 225.75-225.75 93.75-225.75-93.75-93.75-225.75 93.75-225.75 225.75-93.75zM223.5 352.5h321v63h-321v-63z" />
+            </svg>
+            <svg
+                className="PhotoView-Slider__toolbarIcon"
+                onClick={() => onRotate(rotate + 90)}
+                width="44"
+                height="44"
+                fill="white"
+                viewBox="0 0 768 768"
+            >
+                <path d="M565.5 202.5l75-75v225h-225l103.5-103.5c-34.5-34.5-82.5-57-135-57-106.5 0-192 85.5-192 192s85.5 192 192 192c84 0 156-52.5 181.5-127.5h66c-28.5 111-127.5 192-247.5 192-141 0-255-115.5-255-256.5s114-256.5 255-256.5c70.5 0 135 28.5 181.5 75z" />
+            </svg>
+            {document.fullscreenEnabled && <FullScreenIcon onClick={toggleFullScreen} />}
+        </>
+    );
+
     return (
-        <div className="mx-0 sm:mx-2 overflow-x-auto overscroll-x-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <table className="min-w-full bg-white  items-center justify-between ">
-                <thead >
-                    <tr className="sticky top-0 bg-gray-100 z-20">
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">name</th>
-                        <th className="sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">preview</th>
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">time</th>
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">referer</th>
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">ip</th>
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">PV</th>
-                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">rating</th>
-                        <th className="sticky right-0 z-10 py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">限制访问</th>
-                    </tr>
-                </thead>
-                <tbody >
-
-                    <PhotoProvider
-                        maskOpacity={0.5}
-                        toolbarRender={({ rotate, onRotate, onScale, scale }) => {
-                            return (
-                                <>
-                                    <svg
-                                        className="PhotoView-Slider__toolbarIcon"
-                                        width="44"
-                                        height="44"
-                                        viewBox="0 0 768 768"
-                                        fill="white"
-                                        onClick={() => onScale(scale + 0.5)}
-                                    >
-                                        <path d="M384 640.5q105 0 180.75-75.75t75.75-180.75-75.75-180.75-180.75-75.75-180.75 75.75-75.75 180.75 75.75 180.75 180.75 75.75zM384 64.5q132 0 225.75 93.75t93.75 225.75-93.75 225.75-225.75 93.75-225.75-93.75-93.75-225.75 93.75-225.75 225.75-93.75zM415.5 223.5v129h129v63h-129v129h-63v-129h-129v-63h129v-129h63z" />
-                                    </svg>
-                                    <svg
-                                        className="PhotoView-Slider__toolbarIcon"
-                                        width="44"
-                                        height="44"
-                                        viewBox="0 0 768 768"
-                                        fill="white"
-                                        onClick={() => onScale(scale - 0.5)}
-                                    >
-                                        <path d="M384 640.5q105 0 180.75-75.75t75.75-180.75-75.75-180.75-180.75-75.75-180.75 75.75-75.75 180.75 75.75 180.75 180.75 75.75zM384 64.5q132 0 225.75 93.75t93.75 225.75-93.75 225.75-225.75 93.75-225.75-93.75-93.75-225.75 93.75-225.75 225.75-93.75zM223.5 352.5h321v63h-321v-63z" />
-                                    </svg>
-                                    <svg
-                                        className="PhotoView-Slider__toolbarIcon"
-                                        onClick={() => onRotate(rotate + 90)}
-                                        width="44"
-                                        height="44"
-                                        fill="white"
-                                        viewBox="0 0 768 768"
-                                    >
-                                        <path d="M565.5 202.5l75-75v225h-225l103.5-103.5c-34.5-34.5-82.5-57-135-57-106.5 0-192 85.5-192 192s85.5 192 192 192c84 0 156-52.5 181.5-127.5h66c-28.5 111-127.5 192-247.5 192-141 0-255-115.5-255-256.5s114-256.5 255-256.5c70.5 0 135 28.5 181.5 75z" />
-                                    </svg>
-                                    {document.fullscreenEnabled && <FullScreenIcon onClick={toggleFullScreen} />}
-                                </>
-                            );
-                        }}>
-                        {data.map((item, index) => (
-
-                            <tr key={index}>
-
-                                <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48">
-                                    {item.url}
-                                </td>
-                                <td
-                                    className="w-16 sm:w-24 sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-500 bg-white text-sm text-gray-700 text-center align-middle"
-                                >
-
-                                    {
-                                        isVideo(getImgUrl(item.url)) ? (
-
-                                            <PhotoView key={item.url}
-                                                width={elementSize}
-                                                height={elementSize}
-                                                render={({ scale, attrs }) => {
-                                                    const width = attrs.style.width;
-                                                    const offset = (width - elementSize) / elementSize;
-                                                    const childScale = scale === 1 ? scale + offset : 1 + offset;
-                                                    return (
-                                                        <div {...attrs} className={`flex-none bg-white ${attrs.className || ''}`}>
-                                                            {renderFile(getImgUrl(item.url), index)}
-                                                        </div>
-                                                    )
-
-                                                }}
-                                            >
-                                                {renderFile(getImgUrl(item.url), index)}
-                                            </PhotoView>
-                                        ) : (
-                                            <PhotoView key={item.url}
-                                                src={getImgUrl(item.url)}
-                                            >
-                                                {renderFile(getImgUrl(item.url), index)}
-                                            </PhotoView>
-
-                                        )
-                                    }
-
-                                </td>
-                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
-                                    {item.time}
-                                </td>
-                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[110px] sm:max-w-48 truncate">
-                                    <TooltipItem tooltipsText={item.referer} position="bottom" >{item.referer}</TooltipItem>
-                                </td>
-                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[100px] sm:max-w-48 truncate">
-                                    <TooltipItem tooltipsText={item.ip} position="bottom" >{item.ip}</TooltipItem>
-                                </td>
-                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.total}</td>
-                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.rating}</td>
-                                <td className="sticky right-0 z-10 bg-white text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700">
-                                    <div className="flex flex-row justify-center items-center">
-                                        <Switcher initialChecked={item.rating} initName={item.url} />
-                                        <button
-                                            onClick={() => {
-                                                handleDelete(item.url)
-                                            }}
-                                            className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 whitespace-nowrap"
-                                        >
-                                            删除
-                                        </button>
-                                    </div>
-                                </td>
+        <PhotoProvider maskOpacity={0.5} toolbarRender={photoViewToolbar}>
+            <div>
+                {/* 桌面端：完整表格（sm 及以上显示） */}
+                <div className="hidden sm:block sm:mx-2 overflow-x-auto overscroll-x-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <table className="min-w-full bg-white items-center justify-between">
+                        <thead>
+                            <tr className="sticky top-0 bg-gray-100 z-20">
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">name</th>
+                                <th className="sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">preview</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">time</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">referer</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">ip</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">PV</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">rating</th>
+                                <th className="sticky right-0 z-10 py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">限制访问</th>
                             </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((item, index) => (
+                                <tr key={index}>
+                                    <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48">
+                                        {item.url}
+                                    </td>
+                                    <td className="w-16 sm:w-24 sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-500 bg-white text-sm text-gray-700 text-center align-middle">
+                                        {renderPreview(item, index)}
+                                    </td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
+                                        {item.time}
+                                    </td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[110px] sm:max-w-48 truncate">
+                                        <TooltipItem tooltipsText={item.referer} position="bottom">{item.referer}</TooltipItem>
+                                    </td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[100px] sm:max-w-48 truncate">
+                                        <TooltipItem tooltipsText={item.ip} position="bottom">{item.ip}</TooltipItem>
+                                    </td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.total}</td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.rating}</td>
+                                    <td className="sticky right-0 z-10 bg-white text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700">
+                                        <div className="flex flex-row justify-center items-center">
+                                            <Switcher initialChecked={item.rating} initName={item.url} />
+                                            <button
+                                                onClick={() => handleDelete(item.url)}
+                                                className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 whitespace-nowrap"
+                                            >
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-                        ))}
+                {/* 手机端：卡片流（sm 以下显示），无需横向滚动 */}
+                <div className="sm:hidden px-2 pb-2 space-y-2">
+                    {data.length === 0
+                        ? <p className="text-center text-sm text-gray-400 py-10">暂无数据</p>
+                        : data.map((item, index) => renderMobileCard(item, index))}
+                </div>
 
-                    </PhotoProvider>
-                </tbody>
-            </table>
-
-
-            {modalData && (
+                {modalData && (
                 <div onClick={handleClickOutside} className="fixed z-50 inset-0 overflow-y-auto flex items-center justify-center m-5 ">
                     <div className="fixed inset-0 bg-black opacity-75"></div>
                     <div ref={modalRef} className="bg-white rounded-lg flex-none flex flex-col h-1/2 relative w-9/10 sm:w-9/10 md:w-96 lg:w-120 xl:w-144 2xl:w-160">
@@ -342,8 +374,8 @@ export default function Table({ data: initialData = [] }) {
                 </div>
 
 
-            )}
-
-        </div>
+                )}
+            </div>
+        </PhotoProvider>
     );
 }

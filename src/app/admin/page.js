@@ -103,51 +103,75 @@ export default function Admin() {
   return (
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
-        <header className="fixed top-0 h-[50px]  left-0 w-full border-b bg-white flex z-50 justify-center items-center">
-          <div className="flex justify-between items-center w-full max-w-4xl px-4">
-            <button className='text-white px-4 py-2  transition ease-in-out delay-150 bg-blue-500 hover:scale-110 hover:bg-indigo-500 duration-300  rounded '
-              onClick={handleViewToggle}>
-              切换到 {view === 'list' ? '日志页' : '数据页'}
-            </button>
-            <form onSubmit={handleSearch} className="hidden sm:flex items-center">
+        <header className="fixed top-0 left-0 w-full border-b bg-white z-50">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 order-2 sm:order-1">
+              <button
+                className="text-white text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap transition ease-in-out delay-150 bg-blue-500 hover:scale-105 hover:bg-indigo-500 duration-300 rounded"
+                onClick={handleViewToggle}
+              >
+                切换到 {view === 'list' ? '日志页' : '数据页'}
+              </button>
+              <div className="flex items-center gap-2">
+                <Link href="/">
+                  <button className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap"
+                >
+                  登出
+                </button>
+              </div>
+            </div>
+            <form onSubmit={handleSearch} className="flex items-center gap-2 order-1 sm:order-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border rounded p-2 w-40 mr-2"
-                placeholder="搜索"
+                className="border rounded px-2 py-1.5 sm:py-2 w-full sm:w-40 text-sm"
+                placeholder="按 URL 搜索"
               />
-              <button type="submit" className="text-white px-4 py-2 transition ease-in-out delay-150 bg-blue-500 hover:scale-110 hover:bg-indigo-500 duration-300 rounded">
+              <button type="submit" className="text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap transition ease-in-out delay-150 bg-blue-500 hover:scale-105 hover:bg-indigo-500 duration-300 rounded">
                 搜索
               </button>
             </form>
           </div>
-          <Link href="/"  className="hidden sm:flex"> <button className="px-4 py-2 mx-2 w-28  sm:w-28 md:w-20 lg:w-16 xl:w-16  2xl:w-20 bg-blue-500 text-white rounded ">主页</button></Link>
-          <button onClick={() => signOut({ callbackUrl: "/" })} className="px-4 py-2 mx-2 w-28  sm:w-28 md:w-20 lg:w-16 xl:w-16  2xl:w-20 bg-blue-500 text-white rounded ">登出</button>
         </header>
 
-        <main className="my-[60px] w-9/10  sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
+        <main className="mt-[104px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
 
           <Table data={listData} />
 
         </main>
-        <div className="fixed inset-x-0 bottom-0 h-[50px]  w-full  flex  z-50 justify-center items-center bg-white ">
-          <div className="pagination mt-5 mb-5 flex justify-center items-center">
-            <button className=' text-xs sm:text-sm transition ease-in-out delay-150 bg-blue-500  hover:scale-110 hover:bg-indigo-500 duration-300p-2 p-2 rounded mr-5' onClick={handlePrevPage} disabled={currentPage === 1}>
+        <div className="fixed inset-x-0 bottom-0 w-full flex z-50 justify-center items-center bg-white border-t">
+          <div className="pagination py-2 px-2 flex justify-center items-center gap-2 sm:gap-5">
+            <button
+              className="text-xs sm:text-sm px-2 py-1.5 sm:p-2 bg-blue-500 hover:bg-indigo-500 text-white rounded disabled:opacity-40 whitespace-nowrap"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
               上一页
             </button>
-            <span className="text-xs sm:text-sm">第 {`${currentPage}/${searchTotal}`} 页</span>
-            <button className='text-xs sm:text-sm transition ease-in-out delay-150 bg-blue-500  hover:scale-110 hover:bg-indigo-500 duration-300 p-2 rounded ml-5' onClick={handleNextPage}>
-              下一页</button>
-            <div className="ml-5 flex items-center">
+            <span className="text-xs sm:text-sm whitespace-nowrap">第 {`${currentPage}/${searchTotal}`} 页</span>
+            <button
+              className="text-xs sm:text-sm px-2 py-1.5 sm:p-2 bg-blue-500 hover:bg-indigo-500 text-white rounded whitespace-nowrap"
+              onClick={handleNextPage}
+            >
+              下一页
+            </button>
+            <div className="flex items-center gap-1 sm:gap-2">
               <input
                 type="number"
                 value={inputPage}
                 onChange={(e) => setInputPage(e.target.value)}
-                className="border rounded p-2 w-20"
+                className="border rounded px-1 py-1.5 sm:p-2 w-12 sm:w-20 text-sm text-center"
                 placeholder="页码"
               />
-              <button className='text-xs sm:text-sm transition ease-in-out delay-150 bg-blue-500 hover:scale-110 hover:bg-indigo-500 duration-300 p-2 rounded ml-2' onClick={handleJumpPage}>
+              <button
+                className="text-xs sm:text-sm px-2 py-1.5 sm:p-2 bg-blue-500 hover:bg-indigo-500 text-white rounded whitespace-nowrap"
+                onClick={handleJumpPage}
+              >
                 跳转
               </button>
             </div>
