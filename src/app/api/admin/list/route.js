@@ -19,7 +19,7 @@ export async function POST(request) {
     let { page, query } = await request.json()
 
     if (query) {
-      const ps = env.IMG.prepare(`SELECT * FROM imginfo WHERE url LIKE '%${query}%' LIMIT 10 OFFSET ${page} * 10`);
+      const ps = env.IMG.prepare(`SELECT imginfo.*, (SELECT COUNT(*) FROM tgimglog WHERE tgimglog.url = imginfo.url) AS logcount FROM imginfo WHERE url LIKE '%${query}%' ORDER BY id DESC LIMIT 10 OFFSET ${page} * 10`);
       const { results } = await ps.all()
       const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo WHERE url LIKE '%${query}%'`).first()
       return Response.json({
@@ -31,7 +31,7 @@ export async function POST(request) {
         "total": total.total
       });
     } else {
-      const ps = env.IMG.prepare(`SELECT * FROM imginfo ORDER BY id DESC LIMIT 10 OFFSET ${page} * 10`);
+      const ps = env.IMG.prepare(`SELECT imginfo.*, (SELECT COUNT(*) FROM tgimglog WHERE tgimglog.url = imginfo.url) AS logcount FROM imginfo ORDER BY id DESC LIMIT 10 OFFSET ${page} * 10`);
       const { results } = await ps.all()
       const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo`).first()
       return Response.json({

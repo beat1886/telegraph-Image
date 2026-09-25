@@ -262,7 +262,7 @@ export default function Table({ data: initialData = [] }) {
                         onClick={() => fetchLogs(item.url, 0)}
                         className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
                     >
-                        记录{item.total != null ? `(${item.total})` : ''}
+                        记录{item.logcount > 0 ? `(${item.logcount})` : ''}
                     </button>
                     <button
                         onClick={() => handleDelete(item.url)}
@@ -356,7 +356,7 @@ export default function Table({ data: initialData = [] }) {
                                                 onClick={() => fetchLogs(item.url, 0)}
                                                 className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
                                             >
-                                                记录{item.total != null ? `(${item.total})` : ''}
+                                                记录{item.logcount > 0 ? `(${item.logcount})` : ''}
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(item.url)}
