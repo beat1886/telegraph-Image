@@ -107,17 +107,21 @@ export default function HomePage({ initialRole, authButton }) {
 
   const handleFileChange = (event) => {
     const newFiles = event.target.files;
+    // 仅对当前待传列表去重；已上传过的同名文件允许再次选择、重复上传
     const filteredFiles = Array.from(newFiles).filter(file =>
       !selectedFiles.find(selFile => selFile.name === file.name));
-    const uniqueFiles = filteredFiles.filter(file =>
-      !uploadedImages.find(upImg => upImg.name === file.name)
-    );
-    setSelectedFiles([...selectedFiles, ...uniqueFiles]);
+    setSelectedFiles([...selectedFiles, ...filteredFiles]);
   };
 
   const handleClear = () => {
     selectedFiles.forEach(revokePreviewUrl);
     setSelectedFiles([]);
+  };
+
+  const handleClearResults = () => {
+    uploadedImages.forEach(revokePreviewUrl);
+    setUploadedImages([]);
+    setActiveTab('preview');
   };
 
   const getTotalSizeInMB = (files) => {
@@ -473,6 +477,7 @@ export default function HomePage({ initialRole, authButton }) {
               type="file"
               className="hidden"
               onChange={handleFileChange}
+              onClick={(e) => { e.target.value = ''; }}
               multiple
             />
           </div>
@@ -504,12 +509,20 @@ export default function HomePage({ initialRole, authButton }) {
         <ToastContainer position="top-center" />
         {uploadedImages.length > 0 && (
           <div className="w-full mt-4 min-h-[200px] mb-[60px]">
-            <div className="flex flex-nowrap sm:flex-wrap gap-2 mb-4 border-b border-gray-300 overflow-x-auto sm:overflow-visible pb-1">
-              <button onClick={() => setActiveTab('preview')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Preview</button>
-              <button onClick={() => setActiveTab('htmlLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>HTML</button>
-              <button onClick={() => setActiveTab('markdownLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Markdown</button>
-              <button onClick={() => setActiveTab('bbcodeLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>BBCode</button>
-              <button onClick={() => setActiveTab('viewLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Links</button>
+            <div className="flex items-center justify-between gap-2 mb-4 border-b border-gray-300 pb-1">
+              <div className="flex flex-nowrap sm:flex-wrap gap-2 overflow-x-auto sm:overflow-visible">
+                <button onClick={() => setActiveTab('preview')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Preview</button>
+                <button onClick={() => setActiveTab('htmlLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>HTML</button>
+                <button onClick={() => setActiveTab('markdownLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Markdown</button>
+                <button onClick={() => setActiveTab('bbcodeLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>BBCode</button>
+                <button onClick={() => setActiveTab('viewLinks')} className={`px-3 sm:px-4 py-2 text-sm whitespace-nowrap shrink-0 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>Links</button>
+              </div>
+              <button
+                onClick={handleClearResults}
+                className="shrink-0 px-3 py-2 text-sm whitespace-nowrap text-red-600 border border-red-300 rounded hover:bg-red-500 hover:text-white transition-colors"
+              >
+                清空结果
+              </button>
             </div>
             {renderTabContent()}
           </div>
