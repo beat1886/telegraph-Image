@@ -87,7 +87,7 @@ export default function Table({ data: initialData = [] }) {
 
 
     const handleDelete = async (initName) => {
-        const confirmed = window.confirm('你确定要删除这个项目吗？');
+        const confirmed = window.confirm('你确定要删除这张图片吗？');
         if (confirmed) {
             await deleteItem(initName);
         }
