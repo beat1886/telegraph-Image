@@ -14,14 +14,13 @@ export default function Admin() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTotal, setSearchTotal] = useState(0); // 初始化为0，因为初始时还没有搜索结果
   const [inputPage, setInputPage] = useState(1);
-  const [view, setView] = useState('list'); // 'list' 或 'log'，默认为 'list'
   const [searchQuery, setSearchQuery] = useState('');
 
 
 
   const getListdata = useCallback(async (page) => {
     try {
-      const res = await fetch(`/api/admin/${view}`, {
+      const res = await fetch(`/api/admin/list`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +49,7 @@ export default function Admin() {
 
   useEffect(() => {
     getListdata(currentPage)
-  }, [currentPage, view]);
+  }, [currentPage]);
 
   // 分页控制按钮
   const handleNextPage = () => {
@@ -86,13 +85,6 @@ export default function Admin() {
     // setInputPage(""); // 清空输入框
   };
 
-  const handleViewToggle = () => {
-    setView(view === 'list' ? 'log' : 'list');
-    setCurrentPage(1); // 切换视图时重置到第一页
-    setInputPage(1);
-  };
-
-
   const handleSearch = (event) => {
     event.preventDefault();
     setCurrentPage(1);
@@ -105,24 +97,16 @@ export default function Admin() {
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
         <header className="fixed top-0 left-0 w-full border-b bg-white z-50">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex items-center justify-between gap-2 order-2 sm:order-1">
+            <div className="flex items-center justify-end gap-2 order-2 sm:order-1">
+              <Link href="/">
+                <button className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
+              </Link>
               <button
-                className="text-white text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap transition ease-in-out delay-150 bg-blue-500 hover:scale-105 hover:bg-indigo-500 duration-300 rounded"
-                onClick={handleViewToggle}
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap"
               >
-                切换到 {view === 'list' ? '日志页' : '数据页'}
+                登出
               </button>
-              <div className="flex items-center gap-2">
-                <Link href="/">
-                  <button className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
-                </Link>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap"
-                >
-                  登出
-                </button>
-              </div>
             </div>
             <form onSubmit={handleSearch} className="flex items-center gap-2 order-1 sm:order-2">
               <input

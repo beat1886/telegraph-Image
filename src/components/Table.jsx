@@ -19,6 +19,7 @@ export default function Table({ data: initialData = [] }) {
 
     const [data, setData] = useState(initialData); // 初始化状态
     const [modalData, setModalData] = useState(null);
+    const [logView, setLogView] = useState(null); // 单张图片的访问记录弹窗
     const modalRef = useRef(null);
 
 
@@ -89,6 +90,28 @@ export default function Table({ data: initialData = [] }) {
         const confirmed = window.confirm('你确定要删除这个项目吗？');
         if (confirmed) {
             await deleteItem(initName);
+        }
+    };
+
+    // 拉取单张图片的访问记录（整合自原日志页）
+    const fetchLogs = async (url, page = 0) => {
+        setLogView({ url, page, records: [], total: 0, loading: true });
+        try {
+            const res = await fetch(`/api/admin/logdetail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, page }),
+            });
+            const res_data = await res.json();
+            if (res_data.success) {
+                setLogView({ url, page, records: res_data.data || [], total: res_data.total || 0, loading: false });
+            } else {
+                toast.error(res_data.message);
+                setLogView(null);
+            }
+        } catch (error) {
+            toast.error(error.message);
+            setLogView(null);
         }
     };
 
@@ -229,17 +252,25 @@ export default function Table({ data: initialData = [] }) {
                     </div>
                 </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-gray-500 flex items-center gap-2">
+            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                <span className="text-xs text-gray-500 flex items-center gap-1.5 shrink-0">
                     限制访问
                     <Switcher initialChecked={item.rating} initName={item.url} />
                 </span>
-                <button
-                    onClick={() => handleDelete(item.url)}
-                    className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 whitespace-nowrap"
-                >
-                    删除
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => fetchLogs(item.url, 0)}
+                        className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
+                    >
+                        记录{item.total != null ? `(${item.total})` : ''}
+                    </button>
+                    <button
+                        onClick={() => handleDelete(item.url)}
+                        className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 whitespace-nowrap"
+                    >
+                        删除
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -322,6 +353,12 @@ export default function Table({ data: initialData = [] }) {
                                         <div className="flex flex-row justify-center items-center">
                                             <Switcher initialChecked={item.rating} initName={item.url} />
                                             <button
+                                                onClick={() => fetchLogs(item.url, 0)}
+                                                className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
+                                            >
+                                                记录{item.total != null ? `(${item.total})` : ''}
+                                            </button>
+                                            <button
                                                 onClick={() => handleDelete(item.url)}
                                                 className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 whitespace-nowrap"
                                             >
@@ -374,6 +411,93 @@ export default function Table({ data: initialData = [] }) {
                 </div>
 
 
+                )}
+
+                {logView && (
+                    <div
+                        onClick={() => setLogView(null)}
+                        className="fixed z-[60] inset-0 overflow-y-auto flex items-center justify-center p-3 sm:m-5"
+                    >
+                        <div className="fixed inset-0 bg-black opacity-75"></div>
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-lg flex flex-col relative w-full max-w-lg max-h-[80vh]"
+                        >
+                            <div className="flex items-start justify-between px-4 pt-3 pb-2 border-b">
+                                <div className="min-w-0 pr-2">
+                                    <h3 className="text-sm font-semibold text-gray-800">访问记录</h3>
+                                    <p className="text-xs text-gray-400 truncate" title={logView.url}>{logView.url}</p>
+                                </div>
+                                <button className="text-red-600 hover:text-red-800 shrink-0" onClick={() => setLogView(null)}>
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto px-3 py-2">
+                                {logView.loading ? (
+                                    <p className="text-center text-sm text-gray-400 py-10">加载中…</p>
+                                ) : logView.records.length === 0 ? (
+                                    <p className="text-center text-sm text-gray-400 py-10">暂无外部访问记录</p>
+                                ) : (
+                                    <>
+                                        {/* 桌面端：小表格 */}
+                                        <table className="hidden sm:table w-full text-xs">
+                                            <thead>
+                                                <tr className="text-gray-500 border-b">
+                                                    <th className="text-left py-1.5 px-2 font-medium whitespace-nowrap">时间</th>
+                                                    <th className="text-left py-1.5 px-2 font-medium">来源</th>
+                                                    <th className="text-left py-1.5 px-2 font-medium whitespace-nowrap">IP</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {logView.records.map((r) => (
+                                                    <tr key={r.id} className="border-b border-gray-100">
+                                                        <td className="py-1.5 px-2 text-gray-600 whitespace-nowrap align-top">{r.time}</td>
+                                                        <td className="py-1.5 px-2 text-gray-600 break-all">{r.referer || '-'}</td>
+                                                        <td className="py-1.5 px-2 text-gray-600 whitespace-nowrap align-top">{r.ip || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {/* 手机端：纵向记录 */}
+                                        <div className="sm:hidden space-y-2">
+                                            {logView.records.map((r) => (
+                                                <div key={r.id} className="border border-gray-200 rounded-md p-2 text-xs text-gray-600 space-y-0.5">
+                                                    <p className="text-gray-500">{r.time}</p>
+                                                    <p className="break-all">来源：{r.referer || '-'}</p>
+                                                    <p>IP：{r.ip || '-'}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {!logView.loading && logView.total > 0 && (
+                                <div className="flex items-center justify-center gap-3 px-4 py-2 border-t text-xs sm:text-sm">
+                                    <button
+                                        className="px-2 py-1 bg-blue-500 text-white rounded disabled:opacity-40 whitespace-nowrap"
+                                        disabled={logView.page === 0}
+                                        onClick={() => fetchLogs(logView.url, logView.page - 1)}
+                                    >
+                                        上一页
+                                    </button>
+                                    <span className="whitespace-nowrap">
+                                        第 {logView.page + 1}/{Math.ceil(logView.total / 10)} 页（共 {logView.total} 条）
+                                    </span>
+                                    <button
+                                        className="px-2 py-1 bg-blue-500 text-white rounded disabled:opacity-40 whitespace-nowrap"
+                                        disabled={logView.page + 1 >= Math.ceil(logView.total / 10)}
+                                        onClick={() => fetchLogs(logView.url, logView.page + 1)}
+                                    >
+                                        下一页
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
         </PhotoProvider>
