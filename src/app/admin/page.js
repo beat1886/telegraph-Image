@@ -114,7 +114,7 @@ export default function Admin() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="border rounded px-2 py-1.5 sm:py-2 w-full sm:w-40 text-sm"
-                placeholder="按 URL 搜索"
+                placeholder="输入 URL"
               />
               <button type="submit" className="text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap transition ease-in-out delay-150 bg-blue-500 hover:scale-105 hover:bg-indigo-500 duration-300 rounded">
                 搜索
