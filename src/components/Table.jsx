@@ -108,6 +108,9 @@ export default function Table({ data: initialData = [] }) {
             'ogv', 'm4v', '3gp', '3g2', 'mpg', 'mpeg', 'mxf', 'vob'
         ];
 
+        // 缩略图固定方块尺寸：手机 56px / 桌面 80px，不随单元格内边距和行高变化
+        const thumbClass = "w-14 h-14 sm:w-20 sm:h-20 object-cover rounded block mx-auto";
+
         if (imageExtensions.includes(fileExtension)) {
 
             return (
@@ -115,7 +118,7 @@ export default function Table({ data: initialData = [] }) {
                     key={`image-${index}`}
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
-                    className="w-full h-full object-cover"
+                    className={thumbClass}
                 />
             );
         }
@@ -124,8 +127,9 @@ export default function Table({ data: initialData = [] }) {
                 <video
                     key={`video-${index}`}
                     src={fileUrl}
-                    className="w-full h-full object-cover"
-                    controls
+                    className={thumbClass}
+                    muted
+                    preload="metadata"
                 >
                     Your browser does not support the video tag.
                 </video>
@@ -137,7 +141,7 @@ export default function Table({ data: initialData = [] }) {
                     key={`image-${index}`}
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
-                    className="w-full h-full object-cover"
+                    className={thumbClass}
                 />
             );
         }
@@ -164,18 +168,18 @@ export default function Table({ data: initialData = [] }) {
 
     const elementSize = 400;
     return (
-        <div className="mx-2">
+        <div className="mx-0 sm:mx-2 overflow-x-auto overscroll-x-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="min-w-full bg-white  items-center justify-between ">
                 <thead >
                     <tr className="sticky top-0 bg-gray-100 z-20">
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">name</th>
-                        <th className="sticky left-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100 text-center text-sm font-semibold text-gray-600">preview</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">time</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">referer</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">ip</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">PV</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">rating</th>
-                        <th className="sticky  right-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">限制访问</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">name</th>
+                        <th className="sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">preview</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">time</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">referer</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">ip</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">PV</th>
+                        <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">rating</th>
+                        <th className="sticky right-0 z-10 py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">限制访问</th>
                     </tr>
                 </thead>
                 <tbody >
@@ -223,11 +227,11 @@ export default function Table({ data: initialData = [] }) {
 
                             <tr key={index}>
 
-                                <td onClick={() => handleNameClick(item)} className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-48">
+                                <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48">
                                     {item.url}
                                 </td>
                                 <td
-                                    className="w-20 h-20 sticky left-0 z-10   py-2 px-4 border-b border-gray-500 bg-white text-sm text-gray-700"
+                                    className="w-16 sm:w-24 sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-500 bg-white text-sm text-gray-700 text-center align-middle"
                                 >
 
                                     {
@@ -261,25 +265,25 @@ export default function Table({ data: initialData = [] }) {
                                     }
 
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48">
+                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
                                     {item.time}
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48 break-all">
+                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[110px] sm:max-w-48 truncate">
                                     <TooltipItem tooltipsText={item.referer} position="bottom" >{item.referer}</TooltipItem>
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48 ">
+                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[100px] sm:max-w-48 truncate">
                                     <TooltipItem tooltipsText={item.ip} position="bottom" >{item.ip}</TooltipItem>
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-2 ">{item.total}</td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-2 ">{item.rating}</td>
-                                <td className="sticky  right-0 z-10 bg-white text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700">
-                                    <div className="flex flex-row justify-center">
+                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.total}</td>
+                                <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.rating}</td>
+                                <td className="sticky right-0 z-10 bg-white text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700">
+                                    <div className="flex flex-row justify-center items-center">
                                         <Switcher initialChecked={item.rating} initName={item.url} />
                                         <button
                                             onClick={() => {
                                                 handleDelete(item.url)
                                             }}
-                                            className="ml-2 px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                                            className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 whitespace-nowrap"
                                         >
                                             删除
                                         </button>
