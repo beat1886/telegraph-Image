@@ -15,9 +15,12 @@ export default async function AuthButton() {
 
   if (role === 'admin') {
     return (
-      <Link href="/admin">
-        <InnerButton>管理</InnerButton>
-      </Link>
+      <div className="flex items-center -mx-2">
+        <Link href="/admin">
+          <InnerButton>管理</InnerButton>
+        </Link>
+        <LogoutButton />
+      </div>
     );
   }
 
