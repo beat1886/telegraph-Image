@@ -3,6 +3,7 @@ import Switcher from '@/components/SwitchButton';
 import { toast } from "react-toastify";
 import React from 'react';
 import TooltipItem from '@/components/Tooltip';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import FullScreenIcon from "@/components/FullScreenIcon"
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 
@@ -21,6 +22,7 @@ export default function Table({ data: initialData = [] }) {
     const [modalData, setModalData] = useState(null);
     const [logView, setLogView] = useState(null); // 单张图片的访问记录弹窗
     const [copiedIdx, setCopiedIdx] = useState(null); // 链接弹窗内"已复制"行内反馈
+    const [deleteTarget, setDeleteTarget] = useState(null); // 待删除确认的图片 url
 
     useEffect(() => {
         setData(initialData); // 更新数据
@@ -82,10 +84,15 @@ export default function Table({ data: initialData = [] }) {
     };
 
 
-    const handleDelete = async (initName) => {
-        const confirmed = window.confirm('你确定要删除这张图片吗？');
-        if (confirmed) {
-            await deleteItem(initName);
+    const handleDelete = (initName) => {
+        setDeleteTarget(initName);
+    };
+
+    const confirmDelete = async () => {
+        const target = deleteTarget;
+        setDeleteTarget(null);
+        if (target) {
+            await deleteItem(target);
         }
     };
 
@@ -517,6 +524,15 @@ export default function Table({ data: initialData = [] }) {
                         </div>
                     </div>
                 )}
+
+                <ConfirmDialog
+                    open={!!deleteTarget}
+                    title="删除这张图片？"
+                    message={deleteTarget ? `将删除记录「${getLastSegment(deleteTarget)}」，删除后不可恢复。` : ''}
+                    confirmText="删除"
+                    onConfirm={confirmDelete}
+                    onCancel={() => setDeleteTarget(null)}
+                />
             </div>
         </PhotoProvider>
     );

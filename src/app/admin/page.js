@@ -4,6 +4,7 @@ import Table from "@/components/Table"
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import Link from 'next/link'
+import ConfirmDialog from '@/components/ConfirmDialog';
 // import { toast } from "react-toastify";
 
 
@@ -17,14 +18,11 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   // 清理失效图片的弹窗状态：null=未开始；running/done/error 三态
   const [cleanState, setCleanState] = useState(null);
+  const [showCleanConfirm, setShowCleanConfirm] = useState(false);
 
   // 一键清空失效图片：分批检测所有记录的源文件，删除确认 404 的
-  const handleCleanInvalid = async () => {
+  const runCleanInvalid = async () => {
     if (cleanState) return;
-    const ok = window.confirm(
-      '将逐张检测所有图片的源文件，删除确认已失效（源文件 404）的记录及其访问日志。\n\n网络超时或无法确认的图片会自动跳过，不会误删。\n\n图片较多时检测需要一些时间，确定开始吗？'
-    );
-    if (!ok) return;
     setCleanState({ phase: 'running', total: 0, processed: 0, deleted: 0 });
     try {
       let offset = 0;
@@ -173,7 +171,7 @@ export default function Admin() {
               </button>
             </form>
             <button
-              onClick={handleCleanInvalid}
+              onClick={() => setShowCleanConfirm(true)}
               disabled={cleanState?.phase === 'running'}
               className="flex-none text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
             >
@@ -279,6 +277,18 @@ export default function Admin() {
             </div>
           </div>
         )}
+
+        <ConfirmDialog
+          open={showCleanConfirm}
+          title="清空失效图片？"
+          message={'将逐张检测所有图片的源文件，删除确认已失效（源文件 404）的记录及其访问日志。\n\n网络超时或无法确认的图片会自动跳过，不会误删。\n\n图片较多时检测需要一些时间。'}
+          confirmText="开始清理"
+          onConfirm={() => {
+            setShowCleanConfirm(false);
+            runCleanInvalid();
+          }}
+          onCancel={() => setShowCleanConfirm(false)}
+        />
       </div>
     </>
 
