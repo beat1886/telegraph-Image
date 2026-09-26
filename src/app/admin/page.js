@@ -147,11 +147,11 @@ export default function Admin() {
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center justify-end gap-2 order-1">
               <Link href="/">
-                <button className="px-4 py-2 w-28 sm:w-auto sm:px-4 sm:py-2 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
+                <button className="px-2 py-1 w-14 sm:w-16 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap"
+                className="px-2 py-1 w-14 sm:w-16 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap"
               >
                 登出
               </button>
