@@ -89,6 +89,8 @@ export async function GET(request, { params }) {
     const headers = new Headers()
     object.writeHttpMetadata(headers)
     headers.set('etag', object.httpEtag)
+    // 对象名唯一、内容不可变：浏览器长缓存，后台列表/翻页秒开
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable')
 
     if (object.range) {
       headers.set("content-range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)

@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
 
 
 
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket?.remoteAddress;
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') ||  request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
   const Referer = request.headers.get('Referer') || "Referer";
 
@@ -37,10 +37,17 @@ export async function GET(request, { params }) {
       headers: request.headers,
       body: request.body,
     })
+    // 包一层以附加缓存头：浏览器缓存 1 天（telegra.ph 会回收文件，不宜过长），
+    // 避免后台列表/翻页时反复回源 telegra.ph
+    const proxyHeaders = new Headers(res.headers);
+    if (res.ok) {
+      proxyHeaders.set('Cache-Control', 'public, max-age=86400');
+    }
+    const proxied = new Response(res.body, { status: res.status, headers: proxyHeaders });
     if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {
-      return res
+      return proxied
     } else if (!env.IMG) {
-      return res
+      return proxied
     } else {
       const nowTime = await get_nowTime()
       await insertTgImgLog(env.IMG, `/file/${name}`, Referer, clientIp, nowTime);
@@ -56,7 +63,7 @@ export async function GET(request, { params }) {
         if (rating.rating == 3) {
           return Response.redirect(`${req_url.origin}/img/blocked.png`, 302);
         } else {
-          return res;
+          return proxied;
         }
       } else {
         // if (1) {
@@ -66,18 +73,18 @@ export async function GET(request, { params }) {
             const nowTime = await get_nowTime()
             // console.log( `/file/${name}`, Referer, clientIp, rating_index, nowTime);
             await insertImgInfo(env.IMG, `/file/${name}`, Referer, clientIp, rating_index, nowTime);
-       
+
 
             if (rating_index == 3) {
               return Response.redirect(`${req_url.origin}/img/blocked.png`, 302);
             } else {
-              return res;
+              return proxied;
             }
 
 
           } catch (error) {
             // console.log("error"+ error);
-            return res;
+            return proxied;
           }
 
         } else {
