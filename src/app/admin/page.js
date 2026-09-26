@@ -125,7 +125,7 @@ export default function Admin() {
               <select
                 value={channel}
                 onChange={handleChannelChange}
-                className="border rounded px-1.5 py-1.5 text-xs sm:text-sm bg-white shrink-0"
+                className="border rounded px-1.5 py-1.5 text-sm bg-white shrink-0"
                 title="按上传接口筛选"
               >
                 <option value="">全部接口</option>
@@ -140,7 +140,7 @@ export default function Admin() {
                 className="border rounded px-2 py-1.5 text-sm flex-1 min-w-0 w-full"
                 placeholder="输入 URL"
               />
-              <button type="submit" className="text-white px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap bg-blue-500 hover:bg-indigo-500 rounded transition-colors">
+              <button type="submit" className="text-white px-4 py-1.5 text-sm whitespace-nowrap rounded border border-transparent bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all">
                 搜索
               </button>
             </form>
