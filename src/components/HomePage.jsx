@@ -455,7 +455,7 @@ export default function HomePage({ initialRole, authButton }) {
             {selectedFiles.length === 0 && (
               <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
                 <div className="text-gray-500">
-                  拖拽文件到这里或将屏幕截图复制并粘贴到此处上传
+                  拖拽文件到这里或将图片复制并粘贴到此处上传
                 </div>
               </div>
             )}
