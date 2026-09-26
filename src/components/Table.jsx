@@ -127,7 +127,7 @@ export default function Table({ data: initialData = [] }) {
     const getChannel = (url) => {
         if (url.startsWith('/cfile/')) return 'TG_Channel';
         if (url.startsWith('/rfile/')) return 'R2';
-        if (url.startsWith('/file/')) return 'telegra.ph';
+        if (url.startsWith('/file/')) return 'TG';
         return '-';
     };
     const renderFile = (fileUrl, index) => {
