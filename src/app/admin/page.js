@@ -16,6 +16,7 @@ export default function Admin() {
   const [searchTotal, setSearchTotal] = useState(0); // 初始化为0，因为初始时还没有搜索结果
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [channel, setChannel] = useState(''); // 上传通道筛选：'' | 'file' | 'cfile' | 'rfile'
   // 清理失效图片的弹窗状态：null=未开始；running/done/error 三态
   const [cleanState, setCleanState] = useState(null);
   const [showCleanConfirm, setShowCleanConfirm] = useState(false);
@@ -64,7 +65,7 @@ export default function Admin() {
 
 
 
-  const getListdata = useCallback(async (page) => {
+  const getListdata = useCallback(async (page, ch = channel) => {
     try {
       const res = await fetch(`/api/admin/list`, {
         method: "POST",
@@ -75,6 +76,7 @@ export default function Admin() {
         body: JSON.stringify({
           page: (page - 1),
           query: searchQuery, // 传递搜索查询
+          channel: ch, // 上传通道筛选
         })
       })
       const res_data = await res.json()
@@ -138,6 +140,15 @@ export default function Admin() {
     getListdata(1);
   };
 
+  // 切换上传通道筛选：立即从第一页刷新
+  const handleChannelChange = (event) => {
+    const value = event.target.value;
+    setChannel(value);
+    setCurrentPage(1);
+    setInputPage(1);
+    getListdata(1, value);
+  };
+
   return (
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
@@ -159,6 +170,17 @@ export default function Admin() {
 
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
+              <select
+                value={channel}
+                onChange={handleChannelChange}
+                className="border rounded px-1.5 py-1.5 text-xs sm:text-sm bg-white shrink-0"
+                title="按上传接口筛选"
+              >
+                <option value="">全部接口</option>
+                <option value="file">telegra.ph</option>
+                <option value="cfile">TG_Channel</option>
+                <option value="rfile">R2</option>
+              </select>
               <input
                 type="text"
                 value={searchQuery}

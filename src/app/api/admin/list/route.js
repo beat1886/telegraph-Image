@@ -49,17 +49,31 @@ export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
   // console.log(dd);
   try {
-    let { page, query } = await request.json()
+    let { page, query, channel } = await request.json()
     page = Number.isInteger(Number(page)) && Number(page) >= 0 ? Number(page) : 0;
     const q = normalizeQuery(query);
 
     const baseSelect = `SELECT imginfo.*, (SELECT COUNT(*) FROM tgimglog WHERE tgimglog.url = imginfo.url) AS logcount FROM imginfo`;
 
+    // 组合筛选条件：关键词模糊匹配 + 上传通道前缀过滤
+    const channelPrefix = { file: '/file/', cfile: '/cfile/', rfile: '/rfile/' }[channel];
+    const conds = [];
+    const binds = [];
     if (q) {
-      const like = `%${q}%`;
-      const ps = env.IMG.prepare(`${baseSelect} WHERE url LIKE ?1 ORDER BY id DESC LIMIT 10 OFFSET ?2 * 10`).bind(like, page);
+      conds.push(`url LIKE ?${binds.length + 1}`);
+      binds.push(`%${q}%`);
+    }
+    if (channelPrefix) {
+      conds.push(`url LIKE ?${binds.length + 1}`);
+      binds.push(`${channelPrefix}%`);
+    }
+    const where = conds.length ? ` WHERE ${conds.join(' AND ')}` : '';
+
+    if (where) {
+      const pageBind = `?${binds.length + 1}`;
+      const ps = env.IMG.prepare(`${baseSelect}${where} ORDER BY id DESC LIMIT 10 OFFSET ${pageBind} * 10`).bind(...binds, page);
       const { results } = await ps.all()
-      const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo WHERE url LIKE ?1`).bind(like).first()
+      const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo${where}`).bind(...binds).first()
       return Response.json({
         "code": 200,
         "success": true,
