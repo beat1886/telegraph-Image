@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import LogoutButton from "./LogoutButton";
 
 const InnerButton = ({ children }) => (
-  <button className="px-2 py-1 mx-1 w-14 sm:w-16 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">
+  <button className="px-3 py-1.5 mx-1 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">
     {children}
   </button>
 );
