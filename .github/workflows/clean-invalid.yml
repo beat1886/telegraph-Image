@@ -1,0 +1,44 @@
+name: 定期清理失效图片
+
+on:
+  schedule:
+    # 每天 UTC 18:00 = 北京时间 02:00
+    - cron: '0 18 * * *'
+  workflow_dispatch: {} # 允许在 Actions 页面手动触发
+
+jobs:
+  clean-invalid:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 循环分批调用清理接口直到全部检测完
+        env:
+          SITE_URL: https://image.beat1888.dpdns.org
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -e
+          offset=0
+          total_deleted=0
+          # 最多 200 批（8000 张），正常远早于此结束
+          for i in $(seq 1 200); do
+            resp=$(curl -sS --max-time 60 -X POST "$SITE_URL/api/cron/cleaninvalid" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json" \
+              -d "{\"offset\": $offset}")
+            echo "批次 $i: $resp"
+
+            success=$(echo "$resp" | jq -r '.success // false')
+            if [ "$success" != "true" ]; then
+              echo "接口返回失败，终止"
+              exit 1
+            fi
+
+            deleted_count=$(echo "$resp" | jq '.deleted | length')
+            total_deleted=$((total_deleted + deleted_count))
+            done_flag=$(echo "$resp" | jq -r '.done')
+            offset=$(echo "$resp" | jq -r '.nextOffset')
+
+            if [ "$done_flag" = "true" ]; then
+              break
+            fi
+          done
+          echo "清理完成：本次共删除 $total_deleted 张失效图片"
