@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Switcher from '@/components/SwitchButton';
 import { toast } from "react-toastify";
-import React, { useRef } from 'react';
+import React from 'react';
 import TooltipItem from '@/components/Tooltip';
 import FullScreenIcon from "@/components/FullScreenIcon"
 import { PhotoProvider, PhotoView } from 'react-photo-view';
@@ -20,20 +20,11 @@ export default function Table({ data: initialData = [] }) {
     const [data, setData] = useState(initialData); // 初始化状态
     const [modalData, setModalData] = useState(null);
     const [logView, setLogView] = useState(null); // 单张图片的访问记录弹窗
-    const modalRef = useRef(null);
-
-
+    const [copiedIdx, setCopiedIdx] = useState(null); // 链接弹窗内"已复制"行内反馈
 
     useEffect(() => {
         setData(initialData); // 更新数据
     }, [initialData]);
-
-    const handleClickOutside = (e) => {
-        console.log(modalRef.current.contains(e.target));
-        if (modalRef.current && !modalRef.current.contains(e.target)) {
-            setModalData(null);
-        }
-    };
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -50,13 +41,18 @@ export default function Table({ data: initialData = [] }) {
 
     const handleCloseModal = () => {
         setModalData(null);
+        setCopiedIdx(null);
     };
 
-
-
-    const handleCopy = (text) => {
+    const handleCopy = (text, idx) => {
         navigator.clipboard.writeText(text).then(() => {
             toast.success('链接已复制');
+            if (typeof idx === 'number') {
+                setCopiedIdx(idx);
+                setTimeout(() => setCopiedIdx((cur) => (cur === idx ? null : cur)), 1500);
+            }
+        }).catch(() => {
+            toast.error('复制失败，请重试');
         });
     };
 
@@ -380,37 +376,59 @@ export default function Table({ data: initialData = [] }) {
                 </div>
 
                 {modalData && (
-                <div onClick={handleClickOutside} className="fixed z-50 inset-0 overflow-y-auto flex items-center justify-center m-5 ">
-                    <div className="fixed inset-0 bg-black opacity-75"></div>
-                    <div ref={modalRef} className="bg-white rounded-lg flex-none flex flex-col h-1/2 relative w-9/10 sm:w-9/10 md:w-96 lg:w-120 xl:w-144 2xl:w-160">
-                        <button className="absolute top-2 right-2 ring-2 text-red-600 hover:text-red-800" onClick={handleCloseModal}>
-                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <div className='flex flex-col  mt-10'>
-                            {[
-                                { text: getImgUrl(modalData.url), onClick: () => handleCopy(getImgUrl(modalData.url)) },
-                                { text: `![${modalData.url}](${getImgUrl(modalData.url)})`, onClick: () => handleCopy(`![${modalData.name}](${getImgUrl(modalData.url)})`) },
-                                { text: `<a href="${getImgUrl(modalData.url)}" target="_blank"><img src="${getImgUrl(modalData.url)}"></a>`, onClick: () => handleCopy(`<a href="${getImgUrl(modalData.url)}" target="_blank"><img src="${getImgUrl(modalData.url)}"></a>`) },
-                                { text: `[img]${getImgUrl(modalData.url)}[/img]`, onClick: () => handleCopy(`[img]${getImgUrl(modalData.url)}[/img]`) },
-                            ].map((item, i) => (
-                                <input
-                                    key={`input-${i}`}
-                                    readOnly
-                                    value={item.text}
-                                    onClick={item.onClick}
-                                    className="mx-2 px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-800 focus:outline-none placeholder-gray-400"
-                                />
+                    <div
+                        onClick={handleCloseModal}
+                        className="fixed z-[60] inset-0 overflow-y-auto flex items-center justify-center p-3 sm:m-5"
+                    >
+                        <div className="fixed inset-0 bg-black opacity-75"></div>
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-lg flex flex-col relative w-full max-w-lg max-h-[80vh]"
+                        >
+                            <div className="flex items-start justify-between px-4 pt-3 pb-2 border-b">
+                                <div className="min-w-0 pr-2">
+                                    <h3 className="text-sm font-semibold text-gray-800">复制链接</h3>
+                                    <p className="text-xs text-gray-400 truncate" title={modalData.url}>
+                                        {getLastSegment(modalData.url)}
+                                    </p>
+                                </div>
+                                <button className="text-red-600 hover:text-red-800 shrink-0" onClick={handleCloseModal}>
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
 
-
-                            ))}
+                            <div className="flex-1 overflow-y-auto px-3 py-2">
+                                {[
+                                    { label: '直链', text: getImgUrl(modalData.url) },
+                                    { label: 'Markdown', text: `![${getLastSegment(modalData.url)}](${getImgUrl(modalData.url)})` },
+                                    { label: 'HTML', text: `<a href="${getImgUrl(modalData.url)}" target="_blank"><img src="${getImgUrl(modalData.url)}"></a>` },
+                                    { label: 'BBCode', text: `[img]${getImgUrl(modalData.url)}[/img]` },
+                                ].map((item, i) => (
+                                    <div key={`link-${i}`} className="py-1">
+                                        <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                                        <div
+                                            onClick={() => handleCopy(item.text, i)}
+                                            className="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+                                        >
+                                            <code className="flex-1 min-w-0 truncate text-xs text-gray-600" title={item.text}>
+                                                {item.text}
+                                            </code>
+                                            {copiedIdx === i ? (
+                                                <span className="text-xs text-green-500 shrink-0">已复制</span>
+                                            ) : (
+                                                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-
                     </div>
-                </div>
-
-
                 )}
 
                 {logView && (
