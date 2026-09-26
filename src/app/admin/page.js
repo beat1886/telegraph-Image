@@ -144,40 +144,38 @@ export default function Admin() {
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
         <header className="fixed top-0 left-0 w-full border-b bg-white z-50">
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex items-center justify-end gap-2 order-1">
-              <Link href="/">
-                <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
-              >
-                登出
-              </button>
-            </div>
-            <form onSubmit={handleSearch} className="flex items-center gap-2 order-2">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex items-center justify-end gap-2">
+            <Link href="/">
+              <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
+            >
+              登出
+            </button>
+          </div>
+        </header>
+
+        <main className="mt-[56px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
+
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-2">
+            <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border rounded px-2 py-1.5 sm:py-2 w-full sm:w-40 text-sm"
+                className="border rounded px-2 py-1.5 text-sm flex-1 min-w-0 w-full"
                 placeholder="输入 URL"
               />
-              <button type="submit" className="text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap transition ease-in-out delay-150 bg-blue-500 hover:scale-105 hover:bg-indigo-500 duration-300 rounded">
+              <button type="submit" className="text-white px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap bg-blue-500 hover:bg-indigo-500 rounded transition-colors">
                 搜索
               </button>
             </form>
-          </div>
-        </header>
-
-        <main className="mt-[104px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
-
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex justify-end">
             <button
               onClick={handleCleanInvalid}
               disabled={cleanState?.phase === 'running'}
-              className="text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
+              className="flex-none text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
             >
               {cleanState?.phase === 'running' ? '正在清理…' : '一键清空失效图片'}
             </button>
