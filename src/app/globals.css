@@ -112,3 +112,31 @@ body {
     padding: 10px 22px;
   }
 }
+
+/* ===== 图片预览工具栏：手机端移到底部拇指区，方便单手操作 ===== */
+/* react-photo-view 的 CSS 在 globals.css 之后加载，故用双层类名提高优先级，避免 !important */
+@media (max-width: 639px) {
+  /* 整行（序号 + 缩放/旋转/全屏 + 关闭）从顶部挪到底部 */
+  .PhotoView-Portal .PhotoView-Slider__BannerWrap {
+    top: auto;
+    bottom: 0;
+    height: auto;
+    min-height: 60px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  }
+  /* 序号与工具图标适当留白 */
+  .PhotoView-Portal .PhotoView-Slider__Counter {
+    padding: 0 14px;
+  }
+  .PhotoView-Portal .PhotoView-Slider__BannerRight {
+    gap: 4px;
+    padding-right: 8px;
+  }
+  /* 图标命中区加大到 48px，减少单手误触（border-box 下视觉字形不变） */
+  .PhotoView-Portal .PhotoView-Slider__toolbarIcon {
+    width: 48px;
+    height: 48px;
+    opacity: 1;
+  }
+}
