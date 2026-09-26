@@ -56,7 +56,7 @@ export default function Table({ data: initialData = [] }) {
 
     const handleCopy = (text) => {
         navigator.clipboard.writeText(text).then(() => {
-            toast.success(`链接复制成功`);
+            toast.success('链接已复制');
         });
     };
 
@@ -75,7 +75,7 @@ export default function Table({ data: initialData = [] }) {
             });
             const res_data = await res.json();
             if (res_data.success) {
-                toast.success('删除成功!');
+                toast.success('已删除');
                 setData(prevData => prevData.filter(item => item.url !== initName));
             } else {
                 toast.error(res_data.message);

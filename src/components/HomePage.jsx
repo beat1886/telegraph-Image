@@ -2,8 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { faImages, faTrashAlt, faUpload, faSearchPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
 
@@ -191,7 +190,7 @@ export default function HomePage({ initialRole, authButton }) {
       }
       toast.success(`已成功上传 ${successCount} 张图片`);
     } catch (error) {
-      toast.error('上传错误');
+      toast.error('上传失败，请稍后重试');
     } finally {
       setUploading(false);
     }
@@ -252,9 +251,9 @@ export default function HomePage({ initialRole, authButton }) {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`链接复制成功`);
+      toast.success('链接已复制');
     } catch (err) {
-      toast.error("链接复制失败");
+      toast.error('复制失败，请重试');
     }
   };
 
@@ -263,9 +262,9 @@ export default function HomePage({ initialRole, authButton }) {
     const values = Array.from(codeElements).map(code => code.textContent);
     try {
       await navigator.clipboard.writeText(values.join("\n"));
-      toast.success(`链接复制成功`);
+      toast.success('链接已复制');
     } catch (error) {
-      toast.error(`链接复制失败`);
+      toast.error('复制失败，请重试');
     }
   };
 
@@ -506,7 +505,6 @@ export default function HomePage({ initialRole, authButton }) {
           </div>
         </div>
 
-        <ToastContainer position="top-center" />
         {uploadedImages.length > 0 && (
           <div className="w-full mt-4 min-h-[200px] mb-[60px]">
             <div className="flex items-center justify-between gap-2 mb-4 border-b border-gray-300 pb-1">

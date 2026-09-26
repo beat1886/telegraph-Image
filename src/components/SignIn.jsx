@@ -1,7 +1,6 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 // import { useRouter } from 'next/navigation'
 export function LoginPage() {
@@ -19,14 +18,14 @@ export function LoginPage() {
       // console.log(result);
       if (result?.error) {
         console.log(result.error);
-        toast.error("用户名或密码错误，请核对后在登陆！")
+        toast.error("用户名或密码错误，请核对后重试")
       } else {
         // 登录成功后直接跳转到主页
         console.log('Login successful!');
-        toast.success('登录成功，正在跳转到主页...')
+        toast.success('登录成功')
         setTimeout(() => {
           window.location.replace('/');
-        }, 500);
+        }, 400);
       }
     } catch (error) {
       console.log('Error during sign in:', error);
@@ -75,7 +74,6 @@ export function LoginPage() {
           </form>
         </div>
       </div>
-      <ToastContainer position="top-center" />
     </div>
   );
 }

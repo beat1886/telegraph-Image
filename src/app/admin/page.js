@@ -2,7 +2,7 @@
 import { signOut } from "next-auth/react"
 import Table from "@/components/Table"
 import { useState, useEffect, useCallback } from 'react';
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import Link from 'next/link'
 // import { toast } from "react-toastify";
 
@@ -15,19 +15,21 @@ export default function Admin() {
   const [searchTotal, setSearchTotal] = useState(0); // 初始化为0，因为初始时还没有搜索结果
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cleaning, setCleaning] = useState(false);
+  // 清理失效图片的弹窗状态：null=未开始；running/done/error 三态
+  const [cleanState, setCleanState] = useState(null);
 
   // 一键清空失效图片：分批检测所有记录的源文件，删除确认 404 的
   const handleCleanInvalid = async () => {
-    if (cleaning) return;
+    if (cleanState) return;
     const ok = window.confirm(
       '将逐张检测所有图片的源文件，删除确认已失效（源文件 404）的记录及其访问日志。\n\n网络超时或无法确认的图片会自动跳过，不会误删。\n\n图片较多时检测需要一些时间，确定开始吗？'
     );
     if (!ok) return;
-    setCleaning(true);
-    const tid = toast.loading('正在检测失效图片…');
+    setCleanState({ phase: 'running', total: 0, processed: 0, deleted: 0 });
     try {
       let offset = 0;
+      let initialTotal = 0;
+      let processed = 0;
       let totalDeleted = 0;
       let rounds = 0;
       while (rounds < 500) {
@@ -38,23 +40,27 @@ export default function Admin() {
         });
         const data = await res.json();
         if (!data?.success) {
-          toast.update(tid, { render: data.message || '清理失败', type: 'error', isLoading: false, autoClose: 3000 });
+          setCleanState({ phase: 'error', message: data.message || '清理失败' });
           return;
         }
+        if (rounds === 0) initialTotal = data.total;
+        processed += data.checked;
         totalDeleted += data.deleted.length;
-        toast.update(tid, { render: `正在检测…已清理 ${totalDeleted} 张失效图片` });
+        setCleanState({ phase: 'running', total: initialTotal, processed, deleted: totalDeleted });
         if (data.done) break;
         offset = data.nextOffset;
         rounds++;
       }
-      toast.update(tid, { render: `清理完成，共删除 ${totalDeleted} 张失效图片`, type: 'success', isLoading: false, autoClose: 4000 });
+      setCleanState({ phase: 'done', total: initialTotal, processed, deleted: totalDeleted });
       setCurrentPage(1);
       setInputPage(1);
       getListdata(1);
+      // 完成态停留片刻后自动关闭，也可手动点「完成」
+      setTimeout(() => {
+        setCleanState((s) => (s && s.phase === 'done' ? null : s));
+      }, 2800);
     } catch (error) {
-      toast.update(tid, { render: '清理失败：' + error.message, type: 'error', isLoading: false, autoClose: 3000 });
-    } finally {
-      setCleaning(false);
+      setCleanState({ phase: 'error', message: '网络异常：' + error.message });
     }
   };
 
@@ -97,7 +103,7 @@ export default function Admin() {
   const handleNextPage = () => {
     const nextPage = currentPage + 1;
     if (nextPage > searchTotal) { // 检查下一页是否在总页数范围内
-      toast.error('当前已为最后一页！')
+      toast.error('已经是最后一页了')
     }
     if (nextPage <= searchTotal) { // 检查下一页是否在总页数范围内
       setCurrentPage(nextPage);
@@ -122,7 +128,7 @@ export default function Admin() {
     if (!isNaN(page) && page >= 1 && page <= searchTotal) {
       setCurrentPage(page);
     } else {
-      toast.error('请输入有效的页码！');
+      toast.error('请输入有效的页码');
     }
     // setInputPage(""); // 清空输入框
   };
@@ -170,10 +176,10 @@ export default function Admin() {
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex justify-end">
             <button
               onClick={handleCleanInvalid}
-              disabled={cleaning}
+              disabled={cleanState?.phase === 'running'}
               className="text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
             >
-              {cleaning ? '正在清理…' : '一键清空失效图片'}
+              {cleanState?.phase === 'running' ? '正在清理…' : '一键清空失效图片'}
             </button>
           </div>
 
@@ -213,7 +219,68 @@ export default function Admin() {
             </div>
           </div>
         </div>
-        <ToastContainer />
+        {cleanState && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-8">
+            <div className="w-full max-w-xs bg-white rounded-2xl p-6 shadow-xl text-center">
+              {cleanState.phase === 'running' && (
+                <>
+                  <div className="mx-auto mb-4 h-10 w-10 rounded-full border-[3px] border-gray-200 border-t-blue-500 animate-spin" />
+                  <p className="text-base font-medium text-gray-800">正在清理失效图片</p>
+                  <p className="mt-1 text-xs text-gray-400">正在逐张检测源文件，请稍候</p>
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                      style={{
+                        width: `${cleanState.total ? Math.min(100, (cleanState.processed / cleanState.total) * 100) : 3}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    已检测 {cleanState.processed}{cleanState.total ? ` / ${cleanState.total}` : ''} 张 · 已删除 {cleanState.deleted} 张
+                  </p>
+                </>
+              )}
+              {cleanState.phase === 'done' && (
+                <>
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                    <svg className="h-7 w-7 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <p className="text-base font-medium text-gray-800">清理完成</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    共检测 {cleanState.processed} 张，删除 {cleanState.deleted} 张失效图片
+                  </p>
+                  <button
+                    onClick={() => setCleanState(null)}
+                    className="mt-4 w-full rounded-lg bg-blue-500 py-2 text-sm text-white hover:bg-blue-600"
+                  >
+                    完成
+                  </button>
+                </>
+              )}
+              {cleanState.phase === 'error' && (
+                <>
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <svg className="h-7 w-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="12" y1="8" x2="12" y2="13" />
+                      <line x1="12" y1="16.5" x2="12" y2="16.5" />
+                      <circle cx="12" cy="12" r="10" />
+                    </svg>
+                  </div>
+                  <p className="text-base font-medium text-gray-800">清理失败</p>
+                  <p className="mt-1 break-words text-sm text-gray-500">{cleanState.message}</p>
+                  <button
+                    onClick={() => setCleanState(null)}
+                    className="mt-4 w-full rounded-lg bg-blue-500 py-2 text-sm text-white hover:bg-blue-600"
+                  >
+                    我知道了
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </>
 

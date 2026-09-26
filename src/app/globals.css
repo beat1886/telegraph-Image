@@ -72,5 +72,43 @@ body {
 
 /* 鼠标悬停在滑块上的样式 */
 .overflow-container::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* 设置滑块悬停时的背景色 */
+  background-color: #555; /* 设置滚动条悬停时的背景色 */
+}
+
+/* ===== 全局提示（app-toast）：顶部居中胶囊，无进度条、无倒计时 ===== */
+.app-toast.Toastify__toast-container {
+  width: auto;
+  max-width: calc(100vw - 32px);
+  top: max(10px, env(safe-area-inset-top, 0px));
+  padding: 0;
+  pointer-events: none;
+}
+.app-toast .Toastify__toast {
+  min-height: 0;
+  margin-bottom: 8px;
+  padding: 9px 18px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+  justify-content: center;
+  pointer-events: auto;
+  word-break: break-word;
+}
+.app-toast .Toastify__toast-body {
+  padding: 0;
+  margin: 0;
+}
+.app-toast .Toastify__toast-icon {
+  width: 18px;
+  margin-inline-end: 6px;
+  align-self: center;
+}
+@media (min-width: 640px) {
+  .app-toast .Toastify__toast {
+    font-size: 15px;
+    padding: 10px 22px;
+  }
 }

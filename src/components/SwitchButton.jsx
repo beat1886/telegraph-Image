@@ -16,9 +16,9 @@ const updateRating  = async (initName, rating) => {
     });
     const res_data = await res.json();
     if (res_data.success) {
-      toast.success('操作成功!');
+      toast.success('设置已更新');
     } else {
-      toast.error('操作失败!');
+      toast.error('设置失败，请重试');
     }
   } catch (error) {
     toast.error(error.message);
