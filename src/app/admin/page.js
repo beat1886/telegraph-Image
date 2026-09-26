@@ -159,7 +159,7 @@ export default function Admin() {
 
         <main className="mt-[56px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
 
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-2">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
               <input
                 type="text"
