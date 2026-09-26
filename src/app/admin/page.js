@@ -140,7 +140,7 @@ export default function Admin() {
                 className="border rounded px-2 py-1.5 text-sm flex-1 min-w-0 w-full"
                 placeholder="输入 URL"
               />
-              <button type="submit" className="text-white px-4 py-1.5 text-sm whitespace-nowrap rounded border border-transparent bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all">
+              <button type="submit" className="text-white px-4 py-1.5 text-sm whitespace-nowrap rounded border border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 transition-all">
                 搜索
               </button>
             </form>
