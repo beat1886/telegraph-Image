@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import LogoutButton from "./LogoutButton";
 
 const InnerButton = ({ children }) => (
-  <button className="px-4 py-2 mx-2 w-28 sm:w-28 md:w-20 lg:w-16 xl:w-16 2xl:w-20 bg-blue-500 text-white rounded">
+  <button className="px-2 py-1 mx-1 w-14 sm:w-16 text-xs sm:text-sm bg-blue-500 text-white rounded whitespace-nowrap">
     {children}
   </button>
 );
@@ -15,7 +15,7 @@ export default async function AuthButton() {
 
   if (role === 'admin') {
     return (
-      <div className="flex items-center -mx-2">
+      <div className="flex items-center -mx-1">
         <Link href="/admin">
           <InnerButton>管理</InnerButton>
         </Link>
