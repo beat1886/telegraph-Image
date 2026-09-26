@@ -153,6 +153,8 @@ export default function Table({ data: initialData = [] }) {
                     key={`image-${index}`}
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
+                    loading="lazy"
+                    decoding="async"
                     className={thumbClass}
                     onError={handleImgError}
                 />
@@ -178,6 +180,8 @@ export default function Table({ data: initialData = [] }) {
                     key={`image-${index}`}
                     src={fileUrl}
                     alt={`Uploaded ${index}`}
+                    loading="lazy"
+                    decoding="async"
                     className={thumbClass}
                     onError={handleImgError}
                 />
