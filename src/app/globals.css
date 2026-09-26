@@ -134,14 +134,19 @@ body {
     min-height: 60px;
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+    /* 工具图标整行水平居中 */
+    justify-content: center;
   }
-  /* 序号与工具图标适当留白 */
+  /* 序号悬浮到左侧，不挤占工具栏的居中位置 */
   .PhotoView-Portal .PhotoView-Slider__Counter {
-    padding: 0 14px;
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
   }
   .PhotoView-Portal .PhotoView-Slider__BannerRight {
     gap: 4px;
-    padding-right: 8px;
   }
   /* 图标命中区加大到 48px，减少单手误触（border-box 下视觉字形不变） */
   .PhotoView-Portal .PhotoView-Slider__toolbarIcon {
