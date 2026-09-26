@@ -4,7 +4,6 @@ import Table from "@/components/Table"
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import Link from 'next/link'
-import ConfirmDialog from '@/components/ConfirmDialog';
 // import { toast } from "react-toastify";
 
 
@@ -17,53 +16,6 @@ export default function Admin() {
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [channel, setChannel] = useState(''); // 上传通道筛选：'' | 'file' | 'cfile' | 'rfile'
-  // 清理失效图片的弹窗状态：null=未开始；running/done/error 三态
-  const [cleanState, setCleanState] = useState(null);
-  const [showCleanConfirm, setShowCleanConfirm] = useState(false);
-
-  // 一键清空失效图片：分批检测所有记录的源文件，删除确认 404 的
-  const runCleanInvalid = async () => {
-    if (cleanState) return;
-    setCleanState({ phase: 'running', total: 0, processed: 0, deleted: 0 });
-    try {
-      let offset = 0;
-      let initialTotal = 0;
-      let processed = 0;
-      let totalDeleted = 0;
-      let rounds = 0;
-      while (rounds < 500) {
-        const res = await fetch('/api/admin/cleaninvalid', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ offset }),
-        });
-        const data = await res.json();
-        if (!data?.success) {
-          setCleanState({ phase: 'error', message: data.message || '清理失败' });
-          return;
-        }
-        if (rounds === 0) initialTotal = data.total;
-        processed += data.checked;
-        totalDeleted += data.deleted.length;
-        setCleanState({ phase: 'running', total: initialTotal, processed, deleted: totalDeleted });
-        if (data.done) break;
-        offset = data.nextOffset;
-        rounds++;
-      }
-      setCleanState({ phase: 'done', total: initialTotal, processed, deleted: totalDeleted });
-      setCurrentPage(1);
-      setInputPage(1);
-      getListdata(1);
-      // 完成态停留片刻后自动关闭，也可手动点「完成」
-      setTimeout(() => {
-        setCleanState((s) => (s && s.phase === 'done' ? null : s));
-      }, 2800);
-    } catch (error) {
-      setCleanState({ phase: 'error', message: '网络异常：' + error.message });
-    }
-  };
-
-
 
   const getListdata = useCallback(async (page, ch = channel) => {
     try {
@@ -192,13 +144,6 @@ export default function Admin() {
                 搜索
               </button>
             </form>
-            <button
-              onClick={() => setShowCleanConfirm(true)}
-              disabled={cleanState?.phase === 'running'}
-              className="flex-none text-xs sm:text-sm px-3 py-1.5 rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
-            >
-              {cleanState?.phase === 'running' ? '正在清理…' : '一键清空失效图片'}
-            </button>
           </div>
 
           <Table data={listData} />
@@ -237,80 +182,6 @@ export default function Admin() {
             </div>
           </div>
         </div>
-        {cleanState && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-8">
-            <div className="w-full max-w-xs bg-white rounded-2xl p-6 shadow-xl text-center">
-              {cleanState.phase === 'running' && (
-                <>
-                  <div className="mx-auto mb-4 h-10 w-10 rounded-full border-[3px] border-gray-200 border-t-blue-500 animate-spin" />
-                  <p className="text-base font-medium text-gray-800">正在清理失效图片</p>
-                  <p className="mt-1 text-xs text-gray-400">正在逐张检测源文件，请稍候</p>
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                    <div
-                      className="h-full rounded-full bg-blue-500 transition-all duration-300"
-                      style={{
-                        width: `${cleanState.total ? Math.min(100, (cleanState.processed / cleanState.total) * 100) : 3}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    已检测 {cleanState.processed}{cleanState.total ? ` / ${cleanState.total}` : ''} 张 · 已删除 {cleanState.deleted} 张
-                  </p>
-                </>
-              )}
-              {cleanState.phase === 'done' && (
-                <>
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                    <svg className="h-7 w-7 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
-                  <p className="text-base font-medium text-gray-800">清理完成</p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    共检测 {cleanState.processed} 张，删除 {cleanState.deleted} 张失效图片
-                  </p>
-                  <button
-                    onClick={() => setCleanState(null)}
-                    className="mt-4 w-full rounded-lg bg-blue-500 py-2 text-sm text-white hover:bg-blue-600"
-                  >
-                    完成
-                  </button>
-                </>
-              )}
-              {cleanState.phase === 'error' && (
-                <>
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                    <svg className="h-7 w-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="12" y1="8" x2="12" y2="13" />
-                      <line x1="12" y1="16.5" x2="12" y2="16.5" />
-                      <circle cx="12" cy="12" r="10" />
-                    </svg>
-                  </div>
-                  <p className="text-base font-medium text-gray-800">清理失败</p>
-                  <p className="mt-1 break-words text-sm text-gray-500">{cleanState.message}</p>
-                  <button
-                    onClick={() => setCleanState(null)}
-                    className="mt-4 w-full rounded-lg bg-blue-500 py-2 text-sm text-white hover:bg-blue-600"
-                  >
-                    我知道了
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        <ConfirmDialog
-          open={showCleanConfirm}
-          title="清空失效图片？"
-          message={'将逐张检测所有图片的源文件，删除确认已失效（源文件 404）的记录及其访问日志。\n\n网络超时或无法确认的图片会自动跳过，不会误删。\n\n图片较多时检测需要一些时间。'}
-          confirmText="开始清理"
-          onConfirm={() => {
-            setShowCleanConfirm(false);
-            runCleanInvalid();
-          }}
-          onCancel={() => setShowCleanConfirm(false)}
-        />
       </div>
     </>
 
