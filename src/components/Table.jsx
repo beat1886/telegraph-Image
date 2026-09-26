@@ -123,6 +123,13 @@ export default function Table({ data: initialData = [] }) {
         const lastSlashIndex = url.lastIndexOf('/');
         return url.substring(lastSlashIndex + 1);
     }
+    // 由存储路径推断上传通道
+    const getChannel = (url) => {
+        if (url.startsWith('/cfile/')) return 'TG_Channel';
+        if (url.startsWith('/rfile/')) return 'R2';
+        if (url.startsWith('/file/')) return 'telegra.ph';
+        return '-';
+    };
     const renderFile = (fileUrl, index) => {
         const _url = getLastSegment(fileUrl);
         const getFileExtension = (url) => {
@@ -253,9 +260,9 @@ export default function Table({ data: initialData = [] }) {
                     </p>
                     <div className="mt-1 space-y-0.5 text-xs text-gray-500">
                         <p className="truncate">时间：{item.time || '-'}</p>
-                        <p className="truncate">来源：{item.referer || '-'}</p>
+                        <p className="truncate">接口：{getChannel(item.url)}</p>
                         <p className="truncate">IP：{item.ip || '-'}</p>
-                        <p>PV：{item.total ?? '-'}　分级：{item.rating ?? '-'}</p>
+                        <p>访问量：{item.total ?? '-'}　分级：{item.rating ?? '-'}</p>
                     </div>
                 </div>
             </div>
@@ -329,9 +336,9 @@ export default function Table({ data: initialData = [] }) {
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">name</th>
                                 <th className="sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">preview</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">time</th>
-                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">referer</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">接口</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">ip</th>
-                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">PV</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">访问量</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">rating</th>
                                 <th className="sticky right-0 z-10 py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">限制访问</th>
                             </tr>
@@ -348,8 +355,8 @@ export default function Table({ data: initialData = [] }) {
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
                                         {item.time}
                                     </td>
-                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[110px] sm:max-w-48 truncate">
-                                        <TooltipItem tooltipsText={item.referer} position="bottom">{item.referer}</TooltipItem>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 whitespace-nowrap">
+                                        {getChannel(item.url)}
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[100px] sm:max-w-48 truncate">
                                         <TooltipItem tooltipsText={item.ip} position="bottom">{item.ip}</TooltipItem>
