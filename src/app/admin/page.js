@@ -4,6 +4,7 @@ import Table from "@/components/Table"
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import Link from 'next/link'
+import ConfirmDialog from '@/components/ConfirmDialog';
 // import { toast } from "react-toastify";
 
 
@@ -18,6 +19,9 @@ export default function Admin() {
   const [channel, setChannel] = useState(''); // 上传通道筛选：'' | 'file' | 'cfile' | 'rfile'
   const [pageSize, setPageSize] = useState(10); // 每页条数
   const [totalCount, setTotalCount] = useState(0); // 筛选后的记录总数
+  const [selected, setSelected] = useState([]); // 多选的图片 url 列表（仅当前页）
+  const [batchDeleting, setBatchDeleting] = useState(false);
+  const [showBatchConfirm, setShowBatchConfirm] = useState(false);
 
   const getListdata = useCallback(async (page, ch = channel, size = pageSize) => {
     try {
@@ -41,6 +45,7 @@ export default function Admin() {
         setListData(res_data.data)
         setSearchTotal(Math.ceil(res_data.total / size));
         setTotalCount(res_data.total);
+        setSelected([]); // 数据刷新后清空选择，避免选中已不存在的记录
       }
 
     } catch (error) {
@@ -113,6 +118,50 @@ export default function Admin() {
     getListdata(1, channel, size);
   };
 
+  // 多选：单条切换
+  const toggleSelect = (url) => {
+    setSelected((s) => (s.includes(url) ? s.filter((u) => u !== url) : [...s, url]));
+  };
+
+  // 全选/取消全选当前页
+  const allSelected = listData.length > 0 && listData.every((item) => selected.includes(item.url));
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected([]);
+    } else {
+      setSelected(listData.map((item) => item.url));
+    }
+  };
+
+  // 批量删除：逐条调用现有删除接口，全部结束后刷新
+  const runBatchDelete = async () => {
+    setShowBatchConfirm(false);
+    if (batchDeleting || selected.length === 0) return;
+    setBatchDeleting(true);
+    let ok = 0;
+    let fail = 0;
+    for (const url of selected) {
+      try {
+        const res = await fetch('/api/admin/delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: url }),
+        });
+        const data = await res.json();
+        if (data?.success) ok++; else fail++;
+      } catch {
+        fail++;
+      }
+    }
+    setBatchDeleting(false);
+    if (fail === 0) {
+      toast.success(`已删除 ${ok} 张图片`);
+    } else {
+      toast.error(`删除完成：成功 ${ok} 张，失败 ${fail} 张`);
+    }
+    getListdata(currentPage);
+  };
+
   return (
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
@@ -158,16 +207,30 @@ export default function Admin() {
             </form>
           </div>
 
-          {/* 工具栏：记录统计与当前筛选状态 */}
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center justify-between text-xs sm:text-sm text-gray-500">
-            <span>共 {totalCount} 张图片</span>
-            <span>
-              {channel === '' ? '全部接口' : `接口：${{ file: 'TG', cfile: 'TG_Channel', rfile: 'R2' }[channel]}`}
-              {searchQuery.trim() ? ' · 已搜索' : ''}
+          {/* 工具栏：全选 + 已选数量 + 批量删除 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 cursor-pointer select-none shrink-0">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 accent-blue-600 cursor-pointer"
+              />
+              全选
+            </label>
+            <span className="flex-1 min-w-0 truncate text-xs sm:text-sm text-gray-400">
+              {selected.length > 0 ? `已选 ${selected.length} 项` : `共 ${totalCount} 张图片`}
             </span>
+            <button
+              onClick={() => setShowBatchConfirm(true)}
+              disabled={selected.length === 0 || batchDeleting}
+              className="shrink-0 px-3 py-1 text-xs sm:text-sm rounded border border-red-400 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-red-500 whitespace-nowrap transition-colors"
+            >
+              {batchDeleting ? '正在删除…' : `批量删除${selected.length > 0 ? `(${selected.length})` : ''}`}
+            </button>
           </div>
 
-          <Table data={listData} />
+          <Table data={listData} selected={selected} onToggle={toggleSelect} />
 
         </main>
         <div className="fixed inset-x-0 bottom-0 w-full flex z-50 justify-center items-center bg-white border-t">
@@ -214,6 +277,16 @@ export default function Admin() {
             </select>
           </div>
         </div>
+
+        <ConfirmDialog
+          open={showBatchConfirm}
+          title={`删除选中的 ${selected.length} 张图片？`}
+          message="将删除所有选中记录，删除后不可恢复。"
+          confirmText={batchDeleting ? '正在删除…' : '删除'}
+          loading={batchDeleting}
+          onConfirm={runBatchDelete}
+          onCancel={() => setShowBatchConfirm(false)}
+        />
       </div>
     </>
 

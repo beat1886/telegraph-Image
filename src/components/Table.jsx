@@ -16,7 +16,7 @@ const handleImgError = (e) => {
   e.currentTarget.src = brokenPlaceholder;
 };
 
-export default function Table({ data: initialData = [] }) {
+export default function Table({ data: initialData = [], selected = [], onToggle }) {
 
     const [data, setData] = useState(initialData); // 初始化状态
     const [modalData, setModalData] = useState(null);
@@ -245,11 +245,30 @@ export default function Table({ data: initialData = [] }) {
         );
     };
 
+    // 缩略图左上角的多选框（叠加层，不影响原有点击放大）
+    const renderCheckbox = (item) => {
+        if (!onToggle) return null;
+        const checked = selected.includes(item.url);
+        return (
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToggle(item.url)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label="选择此项"
+                className="absolute top-0.5 left-0.5 z-10 h-4 w-4 cursor-pointer rounded bg-white/90 accent-blue-600 shadow"
+            />
+        );
+    };
+
     // 手机端：单条记录卡片
     const renderMobileCard = (item, index) => (
-        <div key={`mcard-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+        <div key={`mcard-${index}`} className={`bg-white border rounded-lg p-3 shadow-sm ${selected.includes(item.url) ? 'border-blue-400 ring-1 ring-blue-300' : 'border-gray-200'}`}>
             <div className="flex gap-3">
-                <div className="shrink-0">{renderPreview(item, index)}</div>
+                <div className="shrink-0 relative">
+                    {renderPreview(item, index)}
+                    {renderCheckbox(item)}
+                </div>
                 <div className="min-w-0 flex-1">
                     <p
                         onClick={() => handleNameClick(item)}
@@ -345,12 +364,15 @@ export default function Table({ data: initialData = [] }) {
                         </thead>
                         <tbody>
                             {data.map((item, index) => (
-                                <tr key={index}>
+                                <tr key={index} className={selected.includes(item.url) ? 'bg-blue-50' : ''}>
                                     <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48">
                                         {item.url}
                                     </td>
                                     <td className="w-16 sm:w-24 sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-500 bg-white text-sm text-gray-700 text-center align-middle">
-                                        {renderPreview(item, index)}
+                                        <div className="relative inline-block">
+                                            {renderPreview(item, index)}
+                                            {renderCheckbox(item)}
+                                        </div>
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
                                         {item.time}
