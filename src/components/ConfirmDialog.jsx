@@ -35,7 +35,7 @@ export default function ConfirmDialog({
           <div className="min-w-0 flex-1 pt-0.5">
             <h3 className="text-base font-medium text-gray-800">{title}</h3>
             {message && (
-              <p className="mt-1 text-sm text-gray-500 whitespace-pre-line leading-relaxed">{message}</p>
+              <p className="mt-1 text-sm text-gray-500 whitespace-pre-line break-all leading-relaxed">{message}</p>
             )}
           </div>
         </div>
