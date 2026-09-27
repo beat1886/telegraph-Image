@@ -16,8 +16,10 @@ export default function Admin() {
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [channel, setChannel] = useState(''); // 上传通道筛选：'' | 'file' | 'cfile' | 'rfile'
+  const [pageSize, setPageSize] = useState(10); // 每页条数
+  const [totalCount, setTotalCount] = useState(0); // 筛选后的记录总数
 
-  const getListdata = useCallback(async (page, ch = channel) => {
+  const getListdata = useCallback(async (page, ch = channel, size = pageSize) => {
     try {
       const res = await fetch(`/api/admin/list`, {
         method: "POST",
@@ -29,6 +31,7 @@ export default function Admin() {
           page: (page - 1),
           query: searchQuery, // 传递搜索查询
           channel: ch, // 上传通道筛选
+          pageSize: size, // 每页条数
         })
       })
       const res_data = await res.json()
@@ -36,8 +39,8 @@ export default function Admin() {
         toast.error(res_data.message)
       } else {
         setListData(res_data.data)
-        const totalPages = Math.ceil(res_data.total / 10);
-        setSearchTotal(totalPages);
+        setSearchTotal(Math.ceil(res_data.total / size));
+        setTotalCount(res_data.total);
       }
 
     } catch (error) {
@@ -101,6 +104,15 @@ export default function Admin() {
     getListdata(1, value);
   };
 
+  // 切换每页条数：立即从第一页刷新
+  const handlePageSizeChange = (event) => {
+    const size = Number(event.target.value);
+    setPageSize(size);
+    setCurrentPage(1);
+    setInputPage(1);
+    getListdata(1, channel, size);
+  };
+
   return (
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
@@ -146,6 +158,15 @@ export default function Admin() {
             </form>
           </div>
 
+          {/* 工具栏：记录统计与当前筛选状态 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center justify-between text-xs sm:text-sm text-gray-500">
+            <span>共 {totalCount} 张图片</span>
+            <span>
+              {channel === '' ? '全部接口' : `接口：${{ file: 'TG', cfile: 'TG_Channel', rfile: 'R2' }[channel]}`}
+              {searchQuery.trim() ? ' · 已搜索' : ''}
+            </span>
+          </div>
+
           <Table data={listData} />
 
         </main>
@@ -180,6 +201,17 @@ export default function Admin() {
                 跳转
               </button>
             </div>
+            <select
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              className="border rounded px-1 py-1.5 sm:p-2 text-xs sm:text-sm bg-white"
+              title="每页展示数量"
+            >
+              <option value={10}>10 条/页</option>
+              <option value={20}>20 条/页</option>
+              <option value={50}>50 条/页</option>
+              <option value={100}>100 条/页</option>
+            </select>
           </div>
         </div>
       </div>

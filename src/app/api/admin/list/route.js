@@ -49,8 +49,10 @@ export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
   // console.log(dd);
   try {
-    let { page, query, channel } = await request.json()
+    let { page, query, channel, pageSize } = await request.json()
     page = Number.isInteger(Number(page)) && Number(page) >= 0 ? Number(page) : 0;
+    // 每页条数白名单，防注入/异常值
+    const size = [10, 20, 50, 100].includes(Number(pageSize)) ? Number(pageSize) : 10;
     const q = normalizeQuery(query);
 
     const baseSelect = `SELECT imginfo.*, (SELECT COUNT(*) FROM tgimglog WHERE tgimglog.url = imginfo.url) AS logcount FROM imginfo`;
@@ -71,7 +73,7 @@ export async function POST(request) {
 
     if (where) {
       const pageBind = `?${binds.length + 1}`;
-      const ps = env.IMG.prepare(`${baseSelect}${where} ORDER BY id DESC LIMIT 10 OFFSET ${pageBind} * 10`).bind(...binds, page);
+      const ps = env.IMG.prepare(`${baseSelect}${where} ORDER BY id DESC LIMIT ${size} OFFSET ${pageBind} * ${size}`).bind(...binds, page);
       const { results } = await ps.all()
       const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo${where}`).bind(...binds).first()
       return Response.json({
@@ -83,7 +85,7 @@ export async function POST(request) {
         "total": total.total
       });
     } else {
-      const ps = env.IMG.prepare(`${baseSelect} ORDER BY id DESC LIMIT 10 OFFSET ?1 * 10`).bind(page);
+      const ps = env.IMG.prepare(`${baseSelect} ORDER BY id DESC LIMIT ${size} OFFSET ?1 * ${size}`).bind(page);
       const { results } = await ps.all()
       const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo`).first()
       return Response.json({
