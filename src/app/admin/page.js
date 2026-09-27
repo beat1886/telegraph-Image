@@ -125,7 +125,7 @@ export default function Admin() {
               <select
                 value={channel}
                 onChange={handleChannelChange}
-                className="border rounded px-1.5 py-1.5 text-sm bg-white shrink-0"
+                className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
                 title="按上传接口筛选"
               >
                 <option value="">全部接口</option>
@@ -137,10 +137,10 @@ export default function Admin() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border rounded px-2 py-1.5 text-sm flex-1 min-w-0 w-full"
+                className="border rounded px-2 text-sm flex-1 min-w-0 w-full h-[34px]"
                 placeholder="输入 URL"
               />
-              <button type="submit" className="text-white px-4 py-1.5 text-sm whitespace-nowrap rounded border border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 transition-all">
+              <button type="submit" className="text-white px-4 text-sm whitespace-nowrap rounded border border-transparent h-[34px] bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 transition-all">
                 搜索
               </button>
             </form>
