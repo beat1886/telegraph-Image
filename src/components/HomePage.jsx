@@ -183,12 +183,12 @@ export default function HomePage({ initialRole, authButton }) {
           let errorMsg = "上传失败";
           try {
             const errorData = await response.json();
-            errorMsg = errorData.message || `上传 ${file.name} 图片时出错`;
+            errorMsg = errorData.message || `上传 ${file.name} 时出错`;
           } catch {}
-          toast.error(`上传 ${file.name} 图片时出错: ${errorMsg}`);
+          toast.error(`上传 ${file.name} 时出错: ${errorMsg}`);
         }
       }
-      toast.success(`已成功上传 ${successCount} 张图片`);
+      toast.success(`已成功上传 ${successCount} 个文件`);
     } catch (error) {
       toast.error('上传失败，请稍后重试');
     } finally {
@@ -200,10 +200,12 @@ export default function HomePage({ initialRole, authButton }) {
     const clipboardItems = event.clipboardData.items;
     for (let i = 0; i < clipboardItems.length; i++) {
       const item = clipboardItems[i];
-      if (item.kind === 'file' && item.type.includes('image')) {
+      if (item.kind === 'file') {
         const file = item.getAsFile();
-        setSelectedFiles([...selectedFiles, file]);
-        break;
+        if (file) {
+          setSelectedFiles([...selectedFiles, file]);
+          break;
+        }
       }
     }
   };
@@ -279,6 +281,24 @@ export default function HomePage({ initialRole, authButton }) {
     // 图片优先用本地已生成的 blob 预览，上传完成后立即显示，不必回源拉取；
     // blob 失效（如清除选区）时 onError 自动回退到远程 URL
     const localUrl = isImage ? getPreviewUrl(data) : null;
+    if (!isImage) {
+      // 非图片文件：显示文件类型图标 + 文件名，点击打开原文件
+      return (
+        <a
+          key={`file-${index}`}
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="object-cover w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg bg-slate-100 flex flex-col items-center justify-center p-2 text-slate-600 hover:bg-slate-200 transition-colors"
+        >
+          <svg className="w-8 h-8 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <p className="text-[11px] text-center break-all line-clamp-3 leading-tight">{data.name || '文件'}</p>
+        </a>
+      );
+    }
     return (
       <img
         key={`image-${index}`}
@@ -455,7 +475,7 @@ export default function HomePage({ initialRole, authButton }) {
             {selectedFiles.length === 0 && (
               <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
                 <div className="text-gray-500">
-                  拖拽文件到这里或将图片复制并粘贴到此处上传
+                  拖拽文件到这里或将文件复制并粘贴到此处上传
                 </div>
               </div>
             )}
