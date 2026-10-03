@@ -1,16 +1,36 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { faImages, faTrashAlt, faUpload, faSearchPlus, faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faImages, faTrashAlt, faUpload, faSearchPlus, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
 
-// 链接行的独立复制按钮：仅复制成功才进入"已复制"态，1.5s 后自动恢复；每个按钮状态互相独立
+// 链接行的独立复制按钮：仅复制成功才显示"已复制"反馈，1.5s 后自动恢复；每个按钮状态互相独立。
+// 反馈直接操作按钮 DOM（不依赖重渲染），保证任何环境下点击后即时可见
 function CopyButton({ text, label = '复制', compact = false }) {
-  const [copied, setCopied] = useState(false);
+  const btnRef = useRef(null);
   const timerRef = useRef(null);
   useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const flashCopied = () => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    btn.classList.remove('bg-white', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-100');
+    btn.classList.add('bg-green-500', 'border-green-500', 'text-white');
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '已复制';
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const b = btnRef.current;
+      if (!b) return;
+      b.classList.add('bg-white', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-100');
+      b.classList.remove('bg-green-500', 'border-green-500', 'text-white');
+      const s = b.querySelector('span');
+      if (s) s.textContent = label;
+    }, 1500);
+  };
+
   // clipboard API 不可用或被拒（非安全上下文/权限策略）时回退到 execCommand
   const fallbackCopy = (value) => {
     const ta = document.createElement('textarea');
@@ -44,26 +64,21 @@ function CopyButton({ text, label = '复制', compact = false }) {
     // clipboard API 不存在、被拒或超时时回退到 execCommand
     if (!ok) ok = fallbackCopy(text);
     if (ok) {
-      setCopied(true);
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setCopied(false), 1500);
+      flashCopied();
     } else {
       toast.error('复制失败，请重试');
     }
   };
   return (
     <button
+      ref={btnRef}
       type="button"
       onClick={handleClick}
       title={label}
-      className={`shrink-0 flex items-center justify-center gap-1 px-2 h-[34px] rounded-lg border text-xs whitespace-nowrap transition-colors ${
-        copied
-          ? 'bg-green-500 border-green-500 text-white'
-          : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
-      }`}
+      className="shrink-0 flex items-center justify-center gap-1 px-2 h-[34px] rounded-lg border text-xs whitespace-nowrap transition-colors bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
     >
-      <FontAwesomeIcon icon={copied ? faCheck : faCopy} className="text-xs" />
-      {!compact && <span>{copied ? '已复制' : label}</span>}
+      <FontAwesomeIcon icon={faCopy} className="text-xs" />
+      {!compact && <span>{label}</span>}
     </button>
   );
 }
