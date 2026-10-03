@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS imginfo (
 	`ip` varchar(255),
 	`rating` integer,
 	`total` integer,
-	`time` DATE
+	`time` DATE,
+	`kind` text
 );
+-- 已有数据库补充 kind 列（媒体大类 image/video/audio/file，供后台按类型渲染预览）：
+-- ALTER TABLE imginfo ADD COLUMN kind TEXT;
 

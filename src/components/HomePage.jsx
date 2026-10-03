@@ -19,7 +19,9 @@ export default function HomePage({ initialRole, authButton }) {
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
   const previewUrlsRef = useRef(new WeakMap());
   const getPreviewUrl = (file) => {
-    if (!file || !file.type || !file.type.startsWith('image/')) return null;
+    if (!file || !file.type) return null;
+    const t = file.type;
+    if (!t.startsWith('image/') && !t.startsWith('video/') && !t.startsWith('audio/')) return null;
     let url = previewUrlsRef.current.get(file);
     if (!url) {
       url = URL.createObjectURL(file);
@@ -287,6 +289,12 @@ export default function HomePage({ initialRole, authButton }) {
     if (file.type.startsWith('image/')) {
       setBoxtype("img");
       setSelectedImage(getPreviewUrl(file));
+    } else if (file.type.startsWith('video/')) {
+      setBoxtype("video");
+      setSelectedImage(getPreviewUrl(file));
+    } else if (file.type.startsWith('audio/')) {
+      setBoxtype("audio");
+      setSelectedImage(getPreviewUrl(file));
     } else {
       setBoxtype("other");
       setSelectedImage("other");
@@ -522,6 +530,22 @@ export default function HomePage({ initialRole, authButton }) {
                       alt={`Preview ${file.name}`}
                       className="w-full h-full object-cover rounded-lg cursor-pointer"
                     />
+                  ) : file.type.startsWith('video/') ? (
+                    <video
+                      src={getPreviewUrl(file)}
+                      muted
+                      preload="metadata"
+                      className="w-full h-full object-cover rounded-lg cursor-pointer bg-black"
+                    />
+                  ) : file.type.startsWith('audio/') ? (
+                    <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100 text-slate-500 rounded-lg cursor-pointer p-1">
+                      <svg className="w-8 h-8 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18V5l12-2v13" />
+                        <circle cx="6" cy="18" r="3" />
+                        <circle cx="18" cy="16" r="3" />
+                      </svg>
+                      <p className="text-xs text-center break-all line-clamp-2">{file.name}</p>
+                    </div>
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700 p-1">
                       <p className="text-xs text-center break-all line-clamp-3">{file.name}</p>
@@ -570,7 +594,7 @@ export default function HomePage({ initialRole, authButton }) {
               className="w-full h-10 bg-blue-500 cursor-pointer flex items-center justify-center text-white text-xs sm:text-sm"
             >
               <FontAwesomeIcon icon={faImages} className="mr-1 sm:mr-2 text-xs sm:text-sm" />
-              选择图片
+              选择文件
             </label>
             <input
               id="file-upload"
@@ -583,7 +607,7 @@ export default function HomePage({ initialRole, authButton }) {
           </div>
           <div className="md:col-span-5 col-span-5">
             <div className="w-full h-10 bg-slate-200 flex items-center px-2 sm:px-4 text-xs sm:text-sm justify-center md:justify-start truncate">
-              已选择 {selectedFiles.length} 张，共 {getTotalSizeInMB(selectedFiles)} M
+              已选择 {selectedFiles.length} 个，共 {getTotalSizeInMB(selectedFiles)} M
             </div>
           </div>
           <div className="md:col-span-1 col-span-3">
@@ -645,6 +669,18 @@ export default function HomePage({ initialRole, authButton }) {
                 alt="Selected"
                 className="object-contain w-[92%] sm:w-9/10 max-h-[85vh] h-auto rounded-lg"
               />
+            ) : boxType === "video" ? (
+              <video
+                src={selectedImage}
+                controls
+                autoPlay
+                className="w-[92%] sm:w-9/10 max-h-[85vh] rounded-lg bg-black"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : boxType === "audio" ? (
+              <div className="p-6 bg-white rounded-lg w-[92%] max-w-md" onClick={(e) => e.stopPropagation()}>
+                <audio src={selectedImage} controls autoPlay className="w-full" />
+              </div>
             ) : (
               <div className="p-4 bg-white text-black rounded">
                 <p>不支持的文件类型</p>

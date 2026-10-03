@@ -41,6 +41,10 @@ export async function POST(request) {
 		})
 	}
 	const fileType = fileField.type;
+	// 媒体大类，入库供后台列表按类型渲染预览（Telegram file_id 无扩展名，前端无法靠 URL 推断）
+	const mediaKind = fileType.startsWith('image/') ? 'image'
+		: fileType.startsWith('video/') ? 'video'
+			: fileType.startsWith('audio/') ? 'audio' : 'file';
 
 	const req_url = new URL(request.url);
 
@@ -109,7 +113,7 @@ export async function POST(request) {
 			try {
 				const rating_index = await getRating(env, `${fileData.file_id}`);
 				nowTime = await get_nowTime()
-				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, rating_index, nowTime);
+				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, rating_index, nowTime, mediaKind);
 
 				return Response.json({
 					...data,
@@ -130,7 +134,7 @@ export async function POST(request) {
 				// 鉴黄/写库失败不影响上传结果（文件已到 Telegram），仍返回成功
 				console.log('rating/db error (ignored):', error.message);
 				try {
-					await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown');
+					await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown', mediaKind);
 				} catch (e) {}
 
 				return Response.json({
@@ -222,14 +226,20 @@ const getFile = async (response) => {
 
 
 
-async function insertImageData(env, src, referer, ip, rating, time) {
+async function insertImageData(env, src, referer, ip, rating, time, kind) {
 	try {
 		const instdata = await env.prepare(
-			`INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+			`INSERT INTO imginfo (url, referer, ip, rating, total, time, kind)
+           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}', '${kind || ''}')`
 		).run()
 	} catch (error) {
-
+		// kind 列尚未迁移时回退旧插入，保证上传记录不丢
+		try {
+			await env.prepare(
+				`INSERT INTO imginfo (url, referer, ip, rating, total, time)
+	           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+			).run()
+		} catch (e) { };
 	};
 }
 

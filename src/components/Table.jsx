@@ -16,6 +16,49 @@ const handleImgError = (e) => {
   e.currentTarget.src = brokenPlaceholder;
 };
 
+const imageExtensions = [
+  'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp',
+  'svg', 'ico', 'heic', 'heif', 'raw', 'psd', 'ai', 'eps'
+];
+
+const videoExtensions = [
+  'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'ogg',
+  'ogv', 'm4v', '3gp', '3g2', 'mpg', 'mpeg', 'mxf', 'vob'
+];
+
+const audioExtensions = [
+  'mp3', 'wav', 'flac', 'm4a', 'aac', 'oga', 'opus', 'wma', 'aiff', 'ape', 'mid', 'midi'
+];
+
+// 无类型信息的历史记录（如无扩展名的 TG_Channel 旧数据）：用 1 字节 Range 请求
+// 探测响应 Content-Type 来判断媒体大类，结果跨组件缓存，避免重复请求
+const kindProbeCache = new Map();
+const probeMediaKind = (url) => {
+  if (!kindProbeCache.has(url)) {
+    kindProbeCache.set(url, fetch(url, { headers: { Range: 'bytes=0-0' } })
+      .then((res) => {
+        const ct = res.headers.get('content-type') || '';
+        res.body?.cancel().catch(() => { });
+        if (ct.startsWith('image/')) return 'image';
+        if (ct.startsWith('video/')) return 'video';
+        if (ct.startsWith('audio/')) return 'audio';
+        return 'file';
+      })
+      .catch(() => 'file'));
+  }
+  return kindProbeCache.get(url);
+};
+
+function LazyKind({ url, children }) {
+  const [kind, setKind] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    probeMediaKind(url).then((k) => { if (alive) setKind(k); });
+    return () => { alive = false; };
+  }, [url]);
+  return children(kind);
+}
+
 export default function Table({ data: initialData = [], selected = [], onToggle }) {
 
     const [data, setData] = useState(initialData); // 初始化状态
@@ -130,31 +173,43 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
         if (url.startsWith('/file/')) return 'TG.ph';
         return '-';
     };
-    const renderFile = (fileUrl, index) => {
-        const _url = getLastSegment(fileUrl);
-        const getFileExtension = (url) => {
-            const parts = url.split('.');
-            return parts.length > 1 ? parts.pop().toLowerCase() : '';
-        };
-        const fileExtension = getFileExtension(_url);
+    // 媒体大类：优先数据库 kind 列（上传时写入），否则按 URL 扩展名推断；都未知返回 null
+    const getMediaKind = (item) => {
+        if (item.kind === 'image' || item.kind === 'video' || item.kind === 'audio') return item.kind;
+        const seg = getLastSegment(item.url);
+        const ext = seg.includes('.') ? seg.split('.').pop().toLowerCase() : '';
+        if (imageExtensions.includes(ext)) return 'image';
+        if (videoExtensions.includes(ext)) return 'video';
+        if (audioExtensions.includes(ext)) return 'audio';
+        return null;
+    };
 
+    // 缩略图固定方块尺寸：手机 56px / 桌面 80px；min-width 防止 table 自动布局压缩列宽
+    const thumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] object-cover rounded block mx-auto";
+    const iconThumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] rounded block mx-auto bg-slate-100 flex items-center justify-center text-slate-500";
 
+    const renderAudioThumb = () => (
+        <div className={iconThumbClass}>
+            <svg className="w-7 h-7 sm:w-9 sm:h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+            </svg>
+        </div>
+    );
 
-        const imageExtensions = [
-            'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp',
-            'svg', 'ico', 'heic', 'heif', 'raw', 'psd', 'ai', 'eps'
-        ];
+    const renderFileThumb = () => (
+        <div className={iconThumbClass}>
+            <svg className="w-7 h-7 sm:w-9 sm:h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+            </svg>
+        </div>
+    );
 
-        const videoExtensions = [
-            'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'ogg',
-            'ogv', 'm4v', '3gp', '3g2', 'mpg', 'mpeg', 'mxf', 'vob'
-        ];
-
-        // 缩略图固定方块尺寸：手机 56px / 桌面 80px；min-width 防止 table 自动布局压缩列宽
-        const thumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] object-cover rounded block mx-auto";
-
-        if (imageExtensions.includes(fileExtension)) {
-
+    // 列表缩略图：图片/视频显示内容本身，音频/其他显示图标
+    const renderThumb = (fileUrl, index, kind) => {
+        if (kind === 'image') {
             return (
                 <img
                     key={`image-${index}`}
@@ -167,7 +222,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
                 />
             );
         }
-        else if (videoExtensions.includes(fileExtension)) {
+        if (kind === 'video') {
             return (
                 <video
                     key={`video-${index}`}
@@ -181,19 +236,10 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
                 </video>
             );
         }
-        else {
-            return (
-                <img
-                    key={`image-${index}`}
-                    src={fileUrl}
-                    alt={`Uploaded ${index}`}
-                    loading="lazy"
-                    decoding="async"
-                    className={thumbClass}
-                    onError={handleImgError}
-                />
-            );
+        if (kind === 'audio') {
+            return renderAudioThumb();
         }
+        return renderFileThumb();
     };
 
     function toggleFullScreen() {
@@ -207,42 +253,79 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
         }
     }
 
-    // const isImage = (url) => {
-    //     return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
-    // };
+    // 点击缩略图放大预览：图片查看原图，视频/音频弹出可播放的播放器，
+    // 其他文件新标签打开；桌面表格与手机卡片共用
+    const renderPreviewByKind = (item, index, url, kind) => {
+        if (kind === 'image') {
+            return (
+                <PhotoView key={item.url} src={url}>
+                    {renderThumb(url, index, kind)}
+                </PhotoView>
+            );
+        }
+        if (kind === 'video') {
+            return (
+                <PhotoView
+                    key={item.url}
+                    render={({ attrs }) => (
+                        <div {...attrs} className={`flex items-center justify-center ${attrs.className || ''}`}>
+                            <video
+                                src={url}
+                                controls
+                                autoPlay
+                                className="max-w-[92vw] max-h-[80vh] bg-black rounded"
+                            />
+                        </div>
+                    )}
+                >
+                    {renderThumb(url, index, kind)}
+                </PhotoView>
+            );
+        }
+        if (kind === 'audio') {
+            return (
+                <PhotoView
+                    key={item.url}
+                    render={({ attrs }) => (
+                        <div {...attrs} className={`flex items-center justify-center ${attrs.className || ''}`}>
+                            <div className="bg-white rounded-lg p-6 w-[86vw] max-w-md flex flex-col items-center gap-3">
+                                <svg className="w-10 h-10 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 18V5l12-2v13" />
+                                    <circle cx="6" cy="18" r="3" />
+                                    <circle cx="18" cy="16" r="3" />
+                                </svg>
+                                <audio src={url} controls autoPlay className="w-full" />
+                                <p className="text-xs text-gray-500 break-all text-center">{getLastSegment(item.url)}</p>
+                            </div>
+                        </div>
+                    )}
+                >
+                    {renderThumb(url, index, kind)}
+                </PhotoView>
+            );
+        }
+        if (kind === 'file') {
+            return (
+                <a href={url} target="_blank" rel="noopener noreferrer" title="新标签打开">
+                    {renderThumb(url, index, kind)}
+                </a>
+            );
+        }
+        // kind 尚未探测完成：静态图标，不响应点击
+        return renderFileThumb();
+    };
 
-    const isVideo = (url) => {
-        return /\.(mp4|mkv|avi|mov|wmv|flv|webm|ogg|ogv|m4v|3gp|3g2|mpg|mpeg|mxf|vob)$/i.test(url);
-    }
-
-    const elementSize = 400;
-
-    // 点击缩略图放大预览（图片/视频两种模式），桌面表格与手机卡片共用
     const renderPreview = (item, index) => {
         const url = getImgUrl(item.url);
-        return isVideo(url) ? (
-            <PhotoView
-                key={item.url}
-                width={elementSize}
-                height={elementSize}
-                render={({ scale, attrs }) => {
-                    const width = attrs.style.width;
-                    const offset = (width - elementSize) / elementSize;
-                    const childScale = scale === 1 ? scale + offset : 1 + offset;
-                    return (
-                        <div {...attrs} className={`flex-none bg-white ${attrs.className || ''}`}>
-                            {renderFile(url, index)}
-                        </div>
-                    );
-                }}
-            >
-                {renderFile(url, index)}
-            </PhotoView>
-        ) : (
-            <PhotoView key={item.url} src={url}>
-                {renderFile(url, index)}
-            </PhotoView>
-        );
+        const kind = getMediaKind(item);
+        if (kind === null) {
+            return (
+                <LazyKind url={url}>
+                    {(probedKind) => renderPreviewByKind(item, index, url, probedKind)}
+                </LazyKind>
+            );
+        }
+        return renderPreviewByKind(item, index, url, kind);
     };
 
     // 缩略图左上角的多选框（叠加层，不影响原有点击放大）
