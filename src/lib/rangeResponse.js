@@ -74,6 +74,7 @@ export async function respondFromCache(request, cached, fileName, { cors = false
  * @param {string} args.fileName 用于推断 Content-Type / 文件名
  * @param {boolean} [args.cors]
  * @param {number} [args.maxAge] 完整对象的浏览器缓存秒数
+ * @param {boolean} [args.forwardRange] 是否向上游转发 Range（telegra.ph 会对 Worker 的 Range 回源 404，需关闭）
  * @returns {Promise<{response: Response, upstream?: Response}>}
  */
 export async function serveMedia({
@@ -85,6 +86,7 @@ export async function serveMedia({
   fileName,
   cors = false,
   maxAge = 86400,
+  forwardRange = true,
 }) {
   // 1) 内层缓存命中：完整对象由我们确定性切片
   if (cache && cacheKey) {
@@ -95,9 +97,14 @@ export async function serveMedia({
   }
 
   const rangeHeader = request.headers.get('range');
+  const sendRange = forwardRange && rangeHeader;
 
-  // 2) 回源（带访客 Range）
-  let res = await fetchUpstream(rangeHeader || null);
+  // 2) 回源（视上游能力决定是否带 Range）
+  let res = await fetchUpstream(sendRange || null);
+  // 部分上游（telegra.ph）对 Range 回源直接 404/416：降级为全量拉取后自行切片
+  if (!res.ok && sendRange) {
+    res = await fetchUpstream(null);
+  }
   if (!res.ok) return { response: null, upstream: res };
 
   // 2a) 上游给了 206：校验可信后原样透传；分片损坏（截断/错误 total）则丢弃并重新拉全量

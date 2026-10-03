@@ -43,6 +43,7 @@ export async function GET(request, { params }) {
       waitUntil: ctx.waitUntil.bind(ctx),
       fileName: name,
       maxAge: 86400,
+      forwardRange: false,
       fetchUpstream: (rangeHeader) => fetch(`https://telegra.ph/file/${name}`, {
         method: 'GET',
         headers: rangeHeader ? { Range: rangeHeader } : {},
