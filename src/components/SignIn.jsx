@@ -36,7 +36,7 @@ export function LoginPage() {
     <div className="flex min-h-screen flex-1 flex-col justify-center px-5 py-10 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm w-full">
         <h1 className="text-center text-xl sm:text-2xl font-bold leading-9 tracking-tight text-gray-900">
-          登录图床
+          登录喵链
         </h1>
         <div className="mt-8 sm:mt-10 w-full sm:mx-auto sm:w-full sm:max-w-sm">
           <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>

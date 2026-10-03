@@ -552,7 +552,7 @@ export default function HomePage({ initialRole, authButton }) {
     <main className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
       <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
         <div className="flex justify-between items-center w-full max-w-4xl px-3 sm:px-4">
-          <nav className="text-base sm:text-lg font-medium">图床</nav>
+          <nav className="text-base sm:text-lg font-medium">喵链</nav>
           {authButton}
         </div>
       </header>

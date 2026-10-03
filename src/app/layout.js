@@ -13,8 +13,8 @@ import ToastHost from '@/components/ToastHost';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "图床",
-  description: "图床",
+  title: "喵链",
+  description: "喵链 - 文件外链托管，支持图片、视频、音频在线播放",
 };
 
 export const viewport = {
