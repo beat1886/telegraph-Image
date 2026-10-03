@@ -474,7 +474,7 @@ export default function HomePage({ initialRole, authButton }) {
           <div className="flex flex-col">
             <div className="text-gray-800 text-lg">图片上传</div>
             <div className="mb-1 sm:mb-4 text-xs sm:text-sm text-gray-500">
-              上传文件最大 5 MB，本站已托管 <span className="text-cyan-600">{Total}</span> 张图片
+              本站已托管 <span className="text-cyan-600">{Total}</span> 张图片
             </div>
           </div>
           <div className="flex flex-row items-center gap-2">
