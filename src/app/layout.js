@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "喵链",
-  description: "喵链 - 文件外链托管（临时或长期存储），支持图片、视频、音频在线预览",
+  description: "喵链 - 图片/视频/音频的外链托管",
 };
 
 export const viewport = {
