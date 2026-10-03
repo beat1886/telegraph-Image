@@ -33,6 +33,9 @@ export async function buildMediaResponse(request, res, fileName, opts = {}) {
     h.set('Content-Type', contentType);
     h.set('Content-Disposition', buildContentDisposition(fileName, contentType));
     h.set('Accept-Ranges', 'bytes');
+    // [DEBUG] 临时排查 Range 头丢失问题，验证后删除
+    h.set('x-dbg-range', request.headers.get('range') || 'none');
+    h.set('x-dbg-up', `${res.status}|cl=${res.headers.get('content-length') || '-'}|te=${res.headers.get('transfer-encoding') || '-'}`);
     if (cors) h.set('Access-Control-Allow-Origin', '*');
     return h;
   };
