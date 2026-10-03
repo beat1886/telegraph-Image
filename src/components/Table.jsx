@@ -186,6 +186,8 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
 
     // 缩略图固定方块尺寸：手机 56px / 桌面 80px；min-width 防止 table 自动布局压缩列宽
     const thumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] object-cover rounded block mx-auto";
+    // 视频缩略图加大并按 16:9 显示，首帧内容更清楚
+    const videoThumbClass = "w-28 h-16 min-w-[112px] sm:w-44 sm:h-[99px] sm:min-w-[176px] object-cover rounded block mx-auto bg-black";
     const iconThumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] rounded block mx-auto bg-slate-100 flex items-center justify-center text-slate-500";
 
     const renderAudioThumb = () => (
@@ -227,7 +229,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
                 <video
                     key={`video-${index}`}
                     src={fileUrl}
-                    className={thumbClass}
+                    className={videoThumbClass}
                     muted
                     preload="metadata"
                     onError={handleImgError}
