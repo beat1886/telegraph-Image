@@ -29,15 +29,19 @@ function CopyButton({ text, label = '复制', compact = false }) {
   const handleClick = async (e) => {
     e.stopPropagation();
     let ok = false;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
+    // 某些环境（权限策略/自动化）writeText 的 Promise 会一直挂起，1.5s 超时立即走降级
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await Promise.race([
+          navigator.clipboard.writeText(text),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('clipboard timeout')), 1500)),
+        ]);
         ok = true;
+      } catch (err) {
+        ok = false;
       }
-    } catch (err) {
-      ok = false;
     }
-    // clipboard API 不存在或调用被拒时回退到 execCommand
+    // clipboard API 不存在、被拒或超时时回退到 execCommand
     if (!ok) ok = fallbackCopy(text);
     if (ok) {
       setCopied(true);
