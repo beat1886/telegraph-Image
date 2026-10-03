@@ -32,16 +32,24 @@ export async function GET(request, { params }) {
   }
 
   try {
+    // 仅转发 Range 头（透传全部头会夹带 host/cf-* 等，可能干扰源站分片响应）
+    const rangeHeader = request.headers.get('range');
     const res = await fetch(`https://telegra.ph/file/${name}`, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
+      method: 'GET',
+      headers: rangeHeader ? { Range: rangeHeader } : {},
     })
     // 包一层以附加缓存头：浏览器缓存 1 天（telegra.ph 会回收文件，不宜过长），
     // 避免后台列表/翻页时反复回源 telegra.ph
     const proxyHeaders = new Headers(res.headers);
     if (res.ok) {
-      proxyHeaders.set('Cache-Control', 'public, max-age=86400');
+      const isPartial = res.status === 206;
+      proxyHeaders.set('Accept-Ranges', 'bytes');
+      if (isPartial) {
+        // 视频拖动进度条的分片响应，透传 Content-Range、不做长缓存
+        proxyHeaders.set('Cache-Control', 'no-cache');
+      } else {
+        proxyHeaders.set('Cache-Control', 'public, max-age=86400');
+      }
     }
     const proxied = new Response(res.body, { status: res.status, headers: proxyHeaders });
     if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {

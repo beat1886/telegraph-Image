@@ -346,9 +346,40 @@ export default function HomePage({ initialRole, authButton }) {
   const renderFile = (data, index) => {
     const fileUrl = data.url;
     const isImage = data.type && data.type.startsWith('image/');
+    const isVideo = data.type && data.type.startsWith('video/');
+    const isAudio = data.type && data.type.startsWith('audio/');
     // 图片优先用本地已生成的 blob 预览，上传完成后立即显示，不必回源拉取；
     // blob 失效（如清除选区）时 onError 自动回退到远程 URL
     const localUrl = isImage ? getPreviewUrl(data) : null;
+    if (isVideo) {
+      // 视频：卡片内直接在线播放（响应头已支持 Range，可拖动进度）
+      return (
+        <video
+          key={`video-${index}`}
+          src={fileUrl}
+          controls
+          preload="metadata"
+          className="w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg bg-black object-contain"
+        />
+      );
+    }
+    if (isAudio) {
+      // 音频：紧凑播放器卡片
+      return (
+        <div
+          key={`audio-${index}`}
+          className="w-28 h-28 sm:w-36 sm:h-40 m-2 self-center rounded-lg bg-slate-100 flex flex-col items-center justify-center p-2 text-slate-600"
+        >
+          <svg className="w-8 h-8 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          <audio src={fileUrl} controls preload="none" className="w-full h-8" />
+          <p className="text-[11px] text-center break-all line-clamp-2 leading-tight mt-1">{data.name || '音频'}</p>
+        </div>
+      );
+    }
     if (!isImage) {
       // 非图片文件：显示文件类型图标 + 文件名，点击打开原文件
       return (
@@ -484,7 +515,7 @@ export default function HomePage({ initialRole, authButton }) {
               onChange={handleSelectChange}
               className="text-xs sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 text-left pl-3"
             >
-              <option value="tg">TG.ph（telegra.ph｜临时｜仅图片｜≤15MB）</option>
+              <option value="tg">TG.ph（telegra.ph｜临时｜图片/视频｜≤15MB）</option>
               <option value="tgchannel">TG_Channel（Telegram｜长期｜图片≤10MB/其他文件≤50MB）</option>
               {isAuthapi && Loginuser === "admin" && <option value="r2">R2（Cloudflare｜长期｜任意文件｜≤2GB）</option>}
             </select>
