@@ -82,8 +82,12 @@ export async function buildMediaResponse(request, res, fileName, opts = {}) {
     return { response: new Response(buf, { status: 200, headers: hf }), partial: false, cacheable: true };
   }
 
-  // 4) 普通完整响应：流式转发 + 长缓存
+  // 4) 普通完整响应：缓冲后带确切 Content-Length 返回。
+  //    Cloudflare 边缘对未命中缓存的 Range 请求会剥离 Range 向源站拉全量，
+  //    只有响应带 Content-Length 时，边缘缓存后才能对后续 Range 请求输出 206。
+  const fullBuf = await res.arrayBuffer();
   const h = makeHeaders();
+  h.set('Content-Length', String(fullBuf.byteLength));
   h.set('Cache-Control', `public, max-age=${maxAge}${maxAge >= 31536000 ? ', immutable' : ''}`);
-  return { response: new Response(res.body, { status: 200, headers: h }), partial: false, cacheable: true };
+  return { response: new Response(fullBuf, { status: 200, headers: h }), partial: false, cacheable: true };
 }
