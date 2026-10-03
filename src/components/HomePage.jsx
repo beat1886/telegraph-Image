@@ -11,14 +11,39 @@ function CopyButton({ text, label = '复制', compact = false }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef(null);
   useEffect(() => () => clearTimeout(timerRef.current), []);
+  // clipboard API 不可用或被拒（非安全上下文/权限策略）时回退到 execCommand
+  const fallbackCopy = (value) => {
+    const ta = document.createElement('textarea');
+    ta.value = value;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  };
   const handleClick = async (e) => {
     e.stopPropagation();
+    let ok = false;
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch (err) {
+      ok = false;
+    }
+    // clipboard API 不存在或调用被拒时回退到 execCommand
+    if (!ok) ok = fallbackCopy(text);
+    if (ok) {
       setCopied(true);
       clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
+    } else {
       toast.error('复制失败，请重试');
     }
   };
