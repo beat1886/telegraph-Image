@@ -500,6 +500,12 @@ export default function HomePage({ initialRole, authButton }) {
       case 'preview':
         return (
           <div className="flex flex-col">
+            <div className="flex justify-end m-1 sm:m-2">
+              <CopyButton
+                text={uploadedImages.map((data) => data.url).join('\n')}
+                label="一键复制全部直链"
+              />
+            </div>
             {uploadedImages.map((data, index) => (
               <div key={index} className="m-1 sm:m-2 rounded-2xl ring-offset-2 ring-2 ring-slate-100 flex flex-col sm:flex-row">
                 {renderFile(data, index)}
