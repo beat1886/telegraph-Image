@@ -128,6 +128,67 @@ export default function HomePage({ initialRole, authButton }) {
     return (totalSizeInBytes / (1024 * 1024)).toFixed(2);
   };
 
+  // R2 预签名直传：取签名 -> 直传 R2 -> 回调入库。成功返回 true
+  const uploadR2Direct = async (file) => {
+    const MAX = 2 * 1024 * 1024 * 1024; // 2GB，与后端一致
+    if (file.size > MAX) {
+      toast.error(`${file.name} 超过 2GB 上限`);
+      return false;
+    }
+    try {
+      // 1) 取预签名 URL
+      const signRes = await fetch('/api/enableauthapi/r2presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+      });
+      const signData = await signRes.json();
+      if (!signRes.ok || !signData.uploadUrl) {
+        toast.error(signData.message || '获取上传凭证失败');
+        return false;
+      }
+
+      // 2) 浏览器直传 R2（大文件 10 分钟超时）
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 600000);
+      const putRes = await fetch(signData.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        signal: controller.signal,
+      });
+      clearTimeout(tid);
+      if (!putRes.ok) {
+        toast.error(`${file.name} 直传 R2 失败（HTTP ${putRes.status}）`);
+        return false;
+      }
+
+      // 3) 回调入库
+      const doneRes = await fetch('/api/enableauthapi/r2complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: signData.key, filename: file.name, contentType: file.type, size: file.size }),
+      });
+      const doneData = await doneRes.json();
+      if (!doneRes.ok || !doneData.url) {
+        toast.error(`${file.name} 已上传但记录失败：${doneData.message || doneRes.status}`);
+        return false;
+      }
+
+      file.url = doneData.url;
+      setUploadedImages((prev) => [...prev, file]);
+      setSelectedFiles((prev) => prev.filter((f) => f !== file));
+      return true;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        toast.error(`${file.name} 上传超时（10 分钟）`);
+      } else {
+        toast.error(`${file.name} 上传失败：${err.message}`);
+      }
+      return false;
+    }
+  };
+
   const handleUpload = async (file = null) => {
     setUploading(true);
     const filesToUpload = file ? [file] : selectedFiles;
@@ -143,6 +204,13 @@ export default function HomePage({ initialRole, authButton }) {
 
     try {
       for (const file of filesToUpload) {
+        // R2 走预签名直传：取签名 URL -> 浏览器直传 R2 -> 回调入库（支持 >100MB 大文件）
+        if (selectedOption === "r2") {
+          const ok = await uploadR2Direct(file);
+          if (ok) successCount++;
+          continue;
+        }
+
         const formData = new FormData();
         formData.append(formFieldName, file);
 
@@ -418,7 +486,7 @@ export default function HomePage({ initialRole, authButton }) {
             >
               <option value="tg">TG(临时，会失效)</option>
               <option value="tgchannel">TG_Channel(长期)</option>
-              {isAuthapi && Loginuser === "admin" && <option value="r2">cloudflare的R2 对象存储（长期，可能会付费）</option>}
+              {isAuthapi && Loginuser === "admin" && <option value="r2">cloudflare的R2 对象存储（长期，支持2GB大文件）</option>}
             </select>
           </div>
         </div>
