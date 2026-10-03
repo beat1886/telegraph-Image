@@ -48,29 +48,35 @@ export async function buildMediaResponse(request, res, fileName, opts = {}) {
     return { response: new Response(res.body, { status: 206, headers: h }), partial: true, cacheable: false };
   }
 
-  const total = parseInt(res.headers.get('content-length') || '0', 10);
   const rangeHeader = request.headers.get('range');
-  const range = rangeHeader && total > 0 ? parseRange(rangeHeader, total) : null;
 
-  // 2) 请求的范围非法：416
-  if (range && range.invalid) {
-    const h = makeHeaders();
-    h.set('Content-Range', `bytes */${total}`);
-    return { response: new Response(null, { status: 416, headers: h }), partial: false, cacheable: false };
-  }
-
-  // 3) 上游给全量但访客要分片：边缘缓冲后自行切分（tg.ph 源站不支持回源分片时的兜底）
-  if (range) {
+  // 3) 访客要分片但上游忽略了 Range（返回 200，可能是 chunked 无 content-length）：
+  //    缓冲完整内容后按实际大小在边缘切分（tg.ph 回源不支持分片时的兜底）
+  if (rangeHeader && res.status === 200) {
     const buf = await res.arrayBuffer();
-    const h = makeHeaders();
-    h.set('Content-Range', `bytes ${range.start}-${range.end}/${total}`);
-    h.set('Content-Length', String(range.end - range.start + 1));
-    h.set('Cache-Control', 'no-cache');
-    return {
-      response: new Response(buf.slice(range.start, range.end + 1), { status: 206, headers: h }),
-      partial: true,
-      cacheable: false,
-    };
+    const total = buf.byteLength;
+    const range = parseRange(rangeHeader, total);
+    if (range && range.invalid) {
+      const h2 = makeHeaders();
+      h2.set('Content-Range', `bytes */${total}`);
+      return { response: new Response(null, { status: 416, headers: h2 }), partial: false, cacheable: false };
+    }
+    if (range) {
+      const h2 = makeHeaders();
+      h2.set('Content-Range', `bytes ${range.start}-${range.end}/${total}`);
+      h2.set('Content-Length', String(range.end - range.start + 1));
+      h2.set('Cache-Control', 'no-cache');
+      return {
+        response: new Response(buf.slice(range.start, range.end + 1), { status: 206, headers: h2 }),
+        partial: true,
+        cacheable: false,
+      };
+    }
+    // Range 头格式无法解析：按完整 200 返回缓冲内容
+    const hf = makeHeaders();
+    hf.set('Content-Length', String(total));
+    hf.set('Cache-Control', `public, max-age=${maxAge}${maxAge >= 31536000 ? ', immutable' : ''}`);
+    return { response: new Response(buf, { status: 200, headers: hf }), partial: false, cacheable: true };
   }
 
   // 4) 普通完整响应：流式转发 + 长缓存
