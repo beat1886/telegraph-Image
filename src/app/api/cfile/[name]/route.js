@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { getContentType, buildContentDisposition } from '@/lib/mime';
+import { buildMediaResponse } from '@/lib/rangeResponse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -90,30 +90,11 @@ export async function GET(request, { params }) {
       });
 
       if (res.ok) {
-        const contentType = getContentType(fileName);
-        const isPartial = res.status === 206;
-        const responseHeaders = new Headers();
-        responseHeaders.set('Access-Control-Allow-Origin', '*');
-        responseHeaders.set('Content-Type', contentType);
-        // 视频/音频/图片/PDF 内联打开（在线播放），其他类型才下载
-        responseHeaders.set('Content-Disposition', buildContentDisposition(fileName, contentType));
-        responseHeaders.set('Accept-Ranges', 'bytes');
-        if (isPartial) {
-          // 透传分片信息，支持视频拖动进度条；分片响应不做长缓存
-          const cr = res.headers.get('content-range');
-          if (cr) responseHeaders.set('Content-Range', cr);
-          responseHeaders.set('Cache-Control', 'no-cache');
-        } else {
-          // URL 含唯一随机名，内容不可变：浏览器长缓存，后台列表/翻页秒开
-          responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
-        }
-        const response_img = new Response(res.body, {
-          status: res.status,
-          headers: responseHeaders
-        });
+        // 统一构造响应：正确 Content-Type/inline 播放、Range 分片（上游不支持则边缘切分）
+        const { response: response_img, cacheable } = await buildMediaResponse(request, res, fileName, { cors: true });
 
-        // 只缓存完整响应（200），206 分片不能进缓存
-        if (!isPartial) {
+        // 只缓存完整响应（200），206 分片不进缓存
+        if (cacheable) {
           ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
         }
 
