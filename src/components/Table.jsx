@@ -127,7 +127,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
     const getChannel = (url) => {
         if (url.startsWith('/cfile/')) return 'TG_Channel';
         if (url.startsWith('/rfile/')) return 'R2';
-        if (url.startsWith('/file/')) return 'TG';
+        if (url.startsWith('/file/')) return 'TG.ph';
         return '-';
     };
     const renderFile = (fileUrl, index) => {

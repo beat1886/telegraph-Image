@@ -251,7 +251,7 @@ export default function Admin() {
                 title="按上传接口筛选"
               >
                 <option value="">全部接口</option>
-                <option value="file">TG</option>
+                <option value="file">TG.ph</option>
                 <option value="cfile">TG_Channel</option>
                 <option value="rfile">R2</option>
               </select>
