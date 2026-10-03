@@ -1,10 +1,43 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { faImages, faTrashAlt, faUpload, faSearchPlus } from '@fortawesome/free-solid-svg-icons';
+import { faImages, faTrashAlt, faUpload, faSearchPlus, faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
+
+// 链接行的独立复制按钮：仅复制成功才进入"已复制"态，1.5s 后自动恢复；每个按钮状态互相独立
+function CopyButton({ text, label = '复制', compact = false }) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef(null);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+  const handleClick = async (e) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      toast.error('复制失败，请重试');
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      title={label}
+      className={`shrink-0 flex items-center justify-center gap-1 px-2 h-[34px] rounded-lg border text-xs whitespace-nowrap transition-colors ${
+        copied
+          ? 'bg-green-500 border-green-500 text-white'
+          : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <FontAwesomeIcon icon={copied ? faCheck : faCopy} className="text-xs" />
+      {!compact && <span>{copied ? '已复制' : label}</span>}
+    </button>
+  );
+}
 
 export default function HomePage({ initialRole, authButton }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -40,8 +73,6 @@ export default function HomePage({ initialRole, authButton }) {
   const [isAuthapi, setisAuthapi] = useState(!!initialRole);
   const [Loginuser, setLoginuser] = useState(initialRole || '');
   const [boxType, setBoxtype] = useState("img");
-
-  const parentRef = useRef(null);
 
   let headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0, Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
@@ -320,17 +351,6 @@ export default function HomePage({ initialRole, authButton }) {
     }
   };
 
-  const handleCopyCode = async () => {
-    const codeElements = parentRef.current.querySelectorAll('code');
-    const values = Array.from(codeElements).map(code => code.textContent);
-    try {
-      await navigator.clipboard.writeText(values.join("\n"));
-      toast.success('链接已复制');
-    } catch (error) {
-      toast.error('复制失败，请重试');
-    }
-  };
-
   const handlerenderImageClick = (imageUrl, type) => {
     setBoxtype(type);
     setSelectedImage(imageUrl);
@@ -408,6 +428,29 @@ export default function HomePage({ initialRole, authButton }) {
     );
   };
 
+  // HTML/Markdown/BBCode/Links 四个标签共用：每行链接带独立复制按钮，顶部可一键复制全部
+  const renderCodeLinks = (format) => {
+    const lines = uploadedImages.map((data) => {
+      if (format === 'html') return `<img src="${data.url}" alt="${data.name}" />`;
+      if (format === 'markdown') return `![${data.name}](${data.url})`;
+      if (format === 'bbcode') return `[img]${data.url}[/img]`;
+      return `${data.url}`;
+    });
+    return (
+      <div className="p-4 bg-slate-100">
+        <div className="flex justify-end mb-2">
+          <CopyButton text={lines.join('\n')} label="复制全部" />
+        </div>
+        {lines.map((line, index) => (
+          <div key={index} className="mb-2 flex items-start gap-2">
+            <code className="break-all flex-1 bg-white rounded px-2 py-1.5 text-xs sm:text-sm">{line}</code>
+            <CopyButton text={line} compact />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'preview':
@@ -418,18 +461,20 @@ export default function HomePage({ initialRole, authButton }) {
                 {renderFile(data, index)}
                 <div className="flex flex-col justify-center w-full sm:w-4/5 p-2 sm:p-0">
                   {[
-                    { text: data.url, onClick: () => handleCopy(data.url) },
-                    { text: `![${data.name}](${data.url})`, onClick: () => handleCopy(`![${data.name}](${data.url})`) },
-                    { text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>`, onClick: () => handleCopy(`<a href="${data.url}" target="_blank"><img src="${data.url}"></a>`) },
-                    { text: `[img]${data.url}[/img]`, onClick: () => handleCopy(`[img]${data.url}[/img]`) },
+                    { text: data.url },
+                    { text: `![${data.name}](${data.url})` },
+                    { text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>` },
+                    { text: `[img]${data.url}[/img]` },
                   ].map((item, i) => (
-                    <input
-                      key={`input-${i}`}
-                      readOnly
-                      value={item.text}
-                      onClick={item.onClick}
-                      className="px-2 sm:px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none w-full"
-                    />
+                    <div key={`input-${i}`} className="flex items-center gap-2 my-1 w-full">
+                      <input
+                        readOnly
+                        value={item.text}
+                        onClick={() => handleCopy(item.text)}
+                        className="px-2 sm:px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none flex-1 min-w-0 cursor-pointer"
+                      />
+                      <CopyButton text={item.text} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -437,45 +482,13 @@ export default function HomePage({ initialRole, authButton }) {
           </div>
         );
       case 'htmlLinks':
-        return (
-          <div ref={parentRef} className="p-4 bg-slate-100" onClick={handleCopyCode}>
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className="break-all">{`<img src="${data.url}" alt="${data.name}" />`}</code>
-              </div>
-            ))}
-          </div>
-        );
+        return renderCodeLinks('html');
       case 'markdownLinks':
-        return (
-          <div ref={parentRef} className="p-4 bg-slate-100" onClick={handleCopyCode}>
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className="break-all">{`![${data.name}](${data.url})`}</code>
-              </div>
-            ))}
-          </div>
-        );
+        return renderCodeLinks('markdown');
       case 'bbcodeLinks':
-        return (
-          <div ref={parentRef} className="p-4 bg-slate-100" onClick={handleCopyCode}>
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className="break-all">{`[img]${data.url}[/img]`}</code>
-              </div>
-            ))}
-          </div>
-        );
+        return renderCodeLinks('bbcode');
       case 'viewLinks':
-        return (
-          <div ref={parentRef} className="p-4 bg-slate-100" onClick={handleCopyCode}>
-            {uploadedImages.map((data, index) => (
-              <div key={index} className="mb-2">
-                <code className="break-all">{`${data.url}`}</code>
-              </div>
-            ))}
-          </div>
-        );
+        return renderCodeLinks('links');
       default:
         return null;
     }
