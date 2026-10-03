@@ -559,7 +559,7 @@ export default function HomePage({ initialRole, authButton }) {
       <div className="mt-[60px] w-[92%] sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-0">
           <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">图片上传</div>
+            <div className="text-gray-800 text-lg">文件上传</div>
           </div>
           <div className="flex flex-row items-center gap-2">
             <span className="text-sm sm:text-base md:text-sm lg:text-xl xl:text-xl 2xl:text-xl whitespace-nowrap">上传接口：</span>
