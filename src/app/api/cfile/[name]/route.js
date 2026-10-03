@@ -40,7 +40,7 @@ export async function GET(request, { params }) {
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
   const Referer = request.headers.get('Referer') || "Referer";
 
-  const cacheKey = new Request(`${req_url.origin}/api/cfile/${name}?__cv=2`, { method: 'GET' });
+  const cacheKey = new Request(`${req_url.origin}/api/cfile/${name}?__cv=3`, { method: 'GET' });
   const cache = caches.default;
 
   let rating

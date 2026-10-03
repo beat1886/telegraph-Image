@@ -39,7 +39,7 @@ export async function GET(request, { params }) {
 
   const req_url = new URL(request.url);
   // 构造缓存键（固定版本号：升级响应头后旧缓存自动失效，且不受访客 URL 参数影响）
-  const cacheKey = new Request(`${req_url.origin}/api/rfile/${name}?__cv=2`, { method: 'GET' });
+  const cacheKey = new Request(`${req_url.origin}/api/rfile/${name}?__cv=3`, { method: 'GET' });
   const cache = caches.default;
 
   let rating
@@ -103,14 +103,21 @@ export async function GET(request, { params }) {
 
     const isPartial = request.headers.get('range') !== null && object.range;
     if (isPartial) {
-      headers.set('Content-Range', `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`);
+      const rangeOffset = object.range.offset;
+      const rangeLength = object.range.length ?? (object.size - rangeOffset);
+      headers.set('Content-Length', String(rangeLength));
+      headers.set('Content-Range', `bytes ${rangeOffset}-${rangeOffset + rangeLength - 1}/${object.size}`);
       headers.set('Cache-Control', 'no-cache');
     } else {
+      // 显式 Content-Length：边缘缓存完整对象后才能对后续 Range 请求输出 206
+      headers.set('Content-Length', String(object.size));
       // 对象名唯一、内容不可变：浏览器长缓存，后台列表/翻页秒开
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     }
 
     const status = object.body ? (isPartial ? 206 : 200) : 304
+    // 304 无响应体，不能带完整对象的 Content-Length
+    if (status === 304) headers.delete('Content-Length');
 
     let response_img = new Response(object.body, {
       headers,
