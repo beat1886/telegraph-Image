@@ -1,37 +1,13 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getContentType, buildContentDisposition } from '@/lib/mime';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Range',
   'Access-Control-Max-Age': '86400', // 24 hours
   'Content-Type': 'application/json'
 };
-
-
-function getContentType(fileName) {
-  const extension = fileName.split('.').pop().toLowerCase();
-  const mimeTypes = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'bmp': 'image/bmp',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'pdf': 'application/pdf',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'json': 'application/json',
-    'mp4': 'video/mp4',
-    'avi': 'video/x-msvideo',
-    'mov': 'video/quicktime',
-    'wmv': 'video/x-ms-wmv',
-    'flv': 'video/x-flv',
-    'mkv': 'video/x-matroska'
-  };
-  return mimeTypes[extension] || 'application/octet-stream';
-}
 
 
 export async function OPTIONS(request) {
@@ -64,7 +40,7 @@ export async function GET(request, { params }) {
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
   const Referer = request.headers.get('Referer') || "Referer";
 
-  const cacheKey = new Request(req_url.toString(), request);
+  const cacheKey = new Request(`${req_url.origin}/api/cfile/${name}?__cv=2`, { method: 'GET' });
   const cache = caches.default;
 
   let rating
@@ -107,30 +83,39 @@ export async function GET(request, { params }) {
         })
 
     } else {
+      const rangeHeader = request.headers.get('range');
       const res = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
+        method: 'GET',
+        headers: rangeHeader ? { Range: rangeHeader } : {},
       });
 
       if (res.ok) {
-        const fileBuffer = await res.arrayBuffer();
-
-
-
         const contentType = getContentType(fileName);
-        const responseHeaders = {
-          "Content-Disposition": `attachment; filename=${fileName}`,
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": contentType,
+        const isPartial = res.status === 206;
+        const responseHeaders = new Headers();
+        responseHeaders.set('Access-Control-Allow-Origin', '*');
+        responseHeaders.set('Content-Type', contentType);
+        // 视频/音频/图片/PDF 内联打开（在线播放），其他类型才下载
+        responseHeaders.set('Content-Disposition', buildContentDisposition(fileName, contentType));
+        responseHeaders.set('Accept-Ranges', 'bytes');
+        if (isPartial) {
+          // 透传分片信息，支持视频拖动进度条；分片响应不做长缓存
+          const cr = res.headers.get('content-range');
+          if (cr) responseHeaders.set('Content-Range', cr);
+          responseHeaders.set('Cache-Control', 'no-cache');
+        } else {
           // URL 含唯一随机名，内容不可变：浏览器长缓存，后台列表/翻页秒开
-          "Cache-Control": "public, max-age=31536000, immutable"
-        };
-        const response_img = new Response(fileBuffer, {
+          responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        const response_img = new Response(res.body, {
+          status: res.status,
           headers: responseHeaders
         });
 
-        ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
+        // 只缓存完整响应（200），206 分片不能进缓存
+        if (!isPartial) {
+          ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
+        }
 
         if (Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`) {
           return response_img;
@@ -245,7 +230,7 @@ async function logRequest(env, name, referer, ip) {
   try {
     const nowTime = await get_nowTime()
     await insertTgImgLog(env.IMG, `/cfile/${name}`, referer, ip, nowTime);
-    const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = '/rfile/${name}';`).run()
+    const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = '/cfile/${name}';`).run()
   } catch (error) {
     console.error('Error logging request:', error);
   }

@@ -1,9 +1,10 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getContentType, buildContentDisposition } from '@/lib/mime';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Range',
   'Access-Control-Max-Age': '86400', // 24 hours
   'Content-Type': 'application/json'
 };
@@ -37,8 +38,8 @@ export async function GET(request, { params }) {
   const Referer = request.headers.get('Referer') || "Referer";
 
   const req_url = new URL(request.url);
-  // 构造缓存键
-  const cacheKey = new Request(req_url.toString(), request);
+  // 构造缓存键（固定版本号：升级响应头后旧缓存自动失效，且不受访客 URL 参数影响）
+  const cacheKey = new Request(`${req_url.origin}/api/rfile/${name}?__cv=2`, { method: 'GET' });
   const cache = caches.default;
 
   let rating
@@ -89,14 +90,27 @@ export async function GET(request, { params }) {
     const headers = new Headers()
     object.writeHttpMetadata(headers)
     headers.set('etag', object.httpEtag)
-    // 对象名唯一、内容不可变：浏览器长缓存，后台列表/翻页秒开
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable')
 
-    if (object.range) {
-      headers.set("content-range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
+    // Content-Type 兜底：R2 对象未存类型（octet-stream）时按文件名扩展名推断
+    const storedType = headers.get('content-type');
+    const contentType = (!storedType || storedType === 'application/octet-stream')
+      ? getContentType(name)
+      : storedType;
+    headers.set('Content-Type', contentType);
+    // 视频/音频/图片/PDF 内联打开（在线播放），其他类型才下载
+    headers.set('Content-Disposition', buildContentDisposition(name, contentType));
+    headers.set('Accept-Ranges', 'bytes');
+
+    const isPartial = request.headers.get('range') !== null && object.range;
+    if (isPartial) {
+      headers.set('Content-Range', `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`);
+      headers.set('Cache-Control', 'no-cache');
+    } else {
+      // 对象名唯一、内容不可变：浏览器长缓存，后台列表/翻页秒开
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     }
 
-    const status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
+    const status = object.body ? (isPartial ? 206 : 200) : 304
 
     let response_img = new Response(object.body, {
       headers,
@@ -105,7 +119,6 @@ export async function GET(request, { params }) {
 
     if (status === 200) {
       ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
-      // await cache.put(cacheKey, response_img.clone());
     }
 
 
