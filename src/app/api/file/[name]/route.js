@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { buildMediaResponse } from '@/lib/rangeResponse';
+import { serveMedia } from '@/lib/rangeResponse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,23 +33,24 @@ export async function GET(request, { params }) {
   }
 
   try {
-    // 仅转发 Range 头；上游不支持分片时由 buildMediaResponse 在边缘切分兜底
-    const rangeHeader = request.headers.get('range');
-    const res = await fetch(`https://telegra.ph/file/${name}`, {
-      method: 'GET',
-      headers: rangeHeader ? { Range: rangeHeader } : {},
-    })
-    if (!res.ok) {
-      const proxied = new Response(res.body, { status: res.status, headers: new Headers(res.headers) });
-      if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {
-        return proxied
-      } else if (!env.IMG) {
-        return proxied
-      } else {
-        return proxied
-      }
+    // private 响应让 Range 头到达函数；完整对象存版本化内层缓存，分片由函数确定性切分
+    const cacheKey = new Request(`${req_url.origin}/api/file/${name}?__cv=3`, { method: 'GET' });
+    const cache = caches.default;
+    const { response: proxied, upstream } = await serveMedia({
+      request,
+      cache,
+      cacheKey,
+      waitUntil: ctx.waitUntil.bind(ctx),
+      fileName: name,
+      maxAge: 86400,
+      fetchUpstream: (rangeHeader) => fetch(`https://telegra.ph/file/${name}`, {
+        method: 'GET',
+        headers: rangeHeader ? { Range: rangeHeader } : {},
+      }),
+    });
+    if (!proxied) {
+      return new Response(upstream.body, { status: upstream.status, headers: new Headers(upstream.headers) });
     }
-    const { response: proxied } = await buildMediaResponse(request, res, name, { maxAge: 86400 });
     if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {
       return proxied
     } else if (!env.IMG) {

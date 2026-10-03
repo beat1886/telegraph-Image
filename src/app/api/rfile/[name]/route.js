@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getContentType, buildContentDisposition } from '@/lib/mime';
+import { respondFromCache } from '@/lib/rangeResponse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,8 +63,8 @@ export async function GET(request, { params }) {
     if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
       await logRequest(env, name, Referer, clientIp);
     }
-    // 如果缓存中存在，直接返回缓存响应
-    return cachedResponse
+    // 缓存命中：有 Range 则由函数确定性切片，无 Range 原样返回
+    return await respondFromCache(request, cachedResponse, name);
   }
 
 
@@ -109,10 +110,10 @@ export async function GET(request, { params }) {
       headers.set('Content-Range', `bytes ${rangeOffset}-${rangeOffset + rangeLength - 1}/${object.size}`);
       headers.set('Cache-Control', 'no-cache');
     } else {
-      // 显式 Content-Length：边缘缓存完整对象后才能对后续 Range 请求输出 206
+      // 显式 Content-Length + private：边缘不接管缓存（Range 才能到达函数），浏览器长缓存
       headers.set('Content-Length', String(object.size));
       // 对象名唯一、内容不可变：浏览器长缓存，后台列表/翻页秒开
-      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      headers.set('Cache-Control', 'private, max-age=31536000, immutable');
     }
 
     const status = object.body ? (isPartial ? 206 : 200) : 304

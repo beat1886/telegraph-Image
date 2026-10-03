@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { buildMediaResponse } from '@/lib/rangeResponse';
+import { serveMedia } from '@/lib/rangeResponse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,21 +83,20 @@ export async function GET(request, { params }) {
         })
 
     } else {
-      const rangeHeader = request.headers.get('range');
-      const res = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
-        method: 'GET',
-        headers: rangeHeader ? { Range: rangeHeader } : {},
+      const { response: response_img, upstream } = await serveMedia({
+        request,
+        cache,
+        cacheKey,
+        waitUntil: ctx.waitUntil.bind(ctx),
+        fileName,
+        cors: true,
+        fetchUpstream: (rangeHeader) => fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
+          method: 'GET',
+          headers: rangeHeader ? { Range: rangeHeader } : {},
+        }),
       });
 
-      if (res.ok) {
-        // 统一构造响应：正确 Content-Type/inline 播放、Range 分片（上游不支持则边缘切分）
-        const { response: response_img, cacheable } = await buildMediaResponse(request, res, fileName, { cors: true });
-
-        // 只缓存完整响应（200），206 分片不进缓存
-        if (cacheable) {
-          ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
-        }
-
+      if (response_img) {
         if (Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`) {
           return response_img;
 
