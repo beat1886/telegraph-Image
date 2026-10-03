@@ -64,7 +64,7 @@ export async function GET(request, { params }) {
       await logRequest(env, name, Referer, clientIp);
     }
     // 缓存命中：有 Range 则由函数确定性切片，无 Range 原样返回
-    return await respondFromCache(request, cachedResponse, name);
+    return await respondFromCache(request, cachedResponse, name, { maxAge: 31536000 });
   }
 
 

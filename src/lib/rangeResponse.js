@@ -2,10 +2,12 @@
 //
 // Cloudflare 边缘缓存机制（实测）：
 // - 当响应可被边缘缓存时，访客的 Range 头在未命中缓存时会被边缘剥离（源站收到完整请求）；
-// - 边缘对 chunked/截断对象的切片不可靠（可能返回空 206 或错误 total）。
+// - 边缘对 chunked/截断对象的切片不可靠（可能返回空 206 或错误 total）；
+// - telegra.ph 对 Cloudflare 回源的 Range 请求直接返回假 404。
 // 因此本方案：对外响应使用 private（边缘不缓存、浏览器照常缓存），Range 头即可到达函数；
-// 完整对象由函数写入 caches.default 的版本化内层缓存，分片一律由本模块在边缘确定性切分。
-import { getContentType, buildContentDisposition } from './mime';
+// 完整对象由函数写入 caches.default 的版本化内层缓存，分片一律由本模块在边缘确定性切分；
+// 文件名无扩展名（Telegram file_31）时按文件头魔数嗅探真实类型，保证内联播放。
+import { resolveContentType, buildContentDisposition } from './mime';
 
 function parseRange(header, size) {
   const m = /^bytes=(\d*)-(\d*)$/.exec((header || '').trim());
@@ -23,44 +25,43 @@ function parseRange(header, size) {
   return { start, end: Math.min(end, size - 1) };
 }
 
-function makeBaseHeaders(fileName, cors) {
+function makeBaseHeaders(media, cors) {
   const h = new Headers();
-  h.set('Content-Type', getContentType(fileName));
-  h.set('Content-Disposition', buildContentDisposition(fileName, h.get('Content-Type')));
+  h.set('Content-Type', media.mime);
+  h.set('Content-Disposition', buildContentDisposition(media.fileName, media.mime));
   h.set('Accept-Ranges', 'bytes');
   if (cors) h.set('Access-Control-Allow-Origin', '*');
   return h;
 }
 
-// 用已缓冲的完整对象构造分片响应（206 / 416）
-function sliceBuffered(buf, rangeHeader, fileName, cors) {
+// 用完整缓冲对象按 Range 构造响应（206 / 416），无 Range 时构造完整 200
+function buildBuffered(buf, rangeHeader, media, cors, maxAge) {
   const total = buf.byteLength;
-  const range = parseRange(rangeHeader, total);
-  const h = makeBaseHeaders(fileName, cors);
-  if (range && range.invalid) {
-    h.set('Content-Range', `bytes */${total}`);
-    return { response: new Response(null, { status: 416, headers: h }) };
+  const h = makeBaseHeaders(media, cors);
+  if (rangeHeader) {
+    const range = parseRange(rangeHeader, total);
+    if (!range) {
+      // 无法解析的 Range：按完整响应处理
+    } else if (range.invalid) {
+      h.set('Content-Range', `bytes */${total}`);
+      return new Response(null, { status: 416, headers: h });
+    } else {
+      h.set('Content-Range', `bytes ${range.start}-${range.end}/${total}`);
+      h.set('Content-Length', String(range.end - range.start + 1));
+      h.set('Cache-Control', 'no-cache');
+      return new Response(buf.slice(range.start, range.end + 1), { status: 206, headers: h });
+    }
   }
-  if (range) {
-    h.set('Content-Range', `bytes ${range.start}-${range.end}/${total}`);
-    h.set('Content-Length', String(range.end - range.start + 1));
-    h.set('Cache-Control', 'no-cache');
-    return {
-      response: new Response(buf.slice(range.start, range.end + 1), { status: 206, headers: h }),
-    };
-  }
-  // 无法解析的 Range：退回完整 200
   h.set('Content-Length', String(total));
-  h.set('Cache-Control', 'private, max-age=86400');
-  return { response: new Response(buf, { status: 200, headers: h }), cacheEntry: true };
+  h.set('Cache-Control', `private, max-age=${maxAge}${maxAge >= 31536000 ? ', immutable' : ''}`);
+  return new Response(buf.slice(0), { status: 200, headers: h });
 }
 
-// 内层缓存命中后按访客 Range 生成响应（无 Range 则原样返回完整对象）
-export async function respondFromCache(request, cached, fileName, { cors = false } = {}) {
-  const rangeHeader = request.headers.get('range');
-  if (!rangeHeader) return cached;
+// 内层缓存命中后按访客 Range 生成响应（无 Range 则基于缓冲重新生成标准响应）
+export async function respondFromCache(request, cached, fileName, { cors = false, maxAge = 86400 } = {}) {
   const buf = await cached.arrayBuffer();
-  return sliceBuffered(buf, rangeHeader, fileName, cors).response;
+  const media = resolveContentType(fileName, buf);
+  return buildBuffered(buf, request.headers.get('range'), media, cors, maxAge);
 }
 
 /**
@@ -70,12 +71,12 @@ export async function respondFromCache(request, cached, fileName, { cors = false
  * @param {Cache} [args.cache] caches.default
  * @param {Request} [args.cacheKey] 版本化内层缓存键
  * @param {Function} [args.waitUntil] ctx.waitUntil，用于不阻塞写入缓存
- * @param {Function} args.fetchUpstream (rangeHeader: string|null) => Promise<Response>，由本层决定是否带 Range
- * @param {string} args.fileName 用于推断 Content-Type / 文件名
+ * @param {Function} args.fetchUpstream (rangeHeader: string|null) => Promise<Response>
+ * @param {string} args.fileName 文件名（无扩展名时按文件头嗅探并补全）
  * @param {boolean} [args.cors]
  * @param {number} [args.maxAge] 完整对象的浏览器缓存秒数
- * @param {boolean} [args.forwardRange] 是否向上游转发 Range（telegra.ph 会对 Worker 的 Range 回源 404，需关闭）
- * @returns {Promise<{response: Response, upstream?: Response}>}
+ * @param {boolean} [args.forwardRange] 是否向上游转发 Range
+ * @returns {Promise<{response: Response|null, upstream?: Response}>}
  */
 export async function serveMedia({
   request,
@@ -92,7 +93,9 @@ export async function serveMedia({
   if (cache && cacheKey) {
     const cached = await cache.match(cacheKey);
     if (cached) {
-      return { response: await respondFromCache(request, cached, fileName, { cors }) };
+      return {
+        response: await respondFromCache(request, cached, fileName, { cors, maxAge }),
+      };
     }
   }
 
@@ -101,7 +104,7 @@ export async function serveMedia({
 
   // 2) 回源（视上游能力决定是否带 Range）
   let res = await fetchUpstream(sendRange || null);
-  // 部分上游（telegra.ph）对 Range 回源直接 404/416：降级为全量拉取后自行切片
+  // 部分上游对 Range 回源直接 404/416：降级为全量拉取后自行切片
   if (!res.ok && sendRange) {
     res = await fetchUpstream(null);
   }
@@ -114,37 +117,28 @@ export async function serveMedia({
     const m = /^bytes\s+\d+-\d+\/(\d+)$/.exec(cr);
     const looksHealthy = m && Number(m[1]) > 0 && buf.byteLength > 0;
     if (looksHealthy) {
-      const h = makeBaseHeaders(fileName, cors);
+      const media = resolveContentType(fileName, buf);
+      const h = makeBaseHeaders(media, cors);
       h.set('Content-Range', cr);
       h.set('Content-Length', String(buf.byteLength));
       h.set('Cache-Control', 'no-cache');
-      return { response: new Response(buf, { status: 206, headers: h }), upstream: res };
+      return { response: new Response(buf.slice(0), { status: 206, headers: h }), upstream: res };
     }
     res = await fetchUpstream(null);
     if (!res.ok) return { response: null, upstream: res };
   }
 
-  // 2b) 完整 200：缓冲（chunked 也要拿到确定大小），再决定切片或完整返回
+  // 2b) 完整 200：缓冲（chunked 也要拿到确定大小），嗅探类型，写内层缓存，再按 Range 切片
   const buf = await res.arrayBuffer();
   const total = buf.byteLength;
-  const sliced = rangeHeader ? sliceBuffered(buf, rangeHeader, fileName, cors) : null;
+  const media = resolveContentType(fileName, buf);
 
-  // 完整对象写内层缓存（200 或 206 响应都基于同一个完整对象）
-  // 注意：new Response(ArrayBuffer) 会 detach 底层 buffer，每个响应必须使用独立副本
   if (cache && cacheKey && total > 0) {
-    const h0 = makeBaseHeaders(fileName, cors);
-    h0.set('Content-Length', String(total));
-    h0.set('Cache-Control', `private, max-age=${maxAge}${maxAge >= 31536000 ? ', immutable' : ''}`);
-    const fullResponse = new Response(buf.slice(0), { status: 200, headers: h0 });
-    const putJob = cache.put(cacheKey, fullResponse);
+    const cachedEntry = buildBuffered(buf, null, media, cors, maxAge);
+    const putJob = cache.put(cacheKey, cachedEntry);
     if (waitUntil) waitUntil(putJob);
     else await putJob;
   }
 
-  if (sliced) return { response: sliced.response, upstream: res };
-
-  const h = makeBaseHeaders(fileName, cors);
-  h.set('Content-Length', String(total));
-  h.set('Cache-Control', `private, max-age=${maxAge}${maxAge >= 31536000 ? ', immutable' : ''}`);
-  return { response: new Response(buf.slice(0), { status: 200, headers: h }), upstream: res };
+  return { response: buildBuffered(buf, rangeHeader, media, cors, maxAge), upstream: res };
 }

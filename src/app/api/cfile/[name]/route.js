@@ -90,6 +90,7 @@ export async function GET(request, { params }) {
         waitUntil: ctx.waitUntil.bind(ctx),
         fileName,
         cors: true,
+        maxAge: 31536000,
         fetchUpstream: (rangeHeader) => fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
           method: 'GET',
           headers: rangeHeader ? { Range: rangeHeader } : {},
