@@ -484,9 +484,9 @@ export default function HomePage({ initialRole, authButton }) {
               onChange={handleSelectChange}
               className="text-xs sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 text-left pl-3"
             >
-              <option value="tg">TG(临时，会失效)</option>
-              <option value="tgchannel">TG_Channel(长期)</option>
-              {isAuthapi && Loginuser === "admin" && <option value="r2">cloudflare的R2 对象存储（长期，支持2GB大文件）</option>}
+              <option value="tg">TG（临时｜仅图片｜≤15MB）</option>
+              <option value="tgchannel">TG_Channel（长期｜图片≤10MB/其他文件≤50MB）</option>
+              {isAuthapi && Loginuser === "admin" && <option value="r2">R2 对象存储（长期｜任意文件｜≤2GB）</option>}
             </select>
           </div>
         </div>
