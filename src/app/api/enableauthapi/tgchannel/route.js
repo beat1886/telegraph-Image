@@ -213,6 +213,10 @@ const getFile = async (response) => {
 			return getFileDetails(response.result.video);
 		}
 
+		if (response.result.audio) {
+			return getFileDetails(response.result.audio);
+		}
+
 		if (response.result.document) {
 			return getFileDetails(response.result.document);
 		}
