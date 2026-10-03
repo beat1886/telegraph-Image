@@ -14,7 +14,6 @@ export default function HomePage({ initialRole, authButton }) {
   const [activeTab, setActiveTab] = useState('preview');
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
-  const [Total, setTotal] = useState('?');
   const [selectedOption, setSelectedOption] = useState('tg');
   // 以 File 对象为键缓存预览 URL，保证同一文件多次渲染时 blob 地址稳定，
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
@@ -48,7 +47,6 @@ export default function HomePage({ initialRole, authButton }) {
 
   useEffect(() => {
     ip();
-    getTotal();
     isAuth();
   }, []);
 
@@ -89,19 +87,6 @@ export default function HomePage({ initialRole, authButton }) {
       console.error('请求出错:', error);
     }
     // 初始状态已由服务端注入，这里仅做客户端刷新校正
-  };
-
-  const getTotal = async () => {
-    try {
-      const res = await fetch(`/api/total`, {
-        method: "GET",
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
-      setTotal(data.total);
-    } catch (error) {
-      console.error('请求出错:', error);
-    }
   };
 
   const handleFileChange = (event) => {
@@ -504,9 +489,6 @@ export default function HomePage({ initialRole, authButton }) {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-0">
           <div className="flex flex-col">
             <div className="text-gray-800 text-lg">图片上传</div>
-            <div className="mb-1 sm:mb-4 text-xs sm:text-sm text-gray-500">
-              本站已托管 <span className="text-cyan-600">{Total}</span> 张图片
-            </div>
           </div>
           <div className="flex flex-row items-center gap-2">
             <span className="text-sm sm:text-base md:text-sm lg:text-xl xl:text-xl 2xl:text-xl whitespace-nowrap">上传接口：</span>
