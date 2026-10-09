@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 
 // 链接行的独立复制按钮：仅复制成功才显示"已复制"反馈，1.5s 后自动恢复；每个按钮状态互相独立。
 // 反馈直接操作按钮 DOM（不依赖重渲染），保证任何环境下点击后即时可见
-function CopyButton({ text, label = '复制', compact = false }) {
+function CopyButton({ text, label = '复制', compact = true }) {
   const btnRef = useRef(null);
   const timerRef = useRef(null);
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -483,7 +483,7 @@ export default function HomePage({ initialRole, authButton }) {
     return (
       <div className="p-4 bg-slate-100">
         <div className="flex justify-end mb-2">
-          <CopyButton text={lines.join('\n')} label="复制全部" />
+          <CopyButton text={lines.join('\n')} label="复制全部" compact={false} />
         </div>
         {lines.map((line, index) => (
           <div key={index} className="mb-2 flex items-start gap-2">
@@ -504,6 +504,7 @@ export default function HomePage({ initialRole, authButton }) {
               <CopyButton
                 text={uploadedImages.map((data) => data.url).join('\n')}
                 label="一键复制全部直链"
+                compact={false}
               />
             </div>
             {uploadedImages.map((data, index) => (
