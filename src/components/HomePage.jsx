@@ -486,9 +486,11 @@ export default function HomePage({ initialRole, authButton }) {
           <CopyButton text={lines.join('\n')} label="复制全部" compact={false} />
         </div>
         {lines.map((line, index) => (
-          <div key={index} className="mb-2 flex items-start gap-2">
-            <code className="break-all flex-1 bg-white rounded px-2 py-1.5 text-xs sm:text-sm">{line}</code>
-            <CopyButton text={line} compact />
+          <div key={index} className="mb-2 relative">
+            <code className="block break-all bg-white rounded pl-2 pr-11 py-1.5 text-xs sm:text-sm">{line}</code>
+            <div className="absolute right-1 top-1/2 -translate-y-1/2">
+              <CopyButton text={line} compact />
+            </div>
           </div>
         ))}
       </div>
@@ -517,14 +519,16 @@ export default function HomePage({ initialRole, authButton }) {
                     { text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>` },
                     { text: `[img]${data.url}[/img]` },
                   ].map((item, i) => (
-                    <div key={`input-${i}`} className="flex items-center gap-2 my-1 w-full">
+                    <div key={`input-${i}`} className="relative my-1 w-full">
                       <input
                         readOnly
                         value={item.text}
                         onClick={() => handleCopy(item.text)}
-                        className="px-2 sm:px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none flex-1 min-w-0 cursor-pointer"
+                        className="px-2 sm:px-3 py-2 pr-11 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none w-full cursor-pointer"
                       />
-                      <CopyButton text={item.text} />
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                        <CopyButton text={item.text} />
+                      </div>
                     </div>
                   ))}
                 </div>
