@@ -89,6 +89,23 @@ function CopyButton({ text, label = '复制', compact = true }) {
 export default function HomePage({ initialRole, authButton }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
+  // 上传结果持久化到 sessionStorage：切到管理页再回来时记录不丢失（仅当前标签页会话）
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('ml_results') || '[]');
+      if (Array.isArray(saved) && saved.length > 0) setUploadedImages(saved);
+    } catch (e) { /* 忽略损坏的缓存 */ }
+    restoredRef.current = true;
+  }, []);
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    try {
+      sessionStorage.setItem('ml_results', JSON.stringify(
+        uploadedImages.map(({ url, name, type }) => ({ url, name, type }))
+      ));
+    } catch (e) { /* 存储满时静默失败 */ }
+  }, [uploadedImages]);
   const [uploadedFilesNum, setUploadedFilesNum] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState('preview');
@@ -99,7 +116,8 @@ export default function HomePage({ initialRole, authButton }) {
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
   const previewUrlsRef = useRef(new WeakMap());
   const getPreviewUrl = (file) => {
-    if (!file || !file.type) return null;
+    // 恢复的历史记录是普通对象而非 File/Blob，无法 createObjectURL，直接用远程 URL
+    if (!file || !file.type || !(file instanceof Blob)) return null;
     const t = file.type;
     if (!t.startsWith('image/') && !t.startsWith('video/') && !t.startsWith('audio/')) return null;
     let url = previewUrlsRef.current.get(file);
