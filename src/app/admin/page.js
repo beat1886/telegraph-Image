@@ -223,7 +223,7 @@ export default function Admin() {
               ) : !r2Usage ? (
                 <div className="space-y-1.5">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="flex items-center gap-2 animate-pulse">
+                    <div key={i} className="flex items-center gap-2 h-4 animate-pulse">
                       <span className="w-36 sm:w-44 shrink-0 h-3 rounded bg-gray-100" />
                       <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden" />
                       <span className="w-32 sm:w-40 shrink-0 h-3 rounded bg-gray-100" />
