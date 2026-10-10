@@ -79,7 +79,8 @@ body {
 .app-toast.Toastify__toast-container {
   width: auto;
   max-width: calc(100vw - 32px);
-  top: max(10px, env(safe-area-inset-top, 0px));
+  /* 顶部让开固定头部（约 50px）及其按钮，避免遮挡“管理/登录”等操作 */
+  top: max(64px, calc(env(safe-area-inset-top, 0px) + 54px));
   padding: 0;
   pointer-events: none;
 }
