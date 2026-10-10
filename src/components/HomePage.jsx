@@ -386,10 +386,24 @@ export default function HomePage({ initialRole, authButton }) {
     setSelectedFiles(updatedFiles);
   };
 
-  const handleCopy = async (text) => {
+  // 链接行内联反馈状态：{ [key]: true } 表示该行刚复制成功，1.5s 后自动清除
+  const [copiedMap, setCopiedMap] = useState({});
+  const copyTimerRef = useRef({});
+  useEffect(() => () => Object.values(copyTimerRef.current).forEach(clearTimeout), []);
+
+  const handleCopyLine = async (text, key) => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('链接已复制');
+      setCopiedMap((m) => ({ ...m, [key]: true }));
+      clearTimeout(copyTimerRef.current[key]);
+      copyTimerRef.current[key] = setTimeout(() => {
+        setCopiedMap((m) => {
+          const n = { ...m };
+          delete n[key];
+          return n;
+        });
+      }, 1500);
     } catch (err) {
       toast.error('复制失败，请重试');
     }
@@ -472,7 +486,7 @@ export default function HomePage({ initialRole, authButton }) {
     );
   };
 
-  // HTML/Markdown/BBCode/Links 四个标签共用：每行链接带独立复制按钮，顶部可一键复制全部
+  // HTML/Markdown/BBCode/Links 四个标签共用：整行可点复制，行内图标/已复制反馈，顶部可复制全部
   const renderCodeLinks = (format) => {
     const lines = uploadedImages.map((data) => {
       if (format === 'html') return `<img src="${data.url}" alt="${data.name}" />`;
@@ -485,14 +499,27 @@ export default function HomePage({ initialRole, authButton }) {
         <div className="flex justify-end mb-2">
           <CopyButton text={lines.join('\n')} label="复制全部" compact={false} />
         </div>
-        {lines.map((line, index) => (
-          <div key={index} className="mb-2 relative">
-            <code className="block break-all bg-white rounded pl-2 pr-11 py-1.5 text-xs sm:text-sm">{line}</code>
-            <div className="absolute right-1 top-1/2 -translate-y-1/2">
-              <CopyButton text={line} compact />
+        {lines.map((line, index) => {
+          const key = `${format}-${index}`;
+          const copied = !!copiedMap[key];
+          return (
+            <div
+              key={index}
+              onClick={() => handleCopyLine(line, key)}
+              className="group mb-2 flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+            >
+              <code className="flex-1 min-w-0 break-all text-xs sm:text-sm text-gray-600">{line}</code>
+              {copied ? (
+                <span className="text-xs text-green-500 shrink-0">已复制</span>
+              ) : (
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -514,23 +541,35 @@ export default function HomePage({ initialRole, authButton }) {
                 {renderFile(data, index)}
                 <div className="flex flex-col justify-center w-full sm:w-4/5 p-2 sm:p-0">
                   {[
-                    { text: data.url },
-                    { text: `![${data.name}](${data.url})` },
-                    { text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>` },
-                    { text: `[img]${data.url}[/img]` },
-                  ].map((item, i) => (
-                    <div key={`input-${i}`} className="relative my-1 w-full">
-                      <input
-                        readOnly
-                        value={item.text}
-                        onClick={() => handleCopy(item.text)}
-                        className="px-2 sm:px-3 py-2 pr-11 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm text-gray-800 focus:outline-none w-full cursor-pointer"
-                      />
-                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                        <CopyButton text={item.text} />
+                    { label: '直链', text: data.url },
+                    { label: 'Markdown', text: `![${data.name}](${data.url})` },
+                    { label: 'HTML', text: `<a href="${data.url}" target="_blank"><img src="${data.url}"></a>` },
+                    { label: 'BBCode', text: `[img]${data.url}[/img]` },
+                  ].map((item, i) => {
+                    const key = `${index}-${i}`;
+                    const copied = !!copiedMap[key];
+                    return (
+                      <div key={`input-${i}`} className="my-1 w-full">
+                        <p className="text-xs text-gray-400 mb-0.5">{item.label}</p>
+                        <div
+                          onClick={() => handleCopyLine(item.text, key)}
+                          className="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+                        >
+                          <code className="flex-1 min-w-0 truncate text-xs text-gray-600" title={item.text}>
+                            {item.text}
+                          </code>
+                          {copied ? (
+                            <span className="text-xs text-green-500 shrink-0">已复制</span>
+                          ) : (
+                            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <rect x="9" y="9" width="13" height="13" rx="2" />
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
