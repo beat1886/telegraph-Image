@@ -24,8 +24,10 @@ export default function Admin() {
   const [showBatchConfirm, setShowBatchConfirm] = useState(false);
   const [r2Usage, setR2Usage] = useState(null); // R2 用量
   const [r2UsageError, setR2UsageError] = useState('');
+  const [listLoading, setListLoading] = useState(true); // 列表加载中（用于骨架屏）
 
   const getListdata = useCallback(async (page, ch = channel, size = pageSize) => {
+    setListLoading(true);
     try {
       const res = await fetch(`/api/admin/list`, {
         method: "POST",
@@ -52,6 +54,8 @@ export default function Admin() {
 
     } catch (error) {
       toast.error(error.message)
+    } finally {
+      setListLoading(false);
     }
 
   })
@@ -201,46 +205,56 @@ export default function Admin() {
 
         <main className="mt-[56px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
 
-          {/* R2 用量卡片 */}
-          {(r2Usage || r2UsageError) && (
-            <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
-              <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">
-                    R2 用量{r2Usage ? `（${r2Usage.month} 计费月）` : ''}
-                  </span>
-                  {r2Usage && (
-                    <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
-                  )}
-                </div>
-                {r2UsageError ? (
-                  <p className="text-xs text-amber-600">{r2UsageError}</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {[
-                      { label: '存储', used: r2Usage.storage.used, limit: r2Usage.storage.limit, fmt: (n) => `${(n / 1024 ** 3).toFixed(2)} GB` },
-                      { label: 'A类操作（写入/列举/删除）', used: r2Usage.classA.used, limit: r2Usage.classA.limit, fmt: (n) => n.toLocaleString() },
-                      { label: 'B类操作（读取）', used: r2Usage.classB.used, limit: r2Usage.classB.limit, fmt: (n) => n.toLocaleString() },
-                    ].map((row) => {
-                      const pct = Math.min(100, row.used / row.limit * 100);
-                      const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500';
-                      return (
-                        <div key={row.label} className="flex items-center gap-2">
-                          <span className="w-36 sm:w-44 shrink-0 text-[11px] sm:text-xs text-gray-500 truncate">{row.label}</span>
-                          <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                            <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${Math.max(pct, 0.5)}%` }} />
-                          </div>
-                          <span className="w-32 sm:w-40 shrink-0 text-right text-[11px] sm:text-xs text-gray-600 whitespace-nowrap">
-                            {row.fmt(row.used)} / {row.fmt(row.limit)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+          {/* R2 用量卡片：加载中先显示骨架，避免数据到达时突然撑开页面 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
+            <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
+                  R2 用量{r2Usage ? `（${r2Usage.month} 计费月）` : ''}
+                </span>
+                {r2Usage ? (
+                  <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
+                ) : !r2UsageError ? (
+                  <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
+                ) : null}
               </div>
+              {r2UsageError ? (
+                <p className="text-xs text-amber-600">{r2UsageError}</p>
+              ) : !r2Usage ? (
+                <div className="space-y-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-2 animate-pulse">
+                      <span className="w-36 sm:w-44 shrink-0 h-3 rounded bg-gray-100" />
+                      <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden" />
+                      <span className="w-32 sm:w-40 shrink-0 h-3 rounded bg-gray-100" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {[
+                    { label: '存储', used: r2Usage.storage.used, limit: r2Usage.storage.limit, fmt: (n) => `${(n / 1024 ** 3).toFixed(2)} GB` },
+                    { label: 'A类操作（写入/列举/删除）', used: r2Usage.classA.used, limit: r2Usage.classA.limit, fmt: (n) => n.toLocaleString() },
+                    { label: 'B类操作（读取）', used: r2Usage.classB.used, limit: r2Usage.classB.limit, fmt: (n) => n.toLocaleString() },
+                  ].map((row) => {
+                    const pct = Math.min(100, row.used / row.limit * 100);
+                    const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500';
+                    return (
+                      <div key={row.label} className="flex items-center gap-2">
+                        <span className="w-36 sm:w-44 shrink-0 text-[11px] sm:text-xs text-gray-500 truncate">{row.label}</span>
+                        <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${Math.max(pct, 0.5)}%` }} />
+                        </div>
+                        <span className="w-32 sm:w-40 shrink-0 text-right text-[11px] sm:text-xs text-gray-600 whitespace-nowrap">
+                          {row.fmt(row.used)} / {row.fmt(row.limit)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
@@ -280,7 +294,9 @@ export default function Admin() {
               全选
             </label>
             <span className="flex-1 min-w-0 truncate text-xs sm:text-sm text-gray-400">
-              {selected.length > 0 ? `已选 ${selected.length} 项` : `共 ${totalCount} 张图片`}
+              {listLoading ? (
+                <span className="inline-block h-3 w-20 rounded bg-gray-100 animate-pulse align-middle" />
+              ) : selected.length > 0 ? `已选 ${selected.length} 项` : `共 ${totalCount} 张图片`}
             </span>
             <button
               onClick={() => setShowBatchConfirm(true)}
