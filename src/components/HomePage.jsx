@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { faImages, faTrashAlt, faUpload, faSearchPlus, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faImages, faTrashAlt, faUpload, faSearchPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -77,7 +77,10 @@ function CopyButton({ text, label = '复制', compact = true }) {
       title={label}
       className="shrink-0 flex items-center justify-center gap-1 px-2 h-[34px] rounded-lg border text-xs whitespace-nowrap transition-colors bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
     >
-      <FontAwesomeIcon icon={faCopy} className="text-xs" />
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
       {!compact && <span>{label}</span>}
     </button>
   );
@@ -532,7 +535,7 @@ export default function HomePage({ initialRole, authButton }) {
             <div className="flex justify-end m-1 sm:m-2">
               <CopyButton
                 text={uploadedImages.map((data) => data.url).join('\n')}
-                label="一键复制全部直链"
+                label="复制全部"
                 compact={false}
               />
             </div>
