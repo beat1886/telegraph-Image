@@ -9,6 +9,23 @@ import { ensureUidCookie } from "@/lib/uid";
 
 // 链接行的独立复制按钮：仅复制成功才显示"已复制"反馈，1.5s 后自动恢复；每个按钮状态互相独立。
 // 反馈直接操作按钮 DOM（不依赖重渲染），保证任何环境下点击后即时可见
+
+// 部分视频/音频格式（如 mkv/flv/rmvb）在系统文件选择器中 MIME 为空，
+// 只靠 file.type 会误判成普通文件导致无法预览；按扩展名兜底判断媒体大类
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'svg', 'ico', 'heic', 'heif'];
+const VIDEO_EXTS = ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'ogg', 'ogv', 'm4v', '3gp', '3g2', 'mpg', 'mpeg', 'mxf', 'vob', 'rmvb', 'rm', 'ts'];
+const AUDIO_EXTS = ['mp3', 'wav', 'flac', 'm4a', 'aac', 'oga', 'opus', 'wma', 'aiff', 'ape', 'mid', 'midi'];
+const getLocalKind = (file) => {
+  const t = file?.type || '';
+  if (t.startsWith('image/')) return 'image';
+  if (t.startsWith('video/')) return 'video';
+  if (t.startsWith('audio/')) return 'audio';
+  const ext = (file?.name?.split('.').pop() || '').toLowerCase();
+  if (VIDEO_EXTS.includes(ext)) return 'video';
+  if (AUDIO_EXTS.includes(ext)) return 'audio';
+  if (IMAGE_EXTS.includes(ext)) return 'image';
+  return 'other';
+};
 function CopyButton({ text, label = '复制', compact = true }) {
   const btnRef = useRef(null);
   const timerRef = useRef(null);
@@ -118,9 +135,7 @@ export default function HomePage({ initialRole, authButton }) {
   const previewUrlsRef = useRef(new WeakMap());
   const getPreviewUrl = (file) => {
     // 恢复的历史记录是普通对象而非 File/Blob，无法 createObjectURL，直接用远程 URL
-    if (!file || !file.type || !(file instanceof Blob)) return null;
-    const t = file.type;
-    if (!t.startsWith('image/') && !t.startsWith('video/') && !t.startsWith('audio/')) return null;
+    if (!file || !(file instanceof Blob)) return null;
     let url = previewUrlsRef.current.get(file);
     if (!url) {
       url = URL.createObjectURL(file);
@@ -384,13 +399,14 @@ export default function HomePage({ initialRole, authButton }) {
 
   const handleImageClick = (index) => {
     const file = selectedFiles[index];
-    if (file.type.startsWith('image/')) {
+    const kind = getLocalKind(file);
+    if (kind === 'image') {
       setBoxtype("img");
       setSelectedImage(getPreviewUrl(file));
-    } else if (file.type.startsWith('video/')) {
+    } else if (kind === 'video') {
       setBoxtype("video");
       setSelectedImage(getPreviewUrl(file));
-    } else if (file.type.startsWith('audio/')) {
+    } else if (kind === 'audio') {
       setBoxtype("audio");
       setSelectedImage(getPreviewUrl(file));
     } else {
@@ -439,9 +455,10 @@ export default function HomePage({ initialRole, authButton }) {
 
   const renderFile = (data, index) => {
     const fileUrl = data.url;
-    const isImage = data.type && data.type.startsWith('image/');
-    const isVideo = data.type && data.type.startsWith('video/');
-    const isAudio = data.type && data.type.startsWith('audio/');
+    const kind = getLocalKind(data);
+    const isImage = kind === 'image';
+    const isVideo = kind === 'video';
+    const isAudio = kind === 'audio';
     // 图片优先用本地已生成的 blob 预览，上传完成后立即显示，不必回源拉取；
     // blob 失效（如清除选区）时 onError 自动回退到远程 URL
     const localUrl = isImage ? getPreviewUrl(data) : null;
@@ -656,20 +673,20 @@ export default function HomePage({ initialRole, authButton }) {
             {selectedFiles.map((file, index) => (
               <div key={index} className="relative rounded-2xl w-36 h-44 sm:w-44 sm:h-48 ring-offset-2 ring-2 flex flex-col items-center">
                 <div className="relative w-28 h-28 sm:w-36 sm:h-36" onClick={() => handleImageClick(index)}>
-                  {file.type.startsWith('image/') ? (
+                  {getLocalKind(file) === 'image' ? (
                     <img
                       src={getPreviewUrl(file)}
                       alt={`Preview ${file.name}`}
                       className="w-full h-full object-cover rounded-lg cursor-pointer"
                     />
-                  ) : file.type.startsWith('video/') ? (
+                  ) : getLocalKind(file) === 'video' ? (
                     <video
                       src={getPreviewUrl(file)}
                       muted
                       preload="metadata"
                       className="w-full h-full object-cover rounded-lg cursor-pointer bg-black"
                     />
-                  ) : file.type.startsWith('audio/') ? (
+                  ) : getLocalKind(file) === 'audio' ? (
                     <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100 text-slate-500 rounded-lg cursor-pointer p-1">
                       <svg className="w-8 h-8 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 18V5l12-2v13" />
