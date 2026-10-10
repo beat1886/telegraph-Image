@@ -519,7 +519,8 @@ export default function HomePage({ initialRole, authButton }) {
     });
     return (
       <div className="p-4 bg-slate-100">
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-400">共 {lines.length} 条</span>
           <CopyButton text={lines.join('\n')} label="复制全部" compact={false} />
         </div>
         {lines.map((line, index) => {
@@ -552,7 +553,8 @@ export default function HomePage({ initialRole, authButton }) {
       case 'preview':
         return (
           <div className="flex flex-col">
-            <div className="flex justify-end m-1 sm:m-2">
+            <div className="flex items-center justify-between m-1 sm:m-2">
+              <span className="text-xs text-gray-400">共 {uploadedImages.length} 条</span>
               <CopyButton
                 text={uploadedImages.map((data) => data.url).join('\n')}
                 label="复制全部"
