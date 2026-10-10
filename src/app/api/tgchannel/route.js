@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getUidFromRequest } from '@/lib/uid';
 
 
 
@@ -27,6 +28,8 @@ export async function POST(request) {
 	const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket?.remoteAddress;
 	const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
 	const Referer = request.headers.get('Referer') || "Referer";
+	// 访客 uid：写入记录，供"我的文件"按人隔离
+	const uid = getUidFromRequest(request);
 
 	const formData = await request.formData();
 	const fileField = formData.get('file');
@@ -113,7 +116,7 @@ export async function POST(request) {
 			try {
 				const rating_index = await getRating(env, `${fileData.file_id}`);
 				nowTime = await get_nowTime()
-				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, rating_index, nowTime, mediaKind);
+				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, rating_index, nowTime, mediaKind, uid);
 
 				return Response.json({
 					...data,
@@ -134,7 +137,7 @@ export async function POST(request) {
 				// 鉴黄/写库失败不影响上传结果（文件已到 Telegram），仍返回成功
 				console.log('rating/db error (ignored):', error.message);
 				try {
-					await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown', mediaKind);
+					await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime || 'unknown', mediaKind, uid);
 				} catch (e) {}
 
 				return Response.json({
@@ -228,21 +231,28 @@ const getFile = async (response) => {
 
 
 
-async function insertImageData(env, src, referer, ip, rating, time, kind) {
+async function insertImageData(env, src, referer, ip, rating, time, kind, uid) {
+	// uid 列为访客隔离新增：优先带 uid+kind 写入，列不存在时逐级回退，保证记录不丢
 	try {
-		const instdata = await env.prepare(
+		await env.prepare(
+			`INSERT INTO imginfo (url, referer, ip, rating, total, time, kind, uid)
+           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}', '${kind || ''}', '${uid || ''}')`
+		).run()
+		return;
+	} catch (error) { }
+	try {
+		await env.prepare(
 			`INSERT INTO imginfo (url, referer, ip, rating, total, time, kind)
            VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}', '${kind || ''}')`
 		).run()
-	} catch (error) {
-		// kind 列尚未迁移时回退旧插入，保证上传记录不丢
-		try {
-			await env.prepare(
-				`INSERT INTO imginfo (url, referer, ip, rating, total, time)
-	           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-			).run()
-		} catch (e) { };
-	};
+		return;
+	} catch (error) { }
+	try {
+		await env.prepare(
+			`INSERT INTO imginfo (url, referer, ip, rating, total, time)
+           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
+		).run()
+	} catch (e) { };
 }
 
 

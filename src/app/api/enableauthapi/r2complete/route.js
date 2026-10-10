@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { auth } from "@/auth";
+import { getUidFromRequest } from '@/lib/uid';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -70,10 +71,17 @@ export async function POST(request) {
     if (env.IMG) {
         const now = new Date();
         const time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        // 参数绑定，防注入
-        await env.IMG.prepare('INSERT INTO imginfo (url, referer, ip, rating, total, time) VALUES (?1, ?2, ?3, ?4, 1, ?5)')
-            .bind(storedUrl, referer.slice(0, 500), clientIp, rating, time)
-            .run();
+        const uid = getUidFromRequest(request);
+        // 参数绑定，防注入；uid 列为访客隔离新增，列不存在时回退旧插入
+        try {
+            await env.IMG.prepare('INSERT INTO imginfo (url, referer, ip, rating, total, time, uid) VALUES (?1, ?2, ?3, ?4, 1, ?5, ?6)')
+                .bind(storedUrl, referer.slice(0, 500), clientIp, rating, time, uid)
+                .run();
+        } catch {
+            await env.IMG.prepare('INSERT INTO imginfo (url, referer, ip, rating, total, time) VALUES (?1, ?2, ?3, ?4, 1, ?5)')
+                .bind(storedUrl, referer.slice(0, 500), clientIp, rating, time)
+                .run();
+        }
     }
 
     return Response.json({

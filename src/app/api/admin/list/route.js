@@ -1,5 +1,7 @@
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { auth } from "@/auth";
+import { getUidFromRequest } from '@/lib/uid';
 
 // ...
 
@@ -55,6 +57,10 @@ export async function POST(request) {
     const size = [10, 20, 50, 100].includes(Number(pageSize)) ? Number(pageSize) : 10;
     const q = normalizeQuery(query);
 
+    // 管理员看全部；其他访客只能看自己 uid 上传的记录
+    const session = await auth();
+    const isAdmin = session?.user?.role === 'admin';
+
     const baseSelect = `SELECT imginfo.*, (SELECT COUNT(*) FROM tgimglog WHERE tgimglog.url = imginfo.url) AS logcount FROM imginfo`;
 
     // 组合筛选条件：关键词模糊匹配 + 上传通道前缀过滤
@@ -69,9 +75,20 @@ export async function POST(request) {
       conds.push(`url LIKE ?${binds.length + 1}`);
       binds.push(`${channelPrefix}%`);
     }
+
+    if (!isAdmin) {
+      const uid = getUidFromRequest(request);
+      if (!uid) {
+        // 无访客标识：没有可归属的记录，直接返回空
+        return Response.json({ code: 200, success: true, message: "success", data: [], page, total: 0 });
+      }
+      conds.push(`uid = ?${binds.length + 1}`);
+      binds.push(uid);
+    }
+
     const where = conds.length ? ` WHERE ${conds.join(' AND ')}` : '';
 
-    if (where) {
+    try {
       const pageBind = `?${binds.length + 1}`;
       const ps = env.IMG.prepare(`${baseSelect}${where} ORDER BY id DESC LIMIT ${size} OFFSET ${pageBind} * ${size}`).bind(...binds, page);
       const { results } = await ps.all()
@@ -84,18 +101,12 @@ export async function POST(request) {
         "page": page,
         "total": total.total
       });
-    } else {
-      const ps = env.IMG.prepare(`${baseSelect} ORDER BY id DESC LIMIT ${size} OFFSET ?1 * ${size}`).bind(page);
-      const { results } = await ps.all()
-      const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo`).first()
-      return Response.json({
-        "code": 200,
-        "success": true,
-        "message": "success",
-        "data": results,
-        "page": page,
-        "total": total.total
-      });
+    } catch (dbErr) {
+      // uid 列尚未迁移时，非管理员查询会报 no such column：返回空列表而不是报错
+      if (!isAdmin && /no such column/i.test(dbErr.message || '')) {
+        return Response.json({ code: 200, success: true, message: "success", data: [], page, total: 0 });
+      }
+      throw dbErr;
     }
 
 

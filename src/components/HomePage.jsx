@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from "react-toastify";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
+import { ensureUidCookie } from "@/lib/uid";
 
 // 链接行的独立复制按钮：仅复制成功才显示"已复制"反馈，1.5s 后自动恢复；每个按钮状态互相独立。
 // 反馈直接操作按钮 DOM（不依赖重渲染），保证任何环境下点击后即时可见
@@ -144,6 +145,7 @@ export default function HomePage({ initialRole, authButton }) {
   };
 
   useEffect(() => {
+    ensureUidCookie(); // 访客标识：上传记录归属"我的文件"
     ip();
     isAuth();
   }, []);

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import Link from 'next/link'
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { ensureUidCookie } from '@/lib/uid';
 // import { toast } from "react-toastify";
 
 
@@ -25,6 +26,23 @@ export default function Admin() {
   const [r2Usage, setR2Usage] = useState(null); // R2 用量
   const [r2UsageError, setR2UsageError] = useState('');
   const [listLoading, setListLoading] = useState(true); // 列表加载中（用于骨架屏）
+  // 登录角色：undefined=探测中，null=未登录，'admin'/'user'=已登录
+  const [role, setRole] = useState(undefined);
+  const isAdmin = role === 'admin';
+
+  // 确保访客 uid cookie 存在（匿名管理"我的文件"依赖它），并探测登录角色
+  useEffect(() => {
+    ensureUidCookie();
+    (async () => {
+      try {
+        const res = await fetch('/api/enableauthapi/isauth', { headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        setRole(data?.role || null);
+      } catch {
+        setRole(null);
+      }
+    })();
+  }, []);
 
   const getListdata = useCallback(async (page, ch = channel, size = pageSize) => {
     setListLoading(true);
@@ -65,8 +83,9 @@ export default function Admin() {
     getListdata(currentPage)
   }, [currentPage]);
 
-  // 拉取 R2 用量（对照免费额度）
+  // 拉取 R2 用量（对照免费额度）：仅管理员可见，访客不请求
   useEffect(() => {
+    if (!isAdmin) return;
     let ignore = false;
     (async () => {
       try {
@@ -81,7 +100,7 @@ export default function Admin() {
       }
     })();
     return () => { ignore = true; };
-  }, []);
+  }, [isAdmin]);
 
   // 分页控制按钮
   const handleNextPage = () => {
@@ -194,19 +213,25 @@ export default function Admin() {
             <Link href="/">
               <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
             </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
-            >
-              登出
-            </button>
+            {role ? (
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
+              >
+                登出
+              </button>
+            ) : (
+              <Link href="/login">
+                <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">登录</button>
+              </Link>
+            )}
           </div>
         </header>
 
         <main className="mt-[56px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
 
-          {/* R2 用量卡片：加载中先显示骨架，避免数据到达时突然撑开页面 */}
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
+          {/* R2 用量卡片：仅管理员可见；加载中先显示骨架，避免数据到达时突然撑开页面 */}
+          {isAdmin && (<div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
             <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
@@ -254,7 +279,7 @@ export default function Admin() {
                 </div>
               )}
             </div>
-          </div>
+          </div>)}
 
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
@@ -307,7 +332,7 @@ export default function Admin() {
             </button>
           </div>
 
-          <Table data={listData} selected={selected} onToggle={toggleSelect} />
+          <Table data={listData} selected={selected} onToggle={toggleSelect} isAdmin={isAdmin} />
 
         </main>
         <div className="fixed inset-x-0 bottom-0 w-full flex z-50 justify-center items-center bg-white border-t">

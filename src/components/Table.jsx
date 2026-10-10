@@ -59,7 +59,7 @@ function LazyKind({ url, children }) {
   return children(kind);
 }
 
-export default function Table({ data: initialData = [], selected = [], onToggle }) {
+export default function Table({ data: initialData = [], selected = [], onToggle, isAdmin = true }) {
 
     const [data, setData] = useState(initialData); // 初始化状态
     const [modalData, setModalData] = useState(null);
@@ -371,17 +371,21 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
                 </div>
             </div>
             <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                <span className="text-xs text-gray-500 flex items-center gap-1.5 shrink-0">
-                    限制访问
-                    <Switcher initialChecked={item.rating} initName={item.url} />
-                </span>
+                {isAdmin && (
+                    <span className="text-xs text-gray-500 flex items-center gap-1.5 shrink-0">
+                        限制访问
+                        <Switcher initialChecked={item.rating} initName={item.url} />
+                    </span>
+                )}
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => fetchLogs(item.url, 0)}
-                        className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
-                    >
-                        记录{item.logcount > 0 ? `(${item.logcount})` : ''}
-                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={() => fetchLogs(item.url, 0)}
+                            className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
+                        >
+                            记录{item.logcount > 0 ? `(${item.logcount})` : ''}
+                        </button>
+                    )}
                     <button
                         onClick={() => handleDelete(item.url)}
                         className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 whitespace-nowrap"
@@ -472,13 +476,17 @@ export default function Table({ data: initialData = [], selected = [], onToggle 
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 w-12">{item.rating}</td>
                                     <td className="sticky right-0 z-10 bg-white text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700">
                                         <div className="flex flex-row justify-center items-center">
-                                            <Switcher initialChecked={item.rating} initName={item.url} />
-                                            <button
-                                                onClick={() => fetchLogs(item.url, 0)}
-                                                className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
-                                            >
-                                                记录{item.logcount > 0 ? `(${item.logcount})` : ''}
-                                            </button>
+                                            {isAdmin && (
+                                                <>
+                                                    <Switcher initialChecked={item.rating} initName={item.url} />
+                                                    <button
+                                                        onClick={() => fetchLogs(item.url, 0)}
+                                                        className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 whitespace-nowrap"
+                                                    >
+                                                        记录{item.logcount > 0 ? `(${item.logcount})` : ''}
+                                                    </button>
+                                                </>
+                                            )}
                                             <button
                                                 onClick={() => handleDelete(item.url)}
                                                 className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 whitespace-nowrap"

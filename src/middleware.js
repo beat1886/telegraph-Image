@@ -25,14 +25,16 @@ export default auth(async (req) => {
     const isAuthAPI = nextUrl.pathname.startsWith(AUTH_API);
 
     if (!isAuthenticated) {
-        if (isAPI_ADMIN) {
+        // 匿名用户也开放管理页与"我的文件"列表/删除接口（数据按访客 uid 隔离）；
+        // 其余管理接口（R2 用量、IP 日志、封禁等）仍需管理员登录
+        const isOpenAdminApi =
+            nextUrl.pathname === '/api/admin/list' ||
+            nextUrl.pathname === '/api/admin/delete';
+        if (isAPI_ADMIN && !isOpenAdminApi) {
             return Response.json(
                 { status: "fail", message: "You are not logged in by admin !", success: false },
                 { status: 401 },
             )
-        }
-        else if (isADMIN_PAGE) {
-            return Response.redirect(new URL(LOGIN, nextUrl));
         }
         else if (isAuthAPI) {
 
@@ -58,9 +60,15 @@ export default auth(async (req) => {
     }
 
     if (role === 'user') {
-        if (isAPI_ADMIN || isADMIN_PAGE) {
-            return Response.redirect(new URL(LOGIN, nextUrl));
-
+        // 普通登录用户与匿名一致：可用管理页和自己的列表/删除，其余管理接口禁止
+        const isOpenAdminApi =
+            nextUrl.pathname === '/api/admin/list' ||
+            nextUrl.pathname === '/api/admin/delete';
+        if (isAPI_ADMIN && !isOpenAdminApi) {
+            return Response.json(
+                { status: "fail", message: "Admin only", success: false },
+                { status: 403 },
+            );
         }
     }
 

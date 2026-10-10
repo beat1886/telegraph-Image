@@ -25,12 +25,25 @@ export default async function AuthButton() {
   }
 
   if (role === 'user') {
-    return <LogoutButton />;
+    return (
+      <div className="flex items-center -mx-1">
+        <Link href="/admin">
+          <InnerButton>管理</InnerButton>
+        </Link>
+        <LogoutButton />
+      </div>
+    );
   }
 
+  // 未登录访客：也可以进管理页管理"我的文件"（按访客 uid 隔离）
   return (
-    <Link href="/login">
-      <InnerButton>登录</InnerButton>
-    </Link>
+    <div className="flex items-center -mx-1">
+      <Link href="/admin">
+        <InnerButton>管理</InnerButton>
+      </Link>
+      <Link href="/login">
+        <InnerButton>登录</InnerButton>
+      </Link>
+    </div>
   );
 }
