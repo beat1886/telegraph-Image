@@ -114,7 +114,7 @@ export default function ApiTokens() {
     }
   };
 
-  const handleCopy = async (text, ev) => {
+  const handleCopy = async (text) => {
     const ok = await copyText(text);
     if (ok) toast.success('已复制');
     else toast.error('复制失败');
@@ -173,7 +173,7 @@ export default function ApiTokens() {
         {loading ? (
           <p className="text-sm text-gray-400 py-4 text-center">加载中…</p>
         ) : tokens.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4 text-center">暂无密钥，填写备注后点击"新建密钥"</p>
+          <p className="text-sm text-gray-400 py-4 text-center">暂无密钥，填写备注后点击「新建密钥」</p>
         ) : (
           <div className="space-y-2">
             {tokens.map((t) => (
@@ -187,7 +187,7 @@ export default function ApiTokens() {
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <code className="text-xs text-gray-500 truncate flex-1 font-mono">{t.token}</code>
                   <button
-                    onClick={(e) => handleCopy(t.token, e)}
+                    onClick={() => handleCopy(t.token)}
                     className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
                     title="复制密钥"
                   >
