@@ -51,7 +51,7 @@ export async function POST(request) {
   const { env, cf, ctx } = getRequestContext();
   // console.log(dd);
   try {
-    let { page, query, channel, pageSize } = await request.json()
+    let { page, query, channel, pageSize, kind, dateFrom, dateTo } = await request.json()
     page = Number.isInteger(Number(page)) && Number(page) >= 0 ? Number(page) : 0;
     // 每页条数白名单，防注入/异常值
     const size = [10, 20, 50, 100].includes(Number(pageSize)) ? Number(pageSize) : 10;
@@ -74,6 +74,22 @@ export async function POST(request) {
     if (channelPrefix) {
       conds.push(`url LIKE ?${binds.length + 1}`);
       binds.push(`${channelPrefix}%`);
+    }
+    // 文件类型筛选（kind 列；旧记录 kind 为空，仅筛选全部时可见）
+    const KINDS = ['image', 'video', 'audio', 'file'];
+    if (KINDS.includes(kind)) {
+      conds.push(`kind = ?${binds.length + 1}`);
+      binds.push(kind);
+    }
+    // 上传时间范围筛选（time 列为 YYYY-MM-DD 字符串，可直接比较）
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    if (DATE_RE.test(dateFrom || '')) {
+      conds.push(`time >= ?${binds.length + 1}`);
+      binds.push(dateFrom);
+    }
+    if (DATE_RE.test(dateTo || '')) {
+      conds.push(`time <= ?${binds.length + 1}`);
+      binds.push(dateTo);
     }
 
     if (!isAdmin) {

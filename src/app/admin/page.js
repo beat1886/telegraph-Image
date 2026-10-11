@@ -19,6 +19,9 @@ export default function Admin() {
   const [inputPage, setInputPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [channel, setChannel] = useState(''); // 上传通道筛选：'' | 'file' | 'cfile' | 'rfile'
+  const [fileKind, setFileKind] = useState(''); // 文件类型筛选：'' | 'image' | 'video' | 'audio' | 'file'
+  const [dateFrom, setDateFrom] = useState(''); // 上传时间范围：开始日期 YYYY-MM-DD
+  const [dateTo, setDateTo] = useState(''); // 上传时间范围：结束日期 YYYY-MM-DD
   const [pageSize, setPageSize] = useState(10); // 每页条数
   const [totalCount, setTotalCount] = useState(0); // 筛选后的记录总数
   const [selected, setSelected] = useState([]); // 多选的图片 url 列表（仅当前页）
@@ -45,7 +48,7 @@ export default function Admin() {
     })();
   }, []);
 
-  const getListdata = useCallback(async (page, ch = channel, size = pageSize) => {
+  const getListdata = useCallback(async (page, ch = channel, size = pageSize, k = fileKind, df = dateFrom, dt = dateTo) => {
     setListLoading(true);
     try {
       const res = await fetch(`/api/admin/list`, {
@@ -59,6 +62,9 @@ export default function Admin() {
           query: searchQuery, // 传递搜索查询
           channel: ch, // 上传通道筛选
           pageSize: size, // 每页条数
+          kind: k, // 文件类型筛选
+          dateFrom: df, // 上传时间范围开始
+          dateTo: dt, // 上传时间范围结束
         })
       })
       const res_data = await res.json()
@@ -160,6 +166,32 @@ export default function Admin() {
     setCurrentPage(1);
     setInputPage(1);
     getListdata(1, channel, size);
+  };
+
+  // 切换文件类型筛选：立即从第一页刷新
+  const handleKindChange = (event) => {
+    const value = event.target.value;
+    setFileKind(value);
+    setCurrentPage(1);
+    setInputPage(1);
+    getListdata(1, channel, pageSize, value);
+  };
+
+  // 切换上传时间范围（开始/结束日期）：立即从第一页刷新；setState 异步，需直接传新值
+  const handleDateFromChange = (event) => {
+    const value = event.target.value;
+    setDateFrom(value);
+    setCurrentPage(1);
+    setInputPage(1);
+    getListdata(1, channel, pageSize, fileKind, value, dateTo);
+  };
+
+  const handleDateToChange = (event) => {
+    const value = event.target.value;
+    setDateTo(value);
+    setCurrentPage(1);
+    setInputPage(1);
+    getListdata(1, channel, pageSize, fileKind, dateFrom, value);
   };
 
   // 多选：单条切换
@@ -310,6 +342,54 @@ export default function Admin() {
                 搜索
               </button>
             </form>
+          </div>
+
+          {/* 第二行筛选：文件类型 + 上传时间范围，选择即刷新 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex flex-wrap items-center gap-2">
+            <select
+              value={fileKind}
+              onChange={handleKindChange}
+              className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
+              title="按文件类型筛选"
+            >
+              <option value="">全部类型</option>
+              <option value="image">图片</option>
+              <option value="video">视频</option>
+              <option value="audio">音频</option>
+              <option value="file">文件</option>
+            </select>
+            <span className="text-xs text-gray-400 shrink-0">上传时间</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={handleDateFromChange}
+              className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
+              title="开始日期"
+            />
+            <span className="text-xs text-gray-400 shrink-0">~</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={handleDateToChange}
+              className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
+              title="结束日期"
+            />
+            {(fileKind || dateFrom || dateTo) && (
+              <button
+                onClick={() => {
+                  setFileKind('');
+                  setDateFrom('');
+                  setDateTo('');
+                  setCurrentPage(1);
+                  setInputPage(1);
+                  getListdata(1, channel, pageSize, '', '', '');
+                }}
+                className="text-xs text-gray-500 border border-gray-300 rounded px-2 h-[34px] bg-white hover:bg-gray-50 transition-colors shrink-0"
+                title="清除类型与时间筛选"
+              >
+                清除筛选
+              </button>
+            )}
           </div>
 
           {/* 工具栏：全选 + 已选数量 + 批量删除 */}
