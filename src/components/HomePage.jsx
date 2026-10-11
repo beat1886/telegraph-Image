@@ -133,6 +133,9 @@ export default function HomePage({ initialRole, authButton }) {
   // 以 File 对象为键缓存预览 URL，保证同一文件多次渲染时 blob 地址稳定，
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
   const previewUrlsRef = useRef(new WeakMap());
+  // 弹窗视频元素引用与解码失败提示标记（每次打开弹窗重置，避免重复/漏提示）
+  const boxVideoRef = useRef(null);
+  const videoErrNotifiedRef = useRef(false);
   const getPreviewUrl = (file) => {
     // 恢复的历史记录是普通对象而非 File/Blob，无法 createObjectURL，直接用远程 URL
     if (!file || !(file instanceof Blob)) return null;
@@ -400,6 +403,7 @@ export default function HomePage({ initialRole, authButton }) {
   const handleImageClick = (index) => {
     const file = selectedFiles[index];
     const kind = getLocalKind(file);
+    videoErrNotifiedRef.current = false;
     if (kind === 'image') {
       setBoxtype("img");
       setSelectedImage(getPreviewUrl(file));
@@ -449,6 +453,7 @@ export default function HomePage({ initialRole, authButton }) {
   };
 
   const handlerenderImageClick = (imageUrl, type) => {
+    videoErrNotifiedRef.current = false;
     setBoxtype(type);
     setSelectedImage(imageUrl);
   };
@@ -805,7 +810,8 @@ export default function HomePage({ initialRole, authButton }) {
 
       {selectedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCloseImage}>
-          <div className="relative flex flex-col items-center justify-between max-w-full">
+          {/* 内容区拦截冒泡：点击视频四周空白不再误触遮罩关闭，只有点遮罩空白才关闭 */}
+          <div className="relative flex flex-col items-center justify-between max-w-full" onClick={(e) => e.stopPropagation()}>
             <button
               className="absolute -top-2 -right-2 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center z-10"
               onClick={handleCloseImage}
@@ -823,8 +829,20 @@ export default function HomePage({ initialRole, authButton }) {
                 src={selectedImage}
                 controls
                 autoPlay
+                playsInline
                 className="w-[92%] sm:w-9/10 max-h-[85vh] rounded-lg bg-black"
-                onClick={(e) => e.stopPropagation()}
+                // preventDefault 拦截 Chromium 的 click-to-toggle：点播放按钮时同一 click
+                // 会被再当作画面点击而立即暂停，导致"点播放直接暂停"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                onError={() => {
+                  // 编码不受支持（如 HEVC）时给出明确提示，而不是停留在无响应画面
+                  const v = boxVideoRef.current;
+                  if (v?.error && !videoErrNotifiedRef.current) {
+                    videoErrNotifiedRef.current = true;
+                    toast.error('该视频编码浏览器无法解码，请转换成 H.264 mp4 后再试');
+                  }
+                }}
+                ref={boxVideoRef}
               />
             ) : boxType === "audio" ? (
               <div className="p-6 bg-white rounded-lg w-[92%] max-w-md" onClick={(e) => e.stopPropagation()}>
