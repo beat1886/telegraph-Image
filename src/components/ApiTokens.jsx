@@ -1,0 +1,211 @@
+'use client';
+// 管理页：API Token 管理卡片
+// 管理员可创建带 R2 权限的密钥；访客创建的密钥仅 TG.ph / TG_Channel，上传记录归属"我的文件"
+
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await Promise.race([
+        navigator.clipboard.writeText(text),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500)),
+      ]);
+      return true;
+    }
+  } catch { /* 降级 */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function CopyIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+    </svg>
+  );
+}
+
+function fmtTime(iso) {
+  if (!iso) return '从未使用';
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  } catch {
+    return iso;
+  }
+}
+
+export default function ApiTokens() {
+  const [tokens, setTokens] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/tokens');
+      const data = await res.json();
+      if (res.ok) {
+        setTokens(data.data || []);
+        setIsAdmin(!!data.isAdmin);
+      }
+    } catch { /* 忽略 */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async () => {
+    setCreating(true);
+    try {
+      const res = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('密钥已创建');
+        setName('');
+        load();
+      } else {
+        toast.error(data.message || '创建失败');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleRevoke = async (id) => {
+    if (!window.confirm('确定吊销该密钥吗？吊销后使用此密钥的程序将无法再上传。')) return;
+    try {
+      const res = await fetch(`/api/tokens/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('已吊销');
+        load();
+      } else {
+        toast.error(data.message || '吊销失败');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleCopy = async (text, ev) => {
+    const ok = await copyText(text);
+    if (ok) toast.success('已复制');
+    else toast.error('复制失败');
+  };
+
+  const curlExample = `curl -X POST ${origin || 'https://你的域名'}/api/upload \\
+  -H "Authorization: Bearer ml_你的密钥" \\
+  -F "channel=tgchannel" \\
+  -F "file=@图片.jpg"`;
+
+  return (
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-gray-800">API 接口</h2>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+            {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
+          </span>
+        </div>
+
+        {/* 调用示例 */}
+        <div className="relative mb-4 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
+          <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
+          <button
+            onClick={() => handleCopy(curlExample)}
+            className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
+            title="复制示例"
+          >
+            <CopyIcon />
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mb-3">
+          返回 JSON：<code className="text-gray-500">{'{ success:true, data:[{url,name}], url }'}</code>；channel 可选 tg / tgchannel{isAdmin ? ' / r2' : ''}，默认 tgchannel。
+        </p>
+
+        {/* 创建密钥 */}
+        <div className="flex gap-2 mb-4">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+            placeholder="密钥备注（如：PicList、备份脚本）"
+            maxLength={40}
+            className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 whitespace-nowrap"
+          >
+            {creating ? '创建中…' : '新建密钥'}
+          </button>
+        </div>
+
+        {/* 密钥列表 */}
+        {loading ? (
+          <p className="text-sm text-gray-400 py-4 text-center">加载中…</p>
+        ) : tokens.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">暂无密钥，填写备注后点击"新建密钥"</p>
+        ) : (
+          <div className="space-y-2">
+            {tokens.map((t) => (
+              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 sm:w-40 shrink-0">
+                  <span className="text-sm text-gray-700 truncate">{t.name || '未命名'}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${t.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {t.role === 'admin' ? '管理员' : '普通'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                  <code className="text-xs text-gray-500 truncate flex-1 font-mono">{t.token}</code>
+                  <button
+                    onClick={(e) => handleCopy(t.token, e)}
+                    className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+                    title="复制密钥"
+                  >
+                    <CopyIcon />
+                  </button>
+                </div>
+                <div className="text-[11px] text-gray-400 sm:w-32 shrink-0">{fmtTime(t.last_used)}</div>
+                <button
+                  onClick={() => handleRevoke(t.id)}
+                  className="text-xs text-red-500 hover:text-red-600 shrink-0 sm:w-12 text-right"
+                >
+                  吊销
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

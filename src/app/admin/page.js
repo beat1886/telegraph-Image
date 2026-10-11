@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import Link from 'next/link'
 import ConfirmDialog from '@/components/ConfirmDialog';
+import ApiTokens from '@/components/ApiTokens';
 import { ensureUidCookie } from '@/lib/uid';
 // import { toast } from "react-toastify";
 
@@ -280,6 +281,9 @@ export default function Admin() {
               )}
             </div>
           </div>)}
+
+          {/* API 密钥管理：管理员和访客均可用（权限分级，数据按 uid 隔离） */}
+          <ApiTokens />
 
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
