@@ -22,6 +22,9 @@ export default function Admin() {
   const [fileKind, setFileKind] = useState(''); // 文件类型筛选：'' | 'image' | 'video' | 'audio' | 'file'
   const [dateFrom, setDateFrom] = useState(''); // 上传时间范围：开始日期 YYYY-MM-DD
   const [dateTo, setDateTo] = useState(''); // 上传时间范围：结束日期 YYYY-MM-DD
+  // 数量统计单位随文件类型筛选变化（不筛选时统称"个文件"）
+  const KIND_UNITS = { image: '张图片', video: '个视频', audio: '个音频', file: '个文件' };
+  const countUnit = KIND_UNITS[fileKind] || '个文件';
   const [pageSize, setPageSize] = useState(10); // 每页条数
   const [totalCount, setTotalCount] = useState(0); // 筛选后的记录总数
   const [selected, setSelected] = useState([]); // 多选的图片 url 列表（仅当前页）
@@ -231,9 +234,9 @@ export default function Admin() {
     }
     setBatchDeleting(false);
     if (fail === 0) {
-      toast.success(`已删除 ${ok} 张图片`);
+      toast.success(`已删除 ${ok} ${countUnit}`);
     } else {
-      toast.error(`删除完成：成功 ${ok} 张，失败 ${fail} 张`);
+      toast.error(`删除完成：成功 ${ok} ${countUnit}，失败 ${fail} ${countUnit}`);
     }
     getListdata(currentPage);
   };
@@ -406,7 +409,7 @@ export default function Admin() {
             <span className="flex-1 min-w-0 truncate text-xs sm:text-sm text-gray-400">
               {listLoading ? (
                 <span className="inline-block h-3 w-20 rounded bg-gray-100 animate-pulse align-middle" />
-              ) : selected.length > 0 ? `已选 ${selected.length} 项` : `共 ${totalCount} 张图片`}
+              ) : selected.length > 0 ? `已选 ${selected.length} 项` : `共 ${totalCount} ${countUnit}`}
             </span>
             <button
               onClick={() => setShowBatchConfirm(true)}
@@ -467,7 +470,7 @@ export default function Admin() {
 
         <ConfirmDialog
           open={showBatchConfirm}
-          title={`删除选中的 ${selected.length} 张图片？`}
+          title={`删除选中的 ${selected.length} ${countUnit}？`}
           message="将删除所有选中记录，删除后不可恢复。"
           confirmText={batchDeleting ? '正在删除…' : '删除'}
           loading={batchDeleting}
