@@ -184,6 +184,27 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
         return null;
     };
 
+    // 文件类型标签：优先数据库 kind 列（含 file），否则按扩展名推断，未知显示 '-'
+    const KIND_LABELS = { image: '图片', video: '视频', audio: '音频', file: '文件' };
+    const KIND_BADGE = {
+        image: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+        video: 'bg-blue-50 text-blue-600 border border-blue-200',
+        audio: 'bg-purple-50 text-purple-600 border border-purple-200',
+        file: 'bg-gray-100 text-gray-500 border border-gray-200',
+    };
+    const getKindKey = (item) => KIND_LABELS[item.kind] ? item.kind : getMediaKind(item);
+    const getKindLabel = (item) => KIND_LABELS[getKindKey(item)] || '-';
+    // 类型徽标；未知类型用灰色横杠，不加徽标样式
+    const renderKindBadge = (item) => {
+        const key = getKindKey(item);
+        if (!key) return <span className="text-gray-400">-</span>;
+        return (
+            <span className={`inline-block px-1.5 py-0.5 rounded text-xs whitespace-nowrap ${KIND_BADGE[key]}`}>
+                {KIND_LABELS[key]}
+            </span>
+        );
+    };
+
     // 缩略图固定方块尺寸：手机 56px / 桌面 80px；min-width 防止 table 自动布局压缩列宽
     const thumbClass = "w-14 h-14 min-w-[56px] sm:w-20 sm:h-20 sm:min-w-[80px] object-cover rounded block mx-auto";
     // 视频缩略图加大并按 16:9 显示，首帧内容更清楚
@@ -364,7 +385,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                     </p>
                     <div className="mt-1 space-y-0.5 text-xs text-gray-500">
                         <p className="truncate">时间：{item.time || '-'}</p>
-                        <p className="truncate">接口：{getChannel(item.url)}</p>
+                        <p className="flex items-center gap-1 whitespace-nowrap">接口：{getChannel(item.url)}　类型：{renderKindBadge(item)}</p>
                         <p className="truncate">IP：{item.ip || '-'}</p>
                         <p>访问量：{item.total ?? '-'}　分级：{item.rating ?? '-'}</p>
                     </div>
@@ -445,6 +466,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                                 <th className="sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">preview</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">time</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">接口</th>
+                                <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">类型</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">ip</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">访问量</th>
                                 <th className="py-2 px-2 sm:px-4 border-b border-gray-200 bg-gray-100 text-center text-xs sm:text-sm font-semibold text-gray-600 whitespace-nowrap">rating</th>
@@ -468,6 +490,9 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 whitespace-nowrap">
                                         {getChannel(item.url)}
+                                    </td>
+                                    <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 whitespace-nowrap">
+                                        {renderKindBadge(item)}
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[100px] sm:max-w-48 truncate">
                                         <TooltipItem tooltipsText={item.ip} position="bottom">{item.ip}</TooltipItem>
