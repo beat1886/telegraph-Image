@@ -231,8 +231,9 @@ export default function Admin() {
 
         <main className="mt-[56px] sm:mt-[60px] mb-[56px] sm:mb-[60px] w-full sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
 
-          {/* R2 用量卡片：仅管理员可见；加载中先显示骨架，避免数据到达时突然撑开页面 */}
-          {isAdmin && (<div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
+          {/* R2 用量卡片：仅管理员可见；角色探测中（undefined）也先显示骨架，
+              避免等 isauth 返回后卡片才突然出现；确认非管理员后消失 */}
+          {(role === undefined || isAdmin) && (<div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
             <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
