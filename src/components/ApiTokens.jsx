@@ -153,15 +153,15 @@ export default function ApiTokens() {
           </a>
         </p>
 
-        {/* 创建密钥 */}
-        <div className="flex gap-2 mb-4">
+        {/* 创建密钥：窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
+        <div className="flex flex-wrap gap-2 mb-4">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-            placeholder="密钥备注（如：PicList、备份脚本）"
+            placeholder="密钥备注（可选，如 PicList）"
             maxLength={40}
-            className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="flex-1 min-w-[200px] border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
           />
           <button
             onClick={handleCreate}
