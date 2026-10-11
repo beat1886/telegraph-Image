@@ -115,8 +115,17 @@ export async function POST(request) {
 // TG.ph / TG_Channel：调用站内现有路由（含写库、鉴黄等既有逻辑）。
 // 只携带归属 cookie，绝不转发 Authorization，避免 Token 泄露给上游。
 async function uploadViaInternal(origin, channel, file, internalHeaders) {
+  // curl 等客户端常给 application/octet-stream 或空 MIME，导致内部误判媒体大类；
+  // 按扩展名补正后再转发（mp4 才能走 sendVideo、记录 kind 也正确）
+  let f = file;
+  if (!f.type || f.type === 'application/octet-stream') {
+    const mime = getContentType(file.name || '');
+    if (mime !== 'application/octet-stream') {
+      f = new File([file], file.name || 'file', { type: mime });
+    }
+  }
   const fd = new FormData();
-  fd.append('file', file, file.name || 'file');
+  fd.append('file', f, f.name || 'file');
   const res = await fetch(`${origin}/api/${channel}`, {
     method: 'POST',
     headers: internalHeaders,
