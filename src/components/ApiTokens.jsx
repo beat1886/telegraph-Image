@@ -148,6 +148,9 @@ export default function ApiTokens() {
         </div>
         <p className="text-xs text-gray-400 mb-3">
           返回 JSON：<code className="text-gray-500">{'{ success:true, data:[{url,name}], url }'}</code>；channel 可选 tg / tgchannel{isAdmin ? ' / r2' : ''}，默认 tgchannel。
+          <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:underline whitespace-nowrap">
+            打开网页上传测试页 →
+          </a>
         </p>
 
         {/* 创建密钥 */}
