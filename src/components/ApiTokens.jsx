@@ -39,6 +39,14 @@ function CopyIcon() {
   );
 }
 
+function ChevronIcon({ open }) {
+  return (
+    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
 function fmtTime(iso) {
   if (!iso) return '从未使用';
   try {
@@ -125,16 +133,32 @@ export default function ApiTokens() {
   -F "channel=tgchannel" \\
   -F "file=@图片.jpg"`;
 
+  // 折叠收纳：默认收起，选择记忆在 localStorage
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try { if (localStorage.getItem('ml_api_open') === '1') setOpen(true); } catch { /* 忽略 */ }
+  }, []);
+  const toggleOpen = () => setOpen((o) => {
+    const n = !o;
+    try { localStorage.setItem('ml_api_open', n ? '1' : '0'); } catch { /* 忽略 */ }
+    return n;
+  });
+
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between mb-3">
+        {/* 标题行点击折叠/展开 API 面板 */}
+        <button type="button" onClick={toggleOpen} className={`w-full flex items-center justify-between ${open ? 'mb-3' : ''}`}>
           <h2 className="text-base font-semibold text-gray-800">API 接口</h2>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-            {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
+          <span className="flex items-center gap-2">
+            <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+              {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
+            </span>
+            <ChevronIcon open={open} />
           </span>
-        </div>
+        </button>
 
+        {open && (<>
         {/* 调用示例 */}
         <div className="relative mb-4 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
           <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
@@ -208,6 +232,7 @@ export default function ApiTokens() {
             ))}
           </div>
         )}
+        </>)}
       </div>
     </div>
   );
