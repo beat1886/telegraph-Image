@@ -149,7 +149,7 @@ export default function ApiTokens() {
       <div className="bg-white rounded-lg shadow p-4">
         {/* 标题行点击折叠/展开 API 面板 */}
         <button type="button" onClick={toggleOpen} className={`w-full flex items-center justify-between ${open ? 'mb-3' : ''}`}>
-          <h2 className="text-base font-semibold text-gray-800">API 接口</h2>
+          <h2 className="text-xs sm:text-sm font-medium text-gray-700">API 接口</h2>
           <span className="flex items-center gap-2">
             {open && (
               <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
