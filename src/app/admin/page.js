@@ -350,8 +350,9 @@ export default function Admin() {
           {/* API 密钥管理：管理员和访客均可用（权限分级，数据按 uid 隔离） */}
           <ApiTokens />
 
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex items-center gap-4">
-            <form onSubmit={handleSearch} className="flex flex-1 min-w-0 items-center gap-2">
+          {/* 筛选行：接口 + 类型 + 上传时间 + 搜索，空间不足时自动换行 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
+            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
               <select
                 value={channel}
                 onChange={handleChannelChange}
@@ -363,65 +364,62 @@ export default function Admin() {
                 <option value="cfile">TG_Channel</option>
                 <option value="rfile">R2</option>
               </select>
+              <select
+                value={fileKind}
+                onChange={handleKindChange}
+                className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
+                title="按文件类型筛选"
+              >
+                <option value="">全部类型</option>
+                <option value="image">图片</option>
+                <option value="video">视频</option>
+                <option value="audio">音频</option>
+                <option value="file">文件</option>
+              </select>
+              <span className="text-xs text-gray-400 shrink-0">上传时间</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={handleDateFromChange}
+                className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
+                title="开始日期"
+              />
+              <span className="text-xs text-gray-400 shrink-0">~</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={handleDateToChange}
+                className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
+                title="结束日期"
+              />
+              {(fileKind || dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFileKind('');
+                    setDateFrom('');
+                    setDateTo('');
+                    setCurrentPage(1);
+                    setInputPage(1);
+                    getListdata(1, channel, pageSize, '', '', '');
+                  }}
+                  className="text-xs text-gray-500 border border-gray-300 rounded px-2 h-[34px] bg-white hover:bg-gray-50 transition-colors shrink-0"
+                  title="清除类型与时间筛选"
+                >
+                  清除筛选
+                </button>
+              )}
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border rounded px-2 text-sm flex-1 min-w-0 w-full h-[34px]"
+                className="border rounded px-2 text-sm flex-1 min-w-[120px] h-[34px]"
                 placeholder="输入 URL"
               />
               <button type="submit" className="text-white px-4 text-sm whitespace-nowrap rounded border border-transparent h-[34px] bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 transition-all">
                 搜索
               </button>
             </form>
-          </div>
-
-          {/* 第二行筛选：文件类型 + 上传时间范围，选择即刷新 */}
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex flex-wrap items-center gap-2">
-            <select
-              value={fileKind}
-              onChange={handleKindChange}
-              className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
-              title="按文件类型筛选"
-            >
-              <option value="">全部类型</option>
-              <option value="image">图片</option>
-              <option value="video">视频</option>
-              <option value="audio">音频</option>
-              <option value="file">文件</option>
-            </select>
-            <span className="text-xs text-gray-400 shrink-0">上传时间</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={handleDateFromChange}
-              className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
-              title="开始日期"
-            />
-            <span className="text-xs text-gray-400 shrink-0">~</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={handleDateToChange}
-              className="border rounded px-1.5 text-sm bg-white h-[34px] w-[135px]"
-              title="结束日期"
-            />
-            {(fileKind || dateFrom || dateTo) && (
-              <button
-                onClick={() => {
-                  setFileKind('');
-                  setDateFrom('');
-                  setDateTo('');
-                  setCurrentPage(1);
-                  setInputPage(1);
-                  getListdata(1, channel, pageSize, '', '', '');
-                }}
-                className="text-xs text-gray-500 border border-gray-300 rounded px-2 h-[34px] bg-white hover:bg-gray-50 transition-colors shrink-0"
-                title="清除类型与时间筛选"
-              >
-                清除筛选
-              </button>
-            )}
           </div>
 
           {/* 工具栏：全选 + 已选数量 + 批量删除 */}
