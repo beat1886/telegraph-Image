@@ -151,9 +151,11 @@ export default function ApiTokens() {
         <button type="button" onClick={toggleOpen} className={`w-full flex items-center justify-between ${open ? 'mb-3' : ''}`}>
           <h2 className="text-base font-semibold text-gray-800">API 接口</h2>
           <span className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-              {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
-            </span>
+            {open && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
+              </span>
+            )}
             <ChevronIcon open={open} />
           </span>
         </button>
