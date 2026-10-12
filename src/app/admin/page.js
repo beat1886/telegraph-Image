@@ -349,37 +349,14 @@ export default function Admin() {
           {/* API 密钥管理：管理员和访客均可用（权限分级，数据按 uid 隔离） */}
           <ApiTokens />
 
-          {/* 筛选行 1：接口 + 类型 + 搜索 */}
+          {/* 筛选行 1：URL 搜索 */}
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
-            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
-              <select
-                value={channel}
-                onChange={handleChannelChange}
-                className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
-                title="按上传接口筛选"
-              >
-                <option value="">全部接口</option>
-                <option value="file">TG.ph</option>
-                <option value="cfile">TG_Channel</option>
-                <option value="rfile">R2</option>
-              </select>
-              <select
-                value={fileKind}
-                onChange={handleKindChange}
-                className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
-                title="按文件类型筛选"
-              >
-                <option value="">全部类型</option>
-                <option value="image">图片</option>
-                <option value="video">视频</option>
-                <option value="audio">音频</option>
-                <option value="file">文件</option>
-              </select>
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border rounded px-2 text-sm flex-1 min-w-[120px] h-[34px]"
+                className="border rounded px-2 text-sm flex-1 min-w-0 h-[34px]"
                 placeholder="输入 URL"
               />
               <button type="submit" className="text-white px-4 text-sm whitespace-nowrap rounded border border-transparent h-[34px] bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 transition-all">
@@ -388,7 +365,34 @@ export default function Admin() {
             </form>
           </div>
 
-          {/* 筛选行 2：上传时间范围（位于类型筛选下一行），选择即刷新 */}
+          {/* 筛选行 2：接口 + 类型，选择即刷新 */}
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex flex-wrap items-center gap-2">
+            <select
+              value={channel}
+              onChange={handleChannelChange}
+              className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
+              title="按上传接口筛选"
+            >
+              <option value="">全部接口</option>
+              <option value="file">TG.ph</option>
+              <option value="cfile">TG_Channel</option>
+              <option value="rfile">R2</option>
+            </select>
+            <select
+              value={fileKind}
+              onChange={handleKindChange}
+              className="border rounded px-1.5 text-sm bg-white shrink-0 h-[34px]"
+              title="按文件类型筛选"
+            >
+              <option value="">全部类型</option>
+              <option value="image">图片</option>
+              <option value="video">视频</option>
+              <option value="audio">音频</option>
+              <option value="file">文件</option>
+            </select>
+          </div>
+
+          {/* 筛选行 3：上传时间范围，选择即刷新 */}
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-gray-400 shrink-0">上传时间</span>
             <input
