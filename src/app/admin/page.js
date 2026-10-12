@@ -9,15 +9,6 @@ import ApiTokens from '@/components/ApiTokens';
 import { ensureUidCookie } from '@/lib/uid';
 // import { toast } from "react-toastify";
 
-// 折叠卡片标题行右侧的箭头图标
-function ChevronIcon({ open }) {
-  return (
-    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
-
 
 
 
@@ -45,16 +36,6 @@ export default function Admin() {
   // 登录角色：undefined=探测中，null=未登录，'admin'/'user'=已登录
   const [role, setRole] = useState(undefined);
   const isAdmin = role === 'admin';
-  // R2 用量卡片折叠状态（默认收起，选择记忆在 localStorage）
-  const [r2Open, setR2Open] = useState(false);
-  useEffect(() => {
-    try { if (localStorage.getItem('ml_r2_open') === '1') setR2Open(true); } catch { /* 忽略 */ }
-  }, []);
-  const toggleR2Open = () => setR2Open((o) => {
-    const n = !o;
-    try { localStorage.setItem('ml_r2_open', n ? '1' : '0'); } catch { /* 忽略 */ }
-    return n;
-  });
 
   // 确保访客 uid cookie 存在（匿名管理"我的文件"依赖它），并探测登录角色
   useEffect(() => {
@@ -264,22 +245,27 @@ export default function Admin() {
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
         <header className="fixed top-0 left-0 w-full border-b bg-white z-50">
-          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex items-center justify-end gap-2">
-            <Link href="/">
-              <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex items-center justify-between gap-2">
+            <Link href="/" className="text-base font-semibold text-gray-800 truncate hover:text-blue-600">
+              喵链 - 图片/视频/音频的外链托管
             </Link>
-            {role ? (
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
-              >
-                登出
-              </button>
-            ) : (
-              <Link href="/login">
-                <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">登录</button>
+            <div className="flex items-center gap-2">
+              <Link href="/">
+                <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">主页</button>
               </Link>
-            )}
+              {role ? (
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap"
+                >
+                  登出
+                </button>
+              ) : (
+                <Link href="/login">
+                  <button className="px-3 py-1.5 w-16 sm:w-20 text-sm bg-blue-500 text-white rounded whitespace-nowrap">登录</button>
+                </Link>
+              )}
+            </div>
           </div>
         </header>
 
@@ -289,21 +275,17 @@ export default function Admin() {
               避免等 isauth 返回后卡片才突然出现；确认非管理员后消失 */}
           {(role === undefined || isAdmin) && (<div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
             <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
-              {/* 标题行点击折叠/展开用量详情 */}
-              <button type="button" onClick={toggleR2Open} className={`w-full flex items-center justify-between ${r2Open ? 'mb-2' : ''}`}>
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
                   R2 用量{r2Usage ? `（${r2Usage.month} 计费月）` : ''}
                 </span>
-                <span className="flex items-center gap-2">
-                  {r2Usage ? (
-                    <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
-                  ) : !r2UsageError ? (
-                    <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
-                  ) : null}
-                  <ChevronIcon open={r2Open} />
-                </span>
-              </button>
-              {r2Open && (r2UsageError ? (
+                {r2Usage ? (
+                  <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
+                ) : !r2UsageError ? (
+                  <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
+                ) : null}
+              </div>
+              {r2UsageError ? (
                 <p className="text-xs text-amber-600">{r2UsageError}</p>
               ) : !r2Usage ? (
                 <div className="space-y-1.5">
@@ -337,7 +319,7 @@ export default function Admin() {
                     );
                   })}
                 </div>
-              ))}
+              )}
             </div>
           </div>)}
 
