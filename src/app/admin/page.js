@@ -9,6 +9,15 @@ import ApiTokens from '@/components/ApiTokens';
 import { ensureUidCookie } from '@/lib/uid';
 // import { toast } from "react-toastify";
 
+// 折叠卡片标题行右侧的箭头图标
+function ChevronIcon({ open }) {
+  return (
+    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
 
 
 
@@ -36,6 +45,16 @@ export default function Admin() {
   // 登录角色：undefined=探测中，null=未登录，'admin'/'user'=已登录
   const [role, setRole] = useState(undefined);
   const isAdmin = role === 'admin';
+  // R2 用量卡片折叠状态（默认收起，选择记忆在 localStorage）
+  const [r2Open, setR2Open] = useState(false);
+  useEffect(() => {
+    try { if (localStorage.getItem('ml_r2_open') === '1') setR2Open(true); } catch { /* 忽略 */ }
+  }, []);
+  const toggleR2Open = () => setR2Open((o) => {
+    const n = !o;
+    try { localStorage.setItem('ml_r2_open', n ? '1' : '0'); } catch { /* 忽略 */ }
+    return n;
+  });
 
   // 确保访客 uid cookie 存在（匿名管理"我的文件"依赖它），并探测登录角色
   useEffect(() => {
@@ -93,9 +112,10 @@ export default function Admin() {
     getListdata(currentPage)
   }, [currentPage]);
 
-  // 拉取 R2 用量（对照免费额度）：仅管理员可见，访客不请求
+  // 拉取 R2 用量（对照免费额度）：仅管理员展开卡片时才请求，已获取过不重复拉取
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !r2Open) return;
+    if (r2Usage || r2UsageError) return;
     let ignore = false;
     (async () => {
       try {
@@ -110,7 +130,7 @@ export default function Admin() {
       }
     })();
     return () => { ignore = true; };
-  }, [isAdmin]);
+  }, [isAdmin, r2Open, r2Usage, r2UsageError]);
 
   // 分页控制按钮
   const handleNextPage = () => {
@@ -275,17 +295,21 @@ export default function Admin() {
               避免等 isauth 返回后卡片才突然出现；确认非管理员后消失 */}
           {(role === undefined || isAdmin) && (<div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-2">
             <div className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
-              <div className="flex items-center justify-between mb-2">
+              {/* 标题行点击折叠/展开；展开时才拉取用量数据 */}
+              <button type="button" onClick={toggleR2Open} className={`w-full flex items-center justify-between ${r2Open ? 'mb-2' : ''}`}>
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
                   R2 用量{r2Usage ? `（${r2Usage.month} 计费月）` : ''}
                 </span>
-                {r2Usage ? (
-                  <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
-                ) : !r2UsageError ? (
-                  <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
-                ) : null}
-              </div>
-              {r2UsageError ? (
+                <span className="flex items-center gap-2">
+                  {r2Usage ? (
+                    <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
+                  ) : r2Open && !r2UsageError ? (
+                    <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
+                  ) : null}
+                  <ChevronIcon open={r2Open} />
+                </span>
+              </button>
+              {r2Open && (r2UsageError ? (
                 <p className="text-xs text-amber-600">{r2UsageError}</p>
               ) : !r2Usage ? (
                 <div className="space-y-1.5">
@@ -319,7 +343,7 @@ export default function Admin() {
                     );
                   })}
                 </div>
-              )}
+              ))}
             </div>
           </div>)}
 
