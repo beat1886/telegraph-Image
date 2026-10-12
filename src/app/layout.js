@@ -13,7 +13,7 @@ import ToastHost from '@/components/ToastHost';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "喵链",
+  title: "喵链 - 图片/视频/音频的外链托管",
   description: "喵链 - 图片/视频/音频的外链托管",
 };
 
