@@ -146,7 +146,7 @@ export default function ApiTokens() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-lg shadow p-3">
         {/* 标题行点击折叠/展开 API 面板 */}
         <button type="button" onClick={toggleOpen} className={`w-full flex items-center justify-between ${open ? 'mb-3' : ''}`}>
           <h2 className="text-xs sm:text-sm font-medium text-gray-700">API 接口</h2>
