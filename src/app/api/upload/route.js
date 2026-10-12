@@ -157,8 +157,8 @@ async function uploadR2(env, origin, file, uid) {
 
   const url = `${origin}/api/rfile/${key}`;
   if (env.IMG) {
-    const now = new Date();
-    const time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    // 统一上传时间格式 YYYY-MM-DD（Asia/Shanghai；中国无时令变化，+8h 取 UTC 日期）
+    const time = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
     const kind = mediaKind(file);
     // uid/kind 列不存在时逐级回退
     try {

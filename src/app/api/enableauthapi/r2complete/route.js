@@ -69,8 +69,8 @@ export async function POST(request) {
     }
 
     if (env.IMG) {
-        const now = new Date();
-        const time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // 统一上传时间格式 YYYY-MM-DD（Asia/Shanghai；中国无时令变化，+8h 取 UTC 日期）
+        const time = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
         const uid = getUidFromRequest(request);
         // 参数绑定，防注入；uid 列为访客隔离新增，列不存在时回退旧插入
         try {

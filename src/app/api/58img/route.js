@@ -118,19 +118,7 @@ async function insertImageData(env, src, referer, ip, rating, time) {
 
 
 async function get_nowTime() {
-  const options = {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  };
-  const timedata = new Date();
-  const formattedDate = new Intl.DateTimeFormat('zh-CN', options).format(timedata);
-
-  return formattedDate
+  // 统一上传时间格式 YYYY-MM-DD（Asia/Shanghai；中国无时令变化，+8h 取 UTC 日期）
+  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
 
 }

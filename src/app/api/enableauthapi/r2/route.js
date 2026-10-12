@@ -145,11 +145,8 @@ async function insertImageData(env, src, referer, ip, rating, time) {
 }
 
 async function get_nowTime() {
-    const timedata = new Date();
-    const year = timedata.getFullYear();
-    const month = String(timedata.getMonth() + 1).padStart(2, '0');
-    const day = String(timedata.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // 统一上传时间格式 YYYY-MM-DD（Asia/Shanghai；中国无时令变化，+8h 取 UTC 日期）
+    return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
 async function getRating(env, url) {

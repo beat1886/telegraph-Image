@@ -184,6 +184,14 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
         return null;
     };
 
+    // 上传时间统一显示 YYYY-MM-DD；兼容旧记录的中文格式（2026年10月5日 14:30:25 → 2026-10-05）
+    const formatTime = (t) => {
+        if (!t) return '-';
+        const m = String(t).match(/^(\d{4})年(\d{1,2})月(\d{1,2})日/);
+        if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+        return String(t).slice(0, 10);
+    };
+
     // 文件类型标签：优先数据库 kind 列（含 file），否则按扩展名推断，未知显示 '-'
     const KIND_LABELS = { image: '图片', video: '视频', audio: '音频', file: '文件' };
     const KIND_BADGE = {
@@ -384,7 +392,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                         {item.url}
                     </p>
                     <div className="mt-1 space-y-0.5 text-xs text-gray-500">
-                        <p className="truncate">时间：{item.time || '-'}</p>
+                        <p className="truncate">时间：{formatTime(item.time)}</p>
                         <p className="flex items-center gap-1 whitespace-nowrap">接口：{getChannel(item.url)}　类型：{renderKindBadge(item)}</p>
                         <p className="truncate">IP：{item.ip || '-'}</p>
                         <p>访问量：{item.total ?? '-'}　分级：{item.rating ?? '-'}</p>
@@ -486,7 +494,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                                         </div>
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 max-w-[96px] sm:max-w-48 truncate">
-                                        {item.time}
+                                        {formatTime(item.time)}
                                     </td>
                                     <td className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 whitespace-nowrap">
                                         {getChannel(item.url)}
