@@ -232,33 +232,32 @@ export default function Admin() {
     }
   };
 
-  // 批量删除：逐条调用现有删除接口，全部结束后刷新
+  // 批量删除：一次请求提交全部 url，服务端用 D1 batch 在一个事务内删除
   const runBatchDelete = async () => {
     setShowBatchConfirm(false);
     if (batchDeleting || selected.length === 0) return;
     setBatchDeleting(true);
-    let ok = 0;
-    let fail = 0;
-    for (const url of selected) {
-      try {
-        const res = await fetch('/api/admin/delete', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: url }),
-        });
-        const data = await res.json();
-        if (data?.success) ok++; else fail++;
-      } catch {
-        fail++;
+    const total = selected.length;
+    try {
+      const res = await fetch('/api/admin/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: selected }),
+      });
+      const data = await res.json();
+      const deleted = data?.deleted ?? 0;
+      const failed = data?.failed ?? (data?.success ? 0 : total);
+      if (failed === 0) {
+        toast.success(`已删除 ${deleted} ${countUnit}`);
+      } else {
+        toast.error(`删除完成：成功 ${deleted} ${countUnit}，失败 ${failed} ${countUnit}`);
       }
+    } catch (err) {
+      toast.error(err.message || '批量删除失败');
+    } finally {
+      setBatchDeleting(false);
+      getListdata(currentPage);
     }
-    setBatchDeleting(false);
-    if (fail === 0) {
-      toast.success(`已删除 ${ok} ${countUnit}`);
-    } else {
-      toast.error(`删除完成：成功 ${ok} ${countUnit}，失败 ${fail} ${countUnit}`);
-    }
-    getListdata(currentPage);
   };
 
   return (
