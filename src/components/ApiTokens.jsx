@@ -236,7 +236,9 @@ Body (form-data):
             <p className="text-slate-400 mb-1">返回 JSON</p>
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
   "success": true,
-  "data": [{ "url": "链接", "name": "文件名" }],
+  "data": [
+    { "url": "链接", "name": "文件名" }
+  ],
   "url": "首个链接"
 }`}</pre>
           </div>
