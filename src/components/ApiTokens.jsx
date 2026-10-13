@@ -170,6 +170,12 @@ Body (form-data):
         </button>
 
         {open && (<>
+        {/* 调用说明 */}
+        <div className="mb-2 text-xs text-gray-500 space-y-0.5">
+          <p>请求方式：POST</p>
+          <p>Content-Type：由浏览器自动设为 multipart/form-data</p>
+          <p>鉴权请求头：Authorization: Bearer &lt;密钥&gt;</p>
+        </div>
         {/* 调用示例：接口测试工具格式 */}
         <div className="relative mb-2 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
           <pre className="whitespace-pre-wrap break-all leading-5">{apiExample}</pre>
