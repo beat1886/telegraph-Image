@@ -297,16 +297,9 @@ export default function Admin() {
               {/* 标题行点击折叠/展开；展开时才拉取用量数据 */}
               <button type="button" onClick={toggleR2Open} className={`w-full flex items-center justify-between ${r2Open ? 'mb-2' : ''}`}>
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  R2 用量{r2Usage ? `（${r2Usage.month} 计费月）` : ''}
+                  R2 用量
                 </span>
-                <span className="flex items-center gap-2">
-                  {r2Usage ? (
-                    <span className="text-[11px] text-gray-400">{r2Usage.storage.objects} 个对象 · 出站流量免费</span>
-                  ) : r2Open && !r2UsageError ? (
-                    <span className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
-                  ) : null}
-                  <ChevronIcon open={r2Open} />
-                </span>
+                <ChevronIcon open={r2Open} />
               </button>
               {r2Open && (r2UsageError ? (
                 <p className="text-xs text-amber-600">{r2UsageError}</p>
@@ -322,6 +315,7 @@ export default function Admin() {
                 </div>
               ) : (
                 <div className="space-y-1.5">
+                  <p className="text-[11px] text-gray-400">{r2Usage.month} 计费月 · {r2Usage.storage.objects} 个对象 · 出站流量免费</p>
                   {[
                     { label: '存储', used: r2Usage.storage.used, limit: r2Usage.storage.limit, fmt: (n) => `${(n / 1024 ** 3).toFixed(2)} GB` },
                     { label: 'A类操作（写入/列举/删除）', used: r2Usage.classA.used, limit: r2Usage.classA.limit, fmt: (n) => n.toLocaleString() },
