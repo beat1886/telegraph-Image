@@ -194,12 +194,27 @@ Body (form-data):
             </button>
           </div>
         </details>
-        <p className="text-xs text-gray-400 mb-3">
-          返回 JSON：<code className="text-gray-500">{'{ success:true, data:[{url,name}], url }'}</code>；channel 可选 tg / tgchannel{isAdmin ? ' / r2' : ''}，默认 tgchannel。
-          <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:underline whitespace-nowrap">
-            打开网页上传测试页 →
-          </a>
-        </p>
+        {/* 返回格式与说明 */}
+        <div className="mb-3 space-y-2">
+          <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
+            <p className="text-slate-400 mb-1">返回 JSON</p>
+            <pre className="whitespace-pre-wrap break-all leading-5">{`{
+  "code": 200,
+  "success": true,
+  "channel": "tgchannel",
+  "data": [{ "url": "https://...", "name": "图片.jpg" }],
+  "url": "https://..."
+}`}</pre>
+          </div>
+          <p className="text-xs text-gray-400">
+            channel 可选 <code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? ' / <code className="text-gray-500">r2</code>' : ''}，默认 <code className="text-gray-500">tgchannel</code>
+          </p>
+          <p className="text-xs text-gray-400">
+            <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline whitespace-nowrap">
+              打开网页上传测试页 →
+            </a>
+          </p>
+        </div>
 
         {/* 创建密钥：窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
         <div className="flex flex-wrap gap-2 mb-4">
