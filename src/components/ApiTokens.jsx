@@ -199,11 +199,9 @@ Body (form-data):
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
             <p className="text-slate-400 mb-1">返回 JSON</p>
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
-  "code": 200,
   "success": true,
-  "channel": "tgchannel",
-  "data": [{ "url": "https://...", "name": "图片.jpg" }],
-  "url": "https://..."
+  "data": [{ "url": "链接", "name": "文件名" }],
+  "url": "首个链接"
 }`}</pre>
           </div>
           <p className="text-xs text-gray-400">
