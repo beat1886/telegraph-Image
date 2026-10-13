@@ -200,6 +200,36 @@ Body (form-data):
             </button>
           </div>
         </details>
+        {/* 请求参数 */}
+        <div className="mb-2">
+          <p className="text-xs text-gray-500 mb-1.5">请求参数</p>
+          <table className="w-full text-xs border border-gray-200 rounded">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数名</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">类型</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">必填</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">说明</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">file</td>
+                <td className="px-2 py-1.5">File</td>
+                <td className="px-2 py-1.5">是</td>
+                <td className="px-2 py-1.5">上传的文件，可多选</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
+                <td className="px-2 py-1.5">String</td>
+                <td className="px-2 py-1.5">否</td>
+                <td className="px-2 py-1.5">
+                  <code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code></> : ''}，默认 <code className="text-gray-500">tgchannel</code>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         {/* 返回格式与说明 */}
         <div className="mb-3 space-y-2">
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
@@ -210,9 +240,6 @@ Body (form-data):
   "url": "首个链接"
 }`}</pre>
           </div>
-          <p className="text-xs text-gray-400">
-            channel 可选 <code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? ' / <code className="text-gray-500">r2</code>' : ''}，默认 <code className="text-gray-500">tgchannel</code>
-          </p>
           <p className="text-xs text-gray-400">
             <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline whitespace-nowrap">
               打开网页上传测试页 →
