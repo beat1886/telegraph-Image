@@ -128,6 +128,15 @@ export default function ApiTokens() {
     else toast.error('复制失败');
   };
 
+  const apiExample = `POST  ${origin || 'https://你的域名'}/api/upload
+
+Headers:
+  Authorization: Bearer ml_你的密钥
+
+Body (form-data):
+  file      文件      必填
+  channel   tgchannel 可选  tg / tgchannel${isAdmin ? ' / r2' : ''}  默认 tgchannel`;
+
   const curlExample = `curl -X POST ${origin || 'https://你的域名'}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
@@ -161,17 +170,30 @@ export default function ApiTokens() {
         </button>
 
         {open && (<>
-        {/* 调用示例 */}
-        <div className="relative mb-4 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
-          <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
+        {/* 调用示例：接口测试工具格式 */}
+        <div className="relative mb-2 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
+          <pre className="whitespace-pre-wrap break-all leading-5">{apiExample}</pre>
           <button
-            onClick={() => handleCopy(curlExample)}
+            onClick={() => handleCopy(apiExample)}
             className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
             title="复制示例"
           >
             <CopyIcon />
           </button>
         </div>
+        <details className="mb-2">
+          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">curl 命令</summary>
+          <div className="relative mt-1 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
+            <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
+            <button
+              onClick={() => handleCopy(curlExample)}
+              className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
+              title="复制 curl"
+            >
+              <CopyIcon />
+            </button>
+          </div>
+        </details>
         <p className="text-xs text-gray-400 mb-3">
           返回 JSON：<code className="text-gray-500">{'{ success:true, data:[{url,name}], url }'}</code>；channel 可选 tg / tgchannel{isAdmin ? ' / r2' : ''}，默认 tgchannel。
           <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:underline whitespace-nowrap">
