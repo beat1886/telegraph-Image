@@ -12,7 +12,7 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="text-blue-300 hover:text-red-900 ml-1"
           >
-            喵搜 - 网盘资源一站式搜索
+            喵搜 - 网盘资源聚合搜索
           </a>
         </p>
       </div>
