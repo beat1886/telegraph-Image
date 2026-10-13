@@ -237,7 +237,10 @@ Body (form-data):
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
   "success": true,
   "data": [
-    { "url": "链接", "name": "文件名" }
+    {
+      "url": "链接",
+      "name": "文件名"
+    }
   ],
   "url": "首个链接"
 }`}</pre>
