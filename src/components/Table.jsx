@@ -389,7 +389,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                         className="text-sm font-medium text-blue-600 truncate cursor-pointer"
                         title={item.url}
                     >
-                        {item.url}
+                        {getLastSegment(item.url)}
                     </p>
                     <div className="mt-1 space-y-0.5 text-xs text-gray-500">
                         <p className="truncate">时间：{formatTime(item.time)}</p>
@@ -484,8 +484,8 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                         <tbody>
                             {data.map((item, index) => (
                                 <tr key={index} className={selected.includes(item.url) ? 'bg-blue-50' : ''}>
-                                    <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48">
-                                        {item.url}
+                                    <td onClick={() => handleNameClick(item)} className="text-center align-middle py-2 px-2 sm:px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-[104px] sm:max-w-48" title={item.url}>
+                                        {getLastSegment(item.url)}
                                     </td>
                                     <td className="w-16 sm:w-24 sticky left-0 z-10 py-2 px-1.5 sm:px-4 border-b border-gray-500 bg-white text-sm text-gray-700 text-center align-middle">
                                         <div className="relative inline-block">
@@ -610,7 +610,7 @@ export default function Table({ data: initialData = [], selected = [], onToggle,
                             <div className="flex items-start justify-between px-4 pt-3 pb-2 border-b">
                                 <div className="min-w-0 pr-2">
                                     <h3 className="text-sm font-semibold text-gray-800">访问记录</h3>
-                                    <p className="text-xs text-gray-400 truncate" title={logView.url}>{logView.url}</p>
+                                    <p className="text-xs text-gray-400 truncate" title={logView.url}>{getLastSegment(logView.url)}</p>
                                 </div>
                                 <button className="text-red-600 hover:text-red-800 shrink-0" onClick={() => setLogView(null)}>
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
