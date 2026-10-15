@@ -133,16 +133,9 @@ export default function ApiTokens() {
   -F "channel=tgchannel" \\
   -F "file=@图片.jpg"`;
 
-  // 折叠收纳：默认收起，选择记忆在 localStorage
+  // 折叠收纳：每次进入页面默认收起
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    try { if (localStorage.getItem('ml_api_open') === '1') setOpen(true); } catch { /* 忽略 */ }
-  }, []);
-  const toggleOpen = () => setOpen((o) => {
-    const n = !o;
-    try { localStorage.setItem('ml_api_open', n ? '1' : '0'); } catch { /* 忽略 */ }
-    return n;
-  });
+  const toggleOpen = () => setOpen((o) => !o);
 
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
