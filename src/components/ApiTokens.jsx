@@ -257,14 +257,9 @@ export default function ApiTokens() {
                 <td className="px-2 py-1.5">上传结果数组，多文件时含多个元素</td>
               </tr>
               <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800 pl-5">+ url</td>
+                <td className="px-2 py-1.5 font-mono text-gray-800 pl-5">+ url / + name</td>
                 <td className="px-2 py-1.5">string</td>
-                <td className="px-2 py-1.5">文件直链</td>
-              </tr>
-              <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800 pl-5">+ name</td>
-                <td className="px-2 py-1.5">string</td>
-                <td className="px-2 py-1.5">文件名</td>
+                <td className="px-2 py-1.5">文件直链 / 文件名</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">url</td>
