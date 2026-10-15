@@ -128,15 +128,6 @@ export default function ApiTokens() {
     else toast.error('复制失败');
   };
 
-  const apiExample = `POST  ${origin || 'https://你的域名'}/api/upload
-
-Headers:
-  Authorization: Bearer ml_你的密钥
-
-Body (form-data):
-  file      文件      必填
-  channel   tgchannel 可选  tg / tgchannel${isAdmin ? ' / r2' : ''}  默认 tgchannel`;
-
   const curlExample = `curl -X POST ${origin || 'https://你的域名'}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
@@ -170,25 +161,67 @@ Body (form-data):
         </button>
 
         {open && (<>
-        {/* 调用说明 */}
-        <div className="mb-2 text-xs text-gray-500 space-y-0.5">
-          <p>请求方式：POST</p>
-          <p>Content-Type：由浏览器自动设为 multipart/form-data</p>
-          <p>鉴权请求头：Authorization: Bearer &lt;密钥&gt;</p>
+        {/* 在线调试 */}
+        <p className="text-xs text-gray-500 mb-3">
+          在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
+        </p>
+
+        {/* 请求说明 */}
+        <div className="mb-3">
+          <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
+          <div className="text-xs text-gray-600 space-y-0.5 mb-2">
+            <p>HTTP 方法：<code className="text-gray-800">POST</code></p>
+            <p>请求 URL：<code className="text-gray-800 break-all">{origin || 'https://你的域名'}/api/upload</code></p>
+          </div>
+
+          <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
+          <table className="w-full text-xs border border-gray-200 rounded mb-2">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">值</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">Authorization</td>
+                <td className="px-2 py-1.5 font-mono">Bearer ml_你的密钥</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p className="text-xs text-gray-500 mb-1">Body 中放置请求参数（form-data）：</p>
+          <table className="w-full text-xs border border-gray-200 rounded">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">是否必选</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">类型</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">说明</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">file</td>
+                <td className="px-2 py-1.5">是</td>
+                <td className="px-2 py-1.5">file</td>
+                <td className="px-2 py-1.5">上传的文件，可同时传多个</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
+                <td className="px-2 py-1.5">否</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5">
+                  上传通道：<code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code></> : ''}，默认 <code className="text-gray-500">tgchannel</code>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        {/* 调用示例：接口测试工具格式 */}
-        <div className="relative mb-2 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
-          <pre className="whitespace-pre-wrap break-all leading-5">{apiExample}</pre>
-          <button
-            onClick={() => handleCopy(apiExample)}
-            className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
-            title="复制示例"
-          >
-            <CopyIcon />
-          </button>
-        </div>
-        <details className="mb-2">
-          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">curl 命令</summary>
+
+        {/* 请求代码示例 */}
+        <details className="mb-3">
+          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">请求代码示例（curl）</summary>
           <div className="relative mt-1 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
             <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
             <button
@@ -200,40 +233,48 @@ Body (form-data):
             </button>
           </div>
         </details>
-        {/* 请求参数 */}
-        <div className="mb-2">
-          <p className="text-xs text-gray-500 mb-1.5">请求参数</p>
-          <table className="w-full text-xs border border-gray-200 rounded">
+
+        {/* 返回说明 */}
+        <div className="mb-3">
+          <p className="text-xs font-medium text-gray-600 mb-1.5">返回说明</p>
+          <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
               <tr className="bg-gray-50">
-                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数名</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">字段</th>
                 <th className="text-left px-2 py-1.5 font-medium text-gray-600">类型</th>
-                <th className="text-left px-2 py-1.5 font-medium text-gray-600">必填</th>
                 <th className="text-left px-2 py-1.5 font-medium text-gray-600">说明</th>
               </tr>
             </thead>
             <tbody className="text-gray-600">
               <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800">file</td>
-                <td className="px-2 py-1.5">File</td>
-                <td className="px-2 py-1.5">是</td>
-                <td className="px-2 py-1.5">上传的文件，可多选</td>
+                <td className="px-2 py-1.5 font-mono text-gray-800">success</td>
+                <td className="px-2 py-1.5">boolean</td>
+                <td className="px-2 py-1.5">是否上传成功</td>
               </tr>
               <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
-                <td className="px-2 py-1.5">String</td>
-                <td className="px-2 py-1.5">否</td>
-                <td className="px-2 py-1.5">
-                  <code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code></> : ''}，默认 <code className="text-gray-500">tgchannel</code>
-                </td>
+                <td className="px-2 py-1.5 font-mono text-gray-800">data</td>
+                <td className="px-2 py-1.5">array[]</td>
+                <td className="px-2 py-1.5">上传结果数组，多文件时含多个元素</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800 pl-5">+ url</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5">文件直链</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800 pl-5">+ name</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5">文件名</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">url</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5">首个文件的直链（便捷字段）</td>
               </tr>
             </tbody>
           </table>
-        </div>
-        {/* 返回格式与说明 */}
-        <div className="mb-3 space-y-2">
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
-            <p className="text-slate-400 mb-1">返回 JSON</p>
+            <p className="text-slate-400 mb-1">返回示例</p>
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
   "success": true,
   "data": [
@@ -245,11 +286,6 @@ Body (form-data):
   "url": "首个链接"
 }`}</pre>
           </div>
-          <p className="text-xs text-gray-400">
-            <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline whitespace-nowrap">
-              打开网页上传测试页 →
-            </a>
-          </p>
         </div>
 
         {/* 创建密钥：窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
