@@ -220,9 +220,9 @@ export default function ApiTokens() {
         </div>
 
         {/* 请求代码示例 */}
-        <details className="mb-3">
-          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">请求代码示例（curl）</summary>
-          <div className="relative mt-1 rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
+        <div className="mb-3">
+          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例（curl）</p>
+          <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
             <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
             <button
               onClick={() => handleCopy(curlExample)}
@@ -232,7 +232,7 @@ export default function ApiTokens() {
               <CopyIcon />
             </button>
           </div>
-        </details>
+        </div>
 
         {/* 返回说明 */}
         <div className="mb-3">
