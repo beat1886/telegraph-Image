@@ -140,10 +140,10 @@ export default function ApiTokens() {
   -F "file=@图片1.jpg" \\
   -F "file=@图片2.jpg" \\
   -F "file=@视频.mp4"`;
-  // 链接转存：单个 url / 多个 urls（公开接口，无需密钥）
+  // 链接转存：统一使用 urls 数组（一个元素即单个），公开接口无需密钥
   const transferSingle = `curl -X POST ${base}/api/transfer \\
   -H "Content-Type: application/json" \\
-  -d '{"url":"https://example.com/图片.jpg","channel":"tgchannel"}'`;
+  -d '{"urls":["https://example.com/图片.jpg"],"channel":"tgchannel"}'`;
   const transferMulti = `curl -X POST ${base}/api/transfer \\
   -H "Content-Type: application/json" \\
   -d '{"urls":["https://example.com/a.jpg","https://example.com/b.mp4"],"channel":"tgchannel"}'`;
@@ -343,7 +343,7 @@ export default function ApiTokens() {
             <p>请求 URL：<code className="text-gray-800 break-all">{base}/api/transfer</code></p>
             <p>Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
           </div>
-          <p className="text-xs text-gray-500 mb-1">Body 参数（JSON，单个传 url，多个传 urls，二选一）：</p>
+          <p className="text-xs text-gray-500 mb-1">Body 参数（JSON；单个、多个统一使用 urls 数组）：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
               <tr className="bg-gray-50">
@@ -355,16 +355,10 @@ export default function ApiTokens() {
             </thead>
             <tbody className="text-gray-600">
               <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800">url</td>
-                <td className="px-2 py-1.5">二选一</td>
-                <td className="px-2 py-1.5">string</td>
-                <td className="px-2 py-1.5">单个链接转存时传，文件直链 http(s) URL</td>
-              </tr>
-              <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">urls</td>
-                <td className="px-2 py-1.5">二选一</td>
+                <td className="px-2 py-1.5">是</td>
                 <td className="px-2 py-1.5">string[]</td>
-                <td className="px-2 py-1.5">多个链接转存时传，直链 URL 数组</td>
+                <td className="px-2 py-1.5">文件直链 http(s) URL 数组；<b>单个链接也传数组</b>（含一个元素），多个链接传多个元素，单次最多 20 个</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
@@ -374,16 +368,19 @@ export default function ApiTokens() {
               </tr>
             </tbody>
           </table>
-          <CodeBlock title="单个链接转存：" code={transferSingle} />
-          <CodeBlock title="多个链接转存：" code={transferMulti} />
+          <CodeBlock title="单个链接转存（urls 含一个元素）：" code={transferSingle} />
+          <CodeBlock title="多个链接转存（urls 含多个元素）：" code={transferMulti} />
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
-            <p className="text-slate-400 mb-1">返回示例（单个）</p>
+            <p className="text-slate-400 mb-1">返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）</p>
             <pre className="whitespace-pre-wrap break-all leading-5 mb-2">{`{
   "success": true,
-  "url": "转存后的直链",
-  "name": "文件名"
+  "count": 1,
+  "results": [
+    { "url": "转存后的直链", "name": "文件名" }
+  ],
+  "failures": []
 }`}</pre>
-            <p className="text-slate-400 mb-1">返回示例（多个；failures 为失败明细，全部成功时为空）</p>
+            <p className="text-slate-400 mb-1">多链接示例（failures 为失败明细，全部成功时为空；部分失败时 success=false）</p>
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
   "success": true,
   "count": 2,

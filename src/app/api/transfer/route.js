@@ -1,9 +1,7 @@
 // 链接转存：服务端抓取外部 URL 文件并转存到站内通道
-// 入参 JSON：
-//   单个：{ url, channel? }
-//   多个：{ urls: string[], channel? }
-// 单个返回：{ success, url, name }
-// 多个返回：{ success, count, results:[{url,name}], failures:[{src,message}] }
+// 入参 JSON：{ urls: string[], channel? }
+//   单个链接也使用 urls（传只含一个元素的数组）
+// 返回：{ success, count, results:[{url,name}], failures:[{src,message}] }
 // 权限：公开（与网页上传一致），记录归属 ml_uid 访客
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
@@ -97,15 +95,18 @@ export async function POST(request) {
     return json({ success: false, message: '请求必须是 JSON' }, 400);
   }
 
-  // 兼容单个 url 与多个 urls
+  // 统一使用 urls：接受数组（一或多个元素），也容忍单个字符串
+  // 旧版单字段 url 仅作向后兼容，文档不再提供
   let urls = [];
-  if (typeof body.url === 'string' && body.url.trim()) {
-    urls = [body.url.trim()];
-  } else if (Array.isArray(body.urls)) {
+  if (Array.isArray(body.urls)) {
     urls = body.urls.map((u) => (typeof u === 'string' ? u.trim() : '')).filter(Boolean);
+  } else if (typeof body.urls === 'string' && body.urls.trim()) {
+    urls = [body.urls.trim()];
+  } else if (typeof body.url === 'string' && body.url.trim()) {
+    urls = [body.url.trim()];
   }
   if (urls.length === 0) {
-    return json({ success: false, message: '请提供 url（单个）或 urls（多个）' }, 400);
+    return json({ success: false, message: '请提供 urls（文件直链数组，单个链接也传数组）' }, 400);
   }
   if (urls.length > MAX_URLS) {
     return json({ success: false, message: `单次最多转存 ${MAX_URLS} 个链接` }, 400);
@@ -128,17 +129,17 @@ export async function POST(request) {
     }
   }
 
-  // 单个链接：保持原有响应格式（业务失败也返回 200，避免 Cloudflare 用 502 错误页吞掉 JSON）
-  if (urls.length === 1) {
-    if (results.length === 1) return json({ success: true, url: results[0].url, name: results[0].name });
-    return json({ success: false, message: failures[0]?.message || '转存失败' });
-  }
-
-  // 多个链接：汇总结果（部分失败时 success=false，失败明细见 failures）
+  // 统一汇总返回（业务失败也返回 200，避免 Cloudflare 用错误页吞掉 JSON）
+  const allFailed = failures.length === urls.length;
   return json({
     success: failures.length === 0,
     count: results.length,
     results,
     failures,
+    // 单个链接时附便捷字段，兼容旧版客户端
+    ...(urls.length === 1 && results.length === 1
+      ? { url: results[0].url, name: results[0].name }
+      : {}),
+    ...(allFailed ? { message: failures.map((f) => f.message).join('；') || '转存失败' } : {}),
   });
 }

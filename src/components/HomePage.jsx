@@ -380,19 +380,20 @@ export default function HomePage({ initialRole, authButton }) {
     }
     setTransferring(true);
     try {
-      const payload = { channel: selectedOption === 'tg' ? 'tg' : 'tgchannel' };
-      if (urls.length === 1) payload.url = urls[0];
-      else payload.urls = urls;
+      // 无论单个还是多个，统一使用 urls 数组
       const res = await fetch('/api/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          urls,
+          channel: selectedOption === 'tg' ? 'tg' : 'tgchannel',
+        }),
       });
       const data = await res.json();
-      // 单个与多个返回格式不同：单个 {url,name}；多个 {results:[{url,name}], failures:[]}
-      const okItems = urls.length === 1
-        ? (res.ok && data?.url ? [data] : [])
-        : (Array.isArray(data?.results) ? data.results : []);
+      // 统一返回 {results:[{url,name}], failures:[]}；旧版单链接格式兜底
+      const okItems = Array.isArray(data?.results) && data.results.length > 0
+        ? data.results
+        : (data?.url ? [{ url: data.url, name: data.name }] : []);
       if (okItems.length > 0) {
         setUploadedImages((prev) => [
           ...prev,
