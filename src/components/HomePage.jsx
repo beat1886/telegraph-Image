@@ -681,24 +681,23 @@ export default function HomePage({ initialRole, authButton }) {
         </div>
       </header>
       <div className="mt-[60px] w-[92%] sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-0">
-          <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">文件上传</div>
-          </div>
-          <div className="flex flex-row items-center gap-2">
-            <span className="text-sm sm:text-base md:text-sm lg:text-xl xl:text-xl 2xl:text-xl whitespace-nowrap">上传接口：</span>
-            <select
-              value={selectedOption}
-              onChange={handleSelectChange}
-              className="text-xs sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 text-left pl-3"
-            >
-              <option value="tg">TG.ph（telegra.ph｜临时｜图片/视频｜≤15MB）</option>
-              <option value="tgchannel">TG_Channel（Telegram｜长期｜图片≤10MB/其他文件≤50MB）</option>
-              {isAuthapi && Loginuser === "admin" && <option value="r2">R2（Cloudflare｜长期｜任意文件｜≤2GB）</option>}
-            </select>
-          </div>
+        {/* 上传接口：文件上传与链接转存共用 */}
+        <div className="flex flex-row items-center justify-end gap-2 mb-3">
+          <span className="text-sm sm:text-base md:text-sm lg:text-xl xl:text-xl 2xl:text-xl whitespace-nowrap">上传接口：</span>
+          <select
+            value={selectedOption}
+            onChange={handleSelectChange}
+            className="text-xs sm:text-base md:text-sm lg:text-xl p-2 border rounded flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 text-left pl-3"
+          >
+            <option value="tg">TG.ph（telegra.ph｜临时｜图片/视频｜≤15MB）</option>
+            <option value="tgchannel">TG_Channel（Telegram｜长期｜图片≤10MB/其他文件≤50MB）</option>
+            {isAuthapi && Loginuser === "admin" && <option value="r2">R2（Cloudflare｜长期｜任意文件｜≤2GB）</option>}
+          </select>
         </div>
 
+        {/* 文件上传区域 */}
+        <section className="border border-gray-200 rounded-lg p-3 mb-4">
+          <div className="text-gray-800 text-sm sm:text-base font-medium mb-2">文件上传</div>
         <div
           className="border-2 border-dashed border-slate-400 rounded-md relative"
           onDrop={handleDrop}
@@ -816,24 +815,29 @@ export default function HomePage({ initialRole, authButton }) {
             </div>
           </div>
         </div>
+        </section>
 
-        {/* 链接转存：服务端抓取外部链接文件，不受浏览器跨域限制 */}
-        <div className="w-full mt-2 flex gap-2">
-          <input
-            value={transferUrl}
-            onChange={(e) => setTransferUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleTransfer()}
-            placeholder="链接转存：粘贴网上文件直链，转存为本站直链"
-            className="flex-1 min-w-0 h-10 border border-gray-300 rounded px-3 text-xs sm:text-sm focus:outline-none focus:border-blue-500"
-          />
-          <button
-            onClick={handleTransfer}
-            disabled={transferring}
-            className="h-10 px-4 bg-blue-500 text-white rounded text-xs sm:text-sm whitespace-nowrap hover:bg-blue-600 disabled:opacity-50"
-          >
-            {transferring ? '转存中…' : '转存'}
-          </button>
-        </div>
+        {/* 链接转存区域：服务端抓取外部链接文件，不受浏览器跨域限制 */}
+        <section className="border border-gray-200 rounded-lg p-3 mb-4">
+          <div className="text-gray-800 text-sm sm:text-base font-medium mb-1">链接转存</div>
+          <p className="text-xs text-gray-500 mb-2">粘贴网上文件直链，转存为本站直链（使用上方上传接口，文件 ≤ 50MB）</p>
+          <div className="w-full flex gap-2">
+            <input
+              value={transferUrl}
+              onChange={(e) => setTransferUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleTransfer()}
+              placeholder="https://…/xxx.jpg"
+              className="flex-1 min-w-0 h-10 border border-gray-300 rounded px-3 text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+            />
+            <button
+              onClick={handleTransfer}
+              disabled={transferring}
+              className="h-10 px-4 bg-blue-500 text-white rounded text-xs sm:text-sm whitespace-nowrap hover:bg-blue-600 disabled:opacity-50"
+            >
+              {transferring ? '转存中…' : '转存'}
+            </button>
+          </div>
+        </section>
 
         {uploadedImages.length > 0 && (
           <div className="w-full mt-4 min-h-[200px] mb-[60px]">
