@@ -1,6 +1,6 @@
 // 统一开放上传 API
 // 鉴权：Authorization: Bearer <api_token>（或 ?token=）
-// 入参：multipart/form-data，字段 file（可多个）；可选 channel=tg|tgchannel|r2（默认 tgchannel）
+// 入参：multipart/form-data，字段 file[]（数组形式，单个文件也传 file[]；多个文件重复 file[] 字段）；可选 channel=tg|tgchannel|r2（默认 tgchannel）
 // 出参：{ code:200, success:true, data:[{url,name}], url }  （单文件时顶层 url 为首个链接）
 // 权限：admin token 可用全部通道；user token 仅 tg/tgchannel。
 
@@ -60,9 +60,13 @@ export async function POST(request) {
     return json({ code: 400, success: false, message: '请求必须是 multipart/form-data 格式' }, 400);
   }
 
-  const files = formData.getAll('file').filter((f) => f instanceof Blob && f.size > 0);
+  // 统一使用 file[] 数组字段（单个文件也传 file[]）；旧版字段名 file 仅作向后兼容，文档不再提供
+  let files = formData.getAll('file[]').filter((f) => f instanceof Blob && f.size > 0);
   if (files.length === 0) {
-    return json({ code: 400, success: false, message: '缺少上传文件（字段名 file）' }, 400);
+    files = formData.getAll('file').filter((f) => f instanceof Blob && f.size > 0);
+  }
+  if (files.length === 0) {
+    return json({ code: 400, success: false, message: '缺少上传文件（字段名 file[]，单个文件也传 file[]）' }, 400);
   }
 
   let channel = (formData.get('channel') || 'tgchannel').toString().trim();

@@ -129,17 +129,17 @@ export default function ApiTokens() {
   };
 
   const base = origin || 'https://你的域名';
-  // 文件上传：单个 / 多个
+  // 文件上传：单个 / 多个统一使用 file[] 数组字段
   const curlSingle = `curl -X POST ${base}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
-  -F "file=@图片.jpg"`;
+  -F "file[]=@图片.jpg"`;
   const curlMulti = `curl -X POST ${base}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
-  -F "file=@图片1.jpg" \\
-  -F "file=@图片2.jpg" \\
-  -F "file=@视频.mp4"`;
+  -F "file[]=@图片1.jpg" \\
+  -F "file[]=@图片2.jpg" \\
+  -F "file[]=@视频.mp4"`;
   // 链接转存：统一使用 urls 数组（一个元素即单个），公开接口无需密钥
   const transferSingle = `curl -X POST ${base}/api/transfer \\
   -H "Content-Type: application/json" \\
@@ -253,10 +253,10 @@ export default function ApiTokens() {
             </thead>
             <tbody className="text-gray-600">
               <tr className="border-t border-gray-100">
-                <td className="px-2 py-1.5 font-mono text-gray-800">file</td>
+                <td className="px-2 py-1.5 font-mono text-gray-800">file[]</td>
                 <td className="px-2 py-1.5">是</td>
-                <td className="px-2 py-1.5">file</td>
-                <td className="px-2 py-1.5">上传的文件，可同时传多个</td>
+                <td className="px-2 py-1.5">file[]</td>
+                <td className="px-2 py-1.5">上传的文件（数组字段）；<b>单个文件也传 file[]</b>，多个文件重复多个 <code className="text-gray-500">file[]</code> 字段，可混合类型</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
@@ -272,8 +272,8 @@ export default function ApiTokens() {
 
         <div>
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例（curl）</p>
-          <CodeBlock title="单个文件（一个 file 字段）：" code={curlSingle} />
-          <CodeBlock title="多个文件（重复 file 字段，可混合类型）：" code={curlMulti} />
+          <CodeBlock title="单个文件（一个 file[] 字段）：" code={curlSingle} />
+          <CodeBlock title="多个文件（重复 file[] 字段，可混合类型）：" code={curlMulti} />
         </div>
         </div>
 

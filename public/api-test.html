@@ -140,7 +140,8 @@
 
     var fd = new FormData();
     fd.append('channel', channel);
-    for (var i = 0; i < files.length; i++) fd.append('file', files[i]);
+    // 统一使用 file[] 数组字段（单个文件也传 file[]）
+    for (var i = 0; i < files.length; i++) fd.append('file[]', files[i]);
 
     postUpload(fd, token, btn, box, '上传');
   }
