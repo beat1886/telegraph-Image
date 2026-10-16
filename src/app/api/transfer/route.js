@@ -1,7 +1,10 @@
 // 链接转存：服务端抓取外部 URL 文件并转存到站内通道
-// 入参 JSON：{ url, channel? }（channel: tgchannel 默认 | tg）
+// 入参 JSON：
+//   单个：{ url, channel? }
+//   多个：{ urls: string[], channel? }
+// 单个返回：{ success, url, name }
+// 多个返回：{ success, count, results:[{url,name}], failures:[{src,message}] }
 // 权限：公开（与网页上传一致），记录归属 ml_uid 访客
-// 说明：服务端抓取不受浏览器 CORS 限制，主页"链接转存"依赖本接口
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getContentType } from '@/lib/mime';
@@ -10,6 +13,7 @@ import { getUidFromRequest } from '@/lib/uid';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
 const CHANNELS = ['tgchannel', 'tg'];
 const MAX_BYTES = 50 * 1024 * 1024; // TG Bot API 上传上限 50MB
+const MAX_URLS = 20;
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Content-Type': 'application/json' } });
@@ -40,22 +44,8 @@ function fileNameFromUrl(u, mime) {
   return `${base || `transfer-${Date.now().toString(36)}`}${ext ? `.${ext}` : ''}`;
 }
 
-export async function POST(request) {
-  const { env, ctx } = getRequestContext();
-  void env; void ctx;
-
-  let body;
-  try { body = await request.json(); } catch {
-    return json({ success: false, message: '请求必须是 JSON' }, 400);
-  }
-  const src = (body.url || '').toString().trim();
-  if (!/^https?:\/\//i.test(src)) {
-    return json({ success: false, message: '请提供 http(s) 文件直链' }, 400);
-  }
-  let channel = (body.channel || 'tgchannel').toString();
-  if (!CHANNELS.includes(channel)) channel = 'tgchannel';
-
-  // 服务端抓取源文件（无 CORS 限制），30 秒超时
+// 抓取单个源链接并经站内通道上传，成功返回 { url, name }
+async function transferOne(src, channel, origin, uid) {
   let upstream, buf;
   try {
     upstream = await fetch(src, {
@@ -63,21 +53,18 @@ export async function POST(request) {
       signal: AbortSignal.timeout(30000),
       redirect: 'follow',
     });
-    if (!upstream.ok) {
-      return json({ success: false, message: `源站返回 ${upstream.status}` }, 502);
-    }
+    if (!upstream.ok) throw new Error(`源站返回 ${upstream.status}`);
     const len = Number(upstream.headers.get('content-length') || 0);
-    if (len > MAX_BYTES) return json({ success: false, message: '文件超过 50MB 转存上限' }, 413);
+    if (len > MAX_BYTES) throw new Error('文件超过 50MB 转存上限');
     buf = await upstream.arrayBuffer();
   } catch (e) {
-    return json({ success: false, message: e.name === 'AbortError' ? '抓取超时（30 秒）' : `抓取失败：${e.message}` }, 502);
+    throw new Error(e.name === 'AbortError' ? '抓取超时（30 秒）' : e.message.startsWith('源站') || e.message.startsWith('抓取') ? e.message : `抓取失败：${e.message}`);
   }
-  if (buf.byteLength === 0) return json({ success: false, message: '源文件内容为空' }, 502);
-  if (buf.byteLength > MAX_BYTES) return json({ success: false, message: '文件超过 50MB 转存上限' }, 413);
+  if (buf.byteLength === 0) throw new Error('源文件内容为空');
+  if (buf.byteLength > MAX_BYTES) throw new Error('文件超过 50MB 转存上限');
 
   const mime = (upstream.headers.get('content-type') || '').split(';')[0].trim();
   const name = fileNameFromUrl(src, mime);
-  // MIME 缺失/octet-stream 时按扩展名补正（与开放上传 API 相同逻辑）
   let type = mime || 'application/octet-stream';
   if (type === 'application/octet-stream') {
     const byExt = getContentType(name);
@@ -85,12 +72,8 @@ export async function POST(request) {
   }
   const file = new File([buf], name, { type });
 
-  // 内部转发：只携带归属 cookie，走站内既有上传路由（写库、鉴黄等复用）
-  const origin = new URL(request.url).origin;
   const internalHeaders = new Headers();
-  const uid = getUidFromRequest(request);
   if (uid) internalHeaders.set('cookie', `ml_uid=${uid}`);
-
   const fd = new FormData();
   fd.append('file', file, name);
   const res = await fetch(`${origin}/api/${channel}`, {
@@ -101,8 +84,61 @@ export async function POST(request) {
   });
   let out = null;
   try { out = await res.json(); } catch { /* 非 JSON 响应 */ }
-  if (!res.ok || !out?.url) {
-    return json({ success: false, message: out?.message || `转存通道返回 ${res.status}` }, 502);
+  if (!res.ok || !out?.url) throw new Error(out?.message || `转存通道返回 ${res.status}`);
+  return { url: out.url, name: out.name || name };
+}
+
+export async function POST(request) {
+  const origin = new URL(request.url).origin;
+  const uid = getUidFromRequest(request);
+
+  let body;
+  try { body = await request.json(); } catch {
+    return json({ success: false, message: '请求必须是 JSON' }, 400);
   }
-  return json({ success: true, url: out.url, name: out.name || name });
+
+  // 兼容单个 url 与多个 urls
+  let urls = [];
+  if (typeof body.url === 'string' && body.url.trim()) {
+    urls = [body.url.trim()];
+  } else if (Array.isArray(body.urls)) {
+    urls = body.urls.map((u) => (typeof u === 'string' ? u.trim() : '')).filter(Boolean);
+  }
+  if (urls.length === 0) {
+    return json({ success: false, message: '请提供 url（单个）或 urls（多个）' }, 400);
+  }
+  if (urls.length > MAX_URLS) {
+    return json({ success: false, message: `单次最多转存 ${MAX_URLS} 个链接` }, 400);
+  }
+  for (const u of urls) {
+    if (!/^https?:\/\//i.test(u)) {
+      return json({ success: false, message: `非法链接：${u.slice(0, 200)}` }, 400);
+    }
+  }
+  let channel = (body.channel || 'tgchannel').toString();
+  if (!CHANNELS.includes(channel)) channel = 'tgchannel';
+
+  const results = [];
+  const failures = [];
+  for (const src of urls) {
+    try {
+      results.push(await transferOne(src, channel, origin, uid));
+    } catch (e) {
+      failures.push({ src, message: e.message || String(e) });
+    }
+  }
+
+  // 单个链接：保持原有响应格式
+  if (urls.length === 1) {
+    if (results.length === 1) return json({ success: true, url: results[0].url, name: results[0].name });
+    return json({ success: false, message: failures[0]?.message || '转存失败' }, 502);
+  }
+
+  // 多个链接：汇总结果
+  return json({
+    success: failures.length === 0,
+    count: results.length,
+    results,
+    failures,
+  }, failures.length === 0 ? 200 : 502);
 }

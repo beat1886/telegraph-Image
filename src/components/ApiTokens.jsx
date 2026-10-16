@@ -128,10 +128,42 @@ export default function ApiTokens() {
     else toast.error('复制失败');
   };
 
-  const curlExample = `curl -X POST ${origin || 'https://你的域名'}/api/upload \\
+  const base = origin || 'https://你的域名';
+  // 文件上传：单个 / 多个
+  const curlSingle = `curl -X POST ${base}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
   -F "file=@图片.jpg"`;
+  const curlMulti = `curl -X POST ${base}/api/upload \\
+  -H "Authorization: Bearer ml_你的密钥" \\
+  -F "channel=tgchannel" \\
+  -F "file=@图片1.jpg" \\
+  -F "file=@图片2.jpg" \\
+  -F "file=@视频.mp4"`;
+  // 链接转存：单个 url / 多个 urls（公开接口，无需密钥）
+  const transferSingle = `curl -X POST ${base}/api/transfer \\
+  -H "Content-Type: application/json" \\
+  -d '{"url":"https://example.com/图片.jpg","channel":"tgchannel"}'`;
+  const transferMulti = `curl -X POST ${base}/api/transfer \\
+  -H "Content-Type: application/json" \\
+  -d '{"urls":["https://example.com/a.jpg","https://example.com/b.mp4"],"channel":"tgchannel"}'`;
+
+  // 带标题与复制按钮的深色代码块
+  const CodeBlock = ({ title, code }) => (
+    <div>
+      <p className="text-xs text-gray-500 mb-1">{title}</p>
+      <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto mb-2">
+        <pre className="whitespace-pre-wrap break-all leading-5">{code}</pre>
+        <button
+          onClick={() => handleCopy(code)}
+          className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
+          title="复制"
+        >
+          <CopyIcon />
+        </button>
+      </div>
+    </div>
+  );
 
   // 折叠收纳：每次进入页面默认收起
   const [open, setOpen] = useState(false);
@@ -240,16 +272,8 @@ export default function ApiTokens() {
 
         <div>
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例（curl）</p>
-          <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
-            <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
-            <button
-              onClick={() => handleCopy(curlExample)}
-              className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
-              title="复制 curl"
-            >
-              <CopyIcon />
-            </button>
-          </div>
+          <CodeBlock title="单个文件（一个 file 字段）：" code={curlSingle} />
+          <CodeBlock title="多个文件（重复 file 字段，可混合类型）：" code={curlMulti} />
         </div>
         </div>
 
@@ -293,16 +317,81 @@ export default function ApiTokens() {
             </tbody>
           </table>
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
-            <p className="text-slate-400 mb-1">返回示例</p>
+            <p className="text-slate-400 mb-1">返回示例（多文件时 data 含多个元素）</p>
             <pre className="whitespace-pre-wrap break-all leading-5">{`{
   "success": true,
   "data": [
     {
-      "url": "链接",
-      "name": "文件名"
+      "url": "链接1",
+      "name": "文件1"
+    },
+    {
+      "url": "链接2",
+      "name": "文件2"
     }
   ],
   "url": "首个链接"
+}`}</pre>
+          </div>
+        </div>
+
+        {/* 链接转存接口：独立边框（公开接口，无需密钥） */}
+        <div className="mb-3 rounded-lg border border-gray-200 p-3">
+          <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口（首页「链接转存」使用，无需密钥）</p>
+          <div className="text-xs text-gray-600 space-y-0.5 mb-2">
+            <p>HTTP 方法：<code className="text-gray-800">POST</code></p>
+            <p>请求 URL：<code className="text-gray-800 break-all">{base}/api/transfer</code></p>
+            <p>Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
+          </div>
+          <p className="text-xs text-gray-500 mb-1">Body 参数（JSON，单个传 url，多个传 urls，二选一）：</p>
+          <table className="w-full text-xs border border-gray-200 rounded mb-2">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">是否必选</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">类型</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">说明</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">url</td>
+                <td className="px-2 py-1.5">二选一</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5">单个链接转存时传，文件直链 http(s) URL</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">urls</td>
+                <td className="px-2 py-1.5">二选一</td>
+                <td className="px-2 py-1.5">string[]</td>
+                <td className="px-2 py-1.5">多个链接转存时传，直链 URL 数组</td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
+                <td className="px-2 py-1.5">否</td>
+                <td className="px-2 py-1.5">string</td>
+                <td className="px-2 py-1.5"><code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>，默认 <code className="text-gray-500">tgchannel</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <CodeBlock title="单个链接转存：" code={transferSingle} />
+          <CodeBlock title="多个链接转存：" code={transferMulti} />
+          <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
+            <p className="text-slate-400 mb-1">返回示例（单个）</p>
+            <pre className="whitespace-pre-wrap break-all leading-5 mb-2">{`{
+  "success": true,
+  "url": "转存后的直链",
+  "name": "文件名"
+}`}</pre>
+            <p className="text-slate-400 mb-1">返回示例（多个；failures 为失败明细，全部成功时为空）</p>
+            <pre className="whitespace-pre-wrap break-all leading-5">{`{
+  "success": true,
+  "count": 2,
+  "results": [
+    { "url": "直链1", "name": "文件1" },
+    { "url": "直链2", "name": "文件2" }
+  ],
+  "failures": []
 }`}</pre>
           </div>
         </div>

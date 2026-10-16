@@ -371,28 +371,45 @@ export default function HomePage({ initialRole, authButton }) {
   };
 
   // 链接转存：服务端抓取外部链接文件并上传（不受浏览器跨域限制），结果进入结果区
+  // 支持一次粘贴多个链接（换行或空格分隔）
   const handleTransfer = async () => {
-    const src = transferUrl.trim();
-    if (!src) {
+    const urls = transferUrl.split(/\s+/).map((u) => u.trim()).filter(Boolean);
+    if (urls.length === 0) {
       toast.error('请粘贴要转存的文件链接');
       return;
     }
     setTransferring(true);
     try {
+      const payload = { channel: selectedOption === 'tg' ? 'tg' : 'tgchannel' };
+      if (urls.length === 1) payload.url = urls[0];
+      else payload.urls = urls;
       const res = await fetch('/api/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 转存暂不支持 R2 通道，r2 选择时回落到 TG_Channel
-        body: JSON.stringify({ url: src, channel: selectedOption === 'tg' ? 'tg' : 'tgchannel' }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok || !data?.url) {
-        toast.error(data?.message || '转存失败');
+      // 单个与多个返回格式不同：单个 {url,name}；多个 {results:[{url,name}], failures:[]}
+      const okItems = urls.length === 1
+        ? (res.ok && data?.url ? [data] : [])
+        : (Array.isArray(data?.results) ? data.results : []);
+      if (okItems.length > 0) {
+        setUploadedImages((prev) => [
+          ...prev,
+          ...okItems.map((it) => ({ url: it.url, name: it.name, type: '' })),
+        ]);
+        setTransferUrl('');
+      }
+      if (!res.ok || okItems.length === 0) {
+        const failMsgs = Array.isArray(data?.failures) && data.failures.length > 0
+          ? data.failures.slice(0, 3).map((f) => f.message).join('；')
+          : (data?.message || '转存失败');
+        toast.error(okItems.length > 0
+          ? `成功 ${okItems.length} 个，失败提示：${failMsgs}`
+          : failMsgs);
         return;
       }
-      setUploadedImages((prev) => [...prev, { url: data.url, name: data.name, type: '' }]);
-      setTransferUrl('');
-      toast.success('转存成功');
+      toast.success(urls.length === 1 ? '转存成功' : `已转存 ${okItems.length} 个链接`);
     } catch (e) {
       toast.error(`转存失败：${e.message}`);
     } finally {
@@ -820,14 +837,18 @@ export default function HomePage({ initialRole, authButton }) {
         {/* 链接转存区域：服务端抓取外部链接文件，不受浏览器跨域限制 */}
         <section className="border border-gray-200 rounded-lg p-3 mb-4">
           <div className="text-gray-800 text-sm sm:text-base font-medium mb-1">链接转存</div>
-          <p className="text-xs text-gray-500 mb-2">粘贴网上文件直链，转存为本站直链（使用上方上传接口）</p>
-          <div className="w-full flex gap-2">
-            <input
+          <p className="text-xs text-gray-500 mb-2">粘贴网上文件直链，转存为本站直链（使用上方上传接口）；支持多个链接，每行一个</p>
+          <div className="w-full flex gap-2 items-start">
+            <textarea
               value={transferUrl}
               onChange={(e) => setTransferUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleTransfer()}
-              placeholder="https://…/xxx.jpg"
-              className="flex-1 min-w-0 h-10 border border-gray-300 rounded px-3 text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+              onKeyDown={(e) => {
+                // Ctrl/Cmd+Enter 提交；普通回车保留换行
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleTransfer();
+              }}
+              rows={2}
+              placeholder={'https://…/a.jpg\nhttps://…/b.mp4'}
+              className="flex-1 min-w-0 min-h-[40px] py-2 border border-gray-300 rounded px-3 text-xs sm:text-sm focus:outline-none focus:border-blue-500 resize-y break-all"
             />
             <button
               onClick={handleTransfer}
