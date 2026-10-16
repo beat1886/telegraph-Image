@@ -80,14 +80,14 @@ function CodeTabs({ examples }) {
   );
 }
 
-// 返回示例：标题栏（JSON 标识 + 复制）+ 行号代码块
+// 返回示例：说明文字在代码块上方；标题栏仅 JSON 标识 + 复制；代码带行号
 function RespExample({ title, code }) {
   const lineNums = code.split('\n').map((_, i) => i + 1).join('\n');
   return (
-    <div className="rounded-lg overflow-hidden border border-slate-700 mb-2">
-      <div className="flex items-center justify-between bg-slate-800 text-slate-300 text-xs px-3 py-1.5">
-        <span>{title}</span>
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="mb-2">
+      <p className="text-xs text-gray-500 mb-1">{title}</p>
+      <div className="rounded-lg overflow-hidden border border-slate-700">
+        <div className="flex items-center justify-end gap-2 bg-slate-800 text-slate-300 text-xs px-3 py-1.5">
           <span className="text-slate-500">JSON</span>
           <button
             onClick={async () => { (await copyText(code)) ? toast.success('已复制') : toast.error('复制失败'); }}
@@ -96,10 +96,10 @@ function RespExample({ title, code }) {
             复制
           </button>
         </div>
-      </div>
-      <div className="bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto flex">
-        <pre aria-hidden="true" className="text-slate-600 text-right pr-3 select-none leading-5 shrink-0">{lineNums}</pre>
-        <pre className="whitespace-pre-wrap break-all leading-5 flex-1">{code}</pre>
+        <div className="bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto flex">
+          <pre aria-hidden="true" className="text-slate-600 text-right pr-3 select-none leading-5 shrink-0">{lineNums}</pre>
+          <pre className="whitespace-pre-wrap break-all leading-5 flex-1">{code}</pre>
+        </div>
       </div>
     </div>
   );
