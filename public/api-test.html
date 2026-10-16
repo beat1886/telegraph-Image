@@ -62,6 +62,7 @@
     <button id="urlBtn" onclick="doUrlUpload()">抓取并上传</button>
     <div class="result" id="urlResult"></div>
     <p class="tip">
+      <b>用途说明：</b>把网上的文件链接转存成你自己站点的直链，粘贴链接点一下按钮即可，无需手动下载再上传。<br>
       <b>转存原理：</b><br>
       1. 页面先 fetch 该链接，取得文件字节；<br>
       2. 再组装 multipart/form-data，POST 到 <code>/api/upload</code>；<br>
