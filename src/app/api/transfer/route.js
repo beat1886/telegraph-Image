@@ -128,17 +128,17 @@ export async function POST(request) {
     }
   }
 
-  // 单个链接：保持原有响应格式
+  // 单个链接：保持原有响应格式（业务失败也返回 200，避免 Cloudflare 用 502 错误页吞掉 JSON）
   if (urls.length === 1) {
     if (results.length === 1) return json({ success: true, url: results[0].url, name: results[0].name });
-    return json({ success: false, message: failures[0]?.message || '转存失败' }, 502);
+    return json({ success: false, message: failures[0]?.message || '转存失败' });
   }
 
-  // 多个链接：汇总结果
+  // 多个链接：汇总结果（部分失败时 success=false，失败明细见 failures）
   return json({
     success: failures.length === 0,
     count: results.length,
     results,
     failures,
-  }, failures.length === 0 ? 200 : 502);
+  });
 }

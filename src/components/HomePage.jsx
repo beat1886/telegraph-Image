@@ -398,14 +398,16 @@ export default function HomePage({ initialRole, authButton }) {
           ...prev,
           ...okItems.map((it) => ({ url: it.url, name: it.name, type: '' })),
         ]);
-        setTransferUrl('');
+        // 部分失败时保留失败链接方便重试，全部成功才清空
+        const failedSrcs = Array.isArray(data?.failures) ? data.failures.map((f) => f.src) : [];
+        setTransferUrl(failedSrcs.join('\n'));
       }
-      if (!res.ok || okItems.length === 0) {
+      if (!res.ok || okItems.length < urls.length) {
         const failMsgs = Array.isArray(data?.failures) && data.failures.length > 0
           ? data.failures.slice(0, 3).map((f) => f.message).join('；')
           : (data?.message || '转存失败');
         toast.error(okItems.length > 0
-          ? `成功 ${okItems.length} 个，失败提示：${failMsgs}`
+          ? `成功 ${okItems.length} 个，${urls.length - okItems.length} 个失败：${failMsgs}`
           : failMsgs);
         return;
       }
