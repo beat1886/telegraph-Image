@@ -47,6 +47,39 @@ function ChevronIcon({ open }) {
   );
 }
 
+// 多语言请求代码示例：标签切换 + 复制
+function CodeTabs({ examples }) {
+  const langs = Object.keys(examples);
+  const [lang, setLang] = useState(langs[0]);
+  const code = examples[lang];
+  return (
+    <div className="mb-2">
+      <div className="flex flex-wrap gap-1 mb-1.5">
+        {langs.map((l) => (
+          <button
+            key={l}
+            type="button"
+            onClick={() => setLang(l)}
+            className={`px-2 py-0.5 rounded text-xs border transition-colors ${lang === l ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+      <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
+        <pre className="whitespace-pre-wrap break-all leading-5">{code}</pre>
+        <button
+          onClick={async () => { (await copyText(code)) ? toast.success('已复制') : toast.error('复制失败'); }}
+          className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
+          title="复制"
+        >
+          <CopyIcon />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function fmtTime(iso) {
   if (!iso) return '从未使用';
   try {
@@ -129,41 +162,90 @@ export default function ApiTokens() {
   };
 
   const base = origin || 'https://你的域名';
-  // 文件上传：单个 / 多个统一使用 file[] 数组字段
-  const curlSingle = `curl -X POST ${base}/api/upload \\
-  -H "Authorization: Bearer ml_你的密钥" \\
-  -F "channel=tgchannel" \\
-  -F "file[]=@图片.jpg"`;
-  const curlMulti = `curl -X POST ${base}/api/upload \\
+  // 文件上传请求示例（多语言）：单个文件只放一个 file[]，多个文件重复/追加
+  const uploadExamples = {
+    Bash: `curl -X POST ${base}/api/upload \\
   -H "Authorization: Bearer ml_你的密钥" \\
   -F "channel=tgchannel" \\
   -F "file[]=@图片1.jpg" \\
-  -F "file[]=@图片2.jpg" \\
-  -F "file[]=@视频.mp4"`;
-  // 链接转存：统一使用 urls 数组（一个元素即单个），公开接口无需密钥
-  const transferSingle = `curl -X POST ${base}/api/transfer \\
-  -H "Content-Type: application/json" \\
-  -d '{"urls":["https://example.com/图片.jpg"],"channel":"tgchannel"}'`;
-  const transferMulti = `curl -X POST ${base}/api/transfer \\
-  -H "Content-Type: application/json" \\
-  -d '{"urls":["https://example.com/a.jpg","https://example.com/b.mp4"],"channel":"tgchannel"}'`;
+  -F "file[]=@图片2.jpg"`,
+    Python: `import requests
 
-  // 带标题与复制按钮的深色代码块
-  const CodeBlock = ({ title, code }) => (
-    <div>
-      <p className="text-xs text-gray-500 mb-1">{title}</p>
-      <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto mb-2">
-        <pre className="whitespace-pre-wrap break-all leading-5">{code}</pre>
-        <button
-          onClick={() => handleCopy(code)}
-          className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-blue-300 transition-colors"
-          title="复制"
-        >
-          <CopyIcon />
-        </button>
-      </div>
-    </div>
-  );
+url = "${base}/api/upload"
+headers = {"Authorization": "Bearer ml_你的密钥"}
+# 多个文件：列表里重复 ("file[]", ...) 项；单个文件只放一个
+files = [
+    ("file[]", ("图片1.jpg", open("图片1.jpg", "rb"))),
+    ("file[]", ("图片2.jpg", open("图片2.jpg", "rb"))),
+]
+resp = requests.post(url, headers=headers, files=files, data={"channel": "tgchannel"})
+print(resp.json())`,
+    JavaScript: `const form = new FormData();
+form.append('channel', 'tgchannel');
+// 多个文件：重复 append；单个文件只 append 一次
+form.append('file[]', fileInput.files[0]);
+form.append('file[]', fileInput.files[1]);
+
+const res = await fetch('${base}/api/upload', {
+  method: 'POST',
+  headers: { Authorization: 'Bearer ml_你的密钥' },
+  body: form,
+});
+console.log(await res.json());`,
+    PHP: `<?php
+$ch = curl_init('${base}/api/upload');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ['Authorization: Bearer ml_你的密钥'],
+    CURLOPT_POSTFIELDS => [
+        'channel' => 'tgchannel',
+        // 多个文件用 file[0]、file[1] 索引形式；单个文件用 'file[]' 即可
+        'file[0]' => new CURLFile('图片1.jpg'),
+        'file[1]' => new CURLFile('图片2.jpg'),
+    ],
+]);
+echo curl_exec($ch);
+curl_close($ch);`,
+  };
+  // 链接转存请求示例（多语言）：单个链接 urls 也只写一个元素，公开接口无需密钥
+  const transferExamples = {
+    Bash: `curl -X POST ${base}/api/transfer \\
+  -H "Content-Type: application/json" \\
+  -d '{"urls":["https://example.com/a.jpg","https://example.com/b.mp4"],"channel":"tgchannel"}'`,
+    Python: `import requests
+
+resp = requests.post(
+    "${base}/api/transfer",
+    json={
+        "urls": ["https://example.com/a.jpg", "https://example.com/b.mp4"],
+        "channel": "tgchannel",
+    },
+)
+print(resp.json())`,
+    JavaScript: `const res = await fetch('${base}/api/transfer', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    urls: ['https://example.com/a.jpg', 'https://example.com/b.mp4'],
+    channel: 'tgchannel',
+  }),
+});
+console.log(await res.json());`,
+    PHP: `<?php
+$ch = curl_init('${base}/api/transfer');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS => json_encode([
+        'urls' => ['https://example.com/a.jpg', 'https://example.com/b.mp4'],
+        'channel' => 'tgchannel',
+    ]),
+]);
+echo curl_exec($ch);
+curl_close($ch);`,
+  };
 
   // 折叠收纳：每次进入页面默认收起
   const [open, setOpen] = useState(false);
@@ -256,7 +338,7 @@ export default function ApiTokens() {
                 <td className="px-2 py-1.5 font-mono text-gray-800">file[]</td>
                 <td className="px-2 py-1.5">是</td>
                 <td className="px-2 py-1.5">file[]</td>
-                <td className="px-2 py-1.5">上传的文件（数组字段）；<b>单个文件也传 file[]</b>，多个文件重复多个 <code className="text-gray-500">file[]</code> 字段，可混合类型</td>
+                <td className="px-2 py-1.5">上传的文件（数组字段）；<b>单个文件也传 file[]</b>，多个文件重复多个 <code className="text-gray-500">file[]</code> 字段，可混合类型；PHP/Java 等可用 <code className="text-gray-500">file[0]</code>、<code className="text-gray-500">file[1]</code> 索引形式</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
@@ -271,9 +353,9 @@ export default function ApiTokens() {
         </div>
 
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例（curl）</p>
-          <CodeBlock title="单个文件（一个 file[] 字段）：" code={curlSingle} />
-          <CodeBlock title="多个文件（重复 file[] 字段，可混合类型）：" code={curlMulti} />
+          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
+          <p className="text-xs text-gray-400 mb-1.5">示例以两个文件演示；单个文件只传一个 <code className="text-gray-500">file[]</code> 即可，多个文件继续追加。使用前请替换密钥与文件路径。</p>
+          <CodeTabs examples={uploadExamples} />
         </div>
         </div>
 
@@ -368,8 +450,9 @@ export default function ApiTokens() {
               </tr>
             </tbody>
           </table>
-          <CodeBlock title="单个链接转存（urls 含一个元素）：" code={transferSingle} />
-          <CodeBlock title="多个链接转存（urls 含多个元素）：" code={transferMulti} />
+          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
+          <p className="text-xs text-gray-400 mb-1.5">示例以两个链接演示；单个链接 <code className="text-gray-500">urls</code> 里只写一个元素即可。</p>
+          <CodeTabs examples={transferExamples} />
           <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
             <p className="text-slate-400 mb-1">返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）</p>
             <pre className="whitespace-pre-wrap break-all leading-5 mb-2">{`{
