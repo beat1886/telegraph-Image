@@ -154,11 +154,6 @@ export default function ApiTokens() {
         </button>
 
         {open && (<>
-        {/* 在线调试 */}
-        <p className="text-xs text-gray-500 mb-3">
-          在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
-        </p>
-
         {/* 接口描述概览 */}
         <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
           <p className="text-xs font-medium text-gray-700 mb-2">接口描述</p>
@@ -314,7 +309,10 @@ export default function ApiTokens() {
 
         {/* 密钥管理：创建 + 列表统一包进边框 */}
         <div className="rounded-lg border border-gray-200 p-3">
-          <p className="text-xs font-medium text-gray-600 mb-2">密钥管理</p>
+          <p className="text-xs font-medium text-gray-600 mb-1">密钥管理</p>
+          <p className="text-xs text-gray-500 mb-2">
+            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
+          </p>
           {/* 窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
           <div className="flex flex-wrap gap-2 mb-3">
           <input
