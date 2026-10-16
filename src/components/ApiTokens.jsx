@@ -180,33 +180,67 @@ files = [
 ]
 resp = requests.post(url, headers=headers, files=files, data={"channel": "tgchannel"})
 print(resp.json())`,
-    JavaScript: `const form = new FormData();
-form.append('channel', 'tgchannel');
-// 多个文件：重复 append；单个文件只 append 一次
-form.append('file[]', fileInput.files[0]);
-form.append('file[]', fileInput.files[1]);
+    JAVA: `// 依赖 OkHttp：implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+import okhttp3.*;
+import java.io.File;
 
-const res = await fetch('${base}/api/upload', {
-  method: 'POST',
-  headers: { Authorization: 'Bearer ml_你的密钥' },
-  body: form,
-});
-console.log(await res.json());`,
-    PHP: `<?php
-$ch = curl_init('${base}/api/upload');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => ['Authorization: Bearer ml_你的密钥'],
-    CURLOPT_POSTFIELDS => [
-        'channel' => 'tgchannel',
-        // 多个文件用 file[0]、file[1] 索引形式；单个文件用 'file[]' 即可
-        'file[0]' => new CURLFile('图片1.jpg'),
-        'file[1]' => new CURLFile('图片2.jpg'),
-    ],
-]);
-echo curl_exec($ch);
-curl_close($ch);`,
+public class UploadExample {
+    public static void main(String[] args) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+        MultipartBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("channel", "tgchannel")
+                // 单个文件只加一个；多个文件用 file[0]、file[1] 索引形式
+                .addFormDataPart("file[0]", "图片1.jpg",
+                        RequestBody.create(new File("图片1.jpg"), MediaType.parse("image/jpeg")))
+                .addFormDataPart("file[1]", "图片2.jpg",
+                        RequestBody.create(new File("图片2.jpg"), MediaType.parse("image/jpeg")))
+                .build();
+        Request request = new Request.Builder()
+                .url("${base}/api/upload")
+                .header("Authorization", "Bearer ml_你的密钥")
+                .post(body)
+                .build();
+        try (Response resp = client.newCall(request).execute()) {
+            System.out.println(resp.body().string());
+        }
+    }
+}`,
+    'C++': `#include <iostream>
+#include <curl/curl.h>
+
+// 依赖 libcurl：https://curl.se/download.html
+int main() {
+    CURL *curl = curl_easy_init();
+    if (!curl) return 1;
+
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Authorization: Bearer ml_你的密钥");
+
+    curl_mime *mime = curl_mime_init(curl);
+    curl_mimepart *part;
+    part = curl_mime_addpart(mime);
+    curl_mime_name(part, "channel");
+    curl_mime_data(part, "tgchannel", CURL_ZERO_TERMINATED);
+    // 多个文件：重复添加 file[] 字段；单个文件只加一个
+    part = curl_mime_addpart(mime);
+    curl_mime_name(part, "file[]");
+    curl_mime_filedata(part, "图片1.jpg");
+    part = curl_mime_addpart(mime);
+    curl_mime_name(part, "file[]");
+    curl_mime_filedata(part, "图片2.jpg");
+
+    curl_easy_setopt(curl, CURLOPT_URL, "${base}/api/upload");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) std::cerr << curl_easy_strerror(res) << std::endl;
+
+    curl_mime_free(mime);
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 0;
+}`,
   };
   // 链接转存请求示例（多语言）：单个链接 urls 也只写一个元素，公开接口无需密钥
   const transferExamples = {
@@ -223,28 +257,47 @@ resp = requests.post(
     },
 )
 print(resp.json())`,
-    JavaScript: `const res = await fetch('${base}/api/transfer', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    urls: ['https://example.com/a.jpg', 'https://example.com/b.mp4'],
-    channel: 'tgchannel',
-  }),
-});
-console.log(await res.json());`,
-    PHP: `<?php
-$ch = curl_init('${base}/api/transfer');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-    CURLOPT_POSTFIELDS => json_encode([
-        'urls' => ['https://example.com/a.jpg', 'https://example.com/b.mp4'],
-        'channel' => 'tgchannel',
-    ]),
-]);
-echo curl_exec($ch);
-curl_close($ch);`,
+    JAVA: `// 依赖 OkHttp：implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+import okhttp3.*;
+
+public class TransferExample {
+    public static void main(String[] args) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+        // 单个链接：urls 只写一个元素
+        String json = "{\\"urls\\":[\\"https://example.com/a.jpg\\",\\"https://example.com/b.mp4\\"],\\"channel\\":\\"tgchannel\\"}";
+        Request request = new Request.Builder()
+                .url("${base}/api/transfer")
+                .post(RequestBody.create(json, MediaType.parse("application/json")))
+                .build();
+        try (Response resp = client.newCall(request).execute()) {
+            System.out.println(resp.body().string());
+        }
+    }
+}`,
+    'C++': `#include <iostream>
+#include <string>
+#include <curl/curl.h>
+
+// 依赖 libcurl：https://curl.se/download.html
+int main() {
+    CURL *curl = curl_easy_init();
+    if (!curl) return 1;
+
+    // 单个链接：urls 只写一个元素
+    std::string body = "{\\"urls\\":[\\"https://example.com/a.jpg\\",\\"https://example.com/b.mp4\\"],\\"channel\\":\\"tgchannel\\"}";
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, "${base}/api/transfer");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) std::cerr << curl_easy_strerror(res) << std::endl;
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 0;
+}`,
   };
 
   // 折叠收纳：每次进入页面默认收起
