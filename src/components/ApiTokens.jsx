@@ -321,37 +321,7 @@ int main() {
         </button>
 
         {open && (<>
-        {/* 接口描述概览 */}
-        <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
-          <p className="text-xs font-medium text-gray-700 mb-2">接口描述</p>
-          <div className="text-xs text-gray-600 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-gray-400">请求方式</span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-500 text-white text-[11px] font-medium leading-4">POST</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-gray-400">Content-Type</span>
-              <code className="text-gray-800 break-all">multipart/form-data</code>
-              <span className="text-gray-400">（由浏览器自动设置）</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-gray-400">鉴权请求头</span>
-              <code className="text-gray-800 break-all">Authorization: Bearer ml_你的密钥</code>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-20 shrink-0 text-gray-400 pt-1">返回 JSON</span>
-              <div className="flex-1 rounded bg-slate-900 text-slate-100 p-2.5 overflow-x-auto">
-                <pre className="whitespace-pre-wrap break-all leading-5">{`{
-  "success": true,
-  "data": [{ "url": "链接", "name": "文件名" }],
-  "url": "首个链接"
-}`}</pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 请求说明 + curl 示例：统一包进边框 */}
+        {/* 请求说明 + 请求代码示例：统一包进边框 */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
