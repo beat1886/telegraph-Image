@@ -66,7 +66,12 @@
     <input type="text" id="srcUrl" value="https://image.beat1888.dpdns.org/api/cfile/BAACAgUAAyEGAATsoKiFAAMrastzKIlSFJG7RPz49XphEMLSiBwAAlUjAAIbWllWurgv31wzRUU9BA" placeholder="粘贴文件直链，如 https://…/api/cfile/…">
     <button id="urlBtn" onclick="doUrlUpload()">抓取并上传</button>
     <div class="result" id="urlResult"></div>
-    <p class="tip">用途：把网上的文件链接转存成你自己站点的直链。操作：粘贴链接 → 点「抓取并上传」，浏览器会自动下载再上传，无需手动操作。<br>注意：部分网站禁止其他网页读取它的文件，这类链接会提示抓取失败；本站的链接都可以正常转存。</p>
+    <p class="tip">
+      <b>转存原理：</b><br>
+      1. 页面先 fetch 该链接，取得文件字节；<br>
+      2. 再组装 multipart/form-data，POST 到 <code>/api/upload</code>；<br>
+      3. 需同源或对方允许 CORS 时才可抓取——本站链接均可正常转存，部分禁跨站的链接会提示失败。
+    </p>
   </div>
 </div>
 
