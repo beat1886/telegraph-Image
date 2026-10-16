@@ -321,6 +321,69 @@ int main() {
         </button>
 
         {open && (<>
+        {/* 密钥管理：创建 + 列表统一包进边框 */}
+        <div className="mb-3 rounded-lg border border-gray-200 p-3">
+          <p className="text-xs font-medium text-gray-600 mb-1">密钥管理</p>
+          <p className="text-xs text-gray-500 mb-2">
+            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
+          </p>
+          {/* 窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
+          <div className="flex flex-wrap gap-2 mb-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+            placeholder="密钥备注（可选，如 PicList）"
+            maxLength={40}
+            className="flex-1 min-w-[200px] border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 whitespace-nowrap"
+          >
+            {creating ? '创建中…' : '新建密钥'}
+          </button>
+        </div>
+
+        {/* 密钥列表 */}
+        {loading ? (
+          <p className="text-sm text-gray-400 py-4 text-center">加载中…</p>
+        ) : tokens.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">暂无密钥，填写备注后点击「新建密钥」</p>
+        ) : (
+          <div className="space-y-2">
+            {tokens.map((t) => (
+              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 sm:w-40 shrink-0">
+                  <span className="text-sm text-gray-700 truncate">{t.name || '未命名'}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${t.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {t.role === 'admin' ? '管理员' : '普通'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                  <code className="text-xs text-gray-500 truncate flex-1 font-mono">{t.token}</code>
+                  <button
+                    onClick={() => handleCopy(t.token)}
+                    className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+                    title="复制密钥"
+                  >
+                    <CopyIcon />
+                  </button>
+                </div>
+                <div className="text-[11px] text-gray-400 sm:w-32 shrink-0">{fmtTime(t.last_used)}</div>
+                <button
+                  onClick={() => handleRevoke(t.id)}
+                  className="text-xs text-red-500 hover:text-red-600 shrink-0 sm:w-12 text-right"
+                >
+                  吊销
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
+
         {/* 请求说明 + 请求代码示例：统一包进边框 */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
         <div className="mb-3">
@@ -499,68 +562,6 @@ int main() {
           </div>
         </div>
 
-        {/* 密钥管理：创建 + 列表统一包进边框 */}
-        <div className="rounded-lg border border-gray-200 p-3">
-          <p className="text-xs font-medium text-gray-600 mb-1">密钥管理</p>
-          <p className="text-xs text-gray-500 mb-2">
-            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
-          </p>
-          {/* 窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
-          <div className="flex flex-wrap gap-2 mb-3">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-            placeholder="密钥备注（可选，如 PicList）"
-            maxLength={40}
-            className="flex-1 min-w-[200px] border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-          />
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 whitespace-nowrap"
-          >
-            {creating ? '创建中…' : '新建密钥'}
-          </button>
-        </div>
-
-        {/* 密钥列表 */}
-        {loading ? (
-          <p className="text-sm text-gray-400 py-4 text-center">加载中…</p>
-        ) : tokens.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4 text-center">暂无密钥，填写备注后点击「新建密钥」</p>
-        ) : (
-          <div className="space-y-2">
-            {tokens.map((t) => (
-              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-2 sm:w-40 shrink-0">
-                  <span className="text-sm text-gray-700 truncate">{t.name || '未命名'}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${t.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {t.role === 'admin' ? '管理员' : '普通'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <code className="text-xs text-gray-500 truncate flex-1 font-mono">{t.token}</code>
-                  <button
-                    onClick={() => handleCopy(t.token)}
-                    className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
-                    title="复制密钥"
-                  >
-                    <CopyIcon />
-                  </button>
-                </div>
-                <div className="text-[11px] text-gray-400 sm:w-32 shrink-0">{fmtTime(t.last_used)}</div>
-                <button
-                  onClick={() => handleRevoke(t.id)}
-                  className="text-xs text-red-500 hover:text-red-600 shrink-0 sm:w-12 text-right"
-                >
-                  吊销
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        </div>
         </>)}
       </div>
     </div>
