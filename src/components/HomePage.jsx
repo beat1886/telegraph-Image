@@ -130,6 +130,9 @@ export default function HomePage({ initialRole, authButton }) {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [selectedOption, setSelectedOption] = useState('tg');
+  // 链接转存输入与进行中状态
+  const [transferUrl, setTransferUrl] = useState('');
+  const [transferring, setTransferring] = useState(false);
   // 以 File 对象为键缓存预览 URL，保证同一文件多次渲染时 blob 地址稳定，
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
   const previewUrlsRef = useRef(new WeakMap());
@@ -364,6 +367,36 @@ export default function HomePage({ initialRole, authButton }) {
       toast.error('上传失败，请稍后重试');
     } finally {
       setUploading(false);
+    }
+  };
+
+  // 链接转存：服务端抓取外部链接文件并上传（不受浏览器跨域限制），结果进入结果区
+  const handleTransfer = async () => {
+    const src = transferUrl.trim();
+    if (!src) {
+      toast.error('请粘贴要转存的文件链接');
+      return;
+    }
+    setTransferring(true);
+    try {
+      const res = await fetch('/api/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // 转存暂不支持 R2 通道，r2 选择时回落到 TG_Channel
+        body: JSON.stringify({ url: src, channel: selectedOption === 'tg' ? 'tg' : 'tgchannel' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.url) {
+        toast.error(data?.message || '转存失败');
+        return;
+      }
+      setUploadedImages((prev) => [...prev, { url: data.url, name: data.name, type: '' }]);
+      setTransferUrl('');
+      toast.success('转存成功');
+    } catch (e) {
+      toast.error(`转存失败：${e.message}`);
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -782,6 +815,24 @@ export default function HomePage({ initialRole, authButton }) {
               上传
             </div>
           </div>
+        </div>
+
+        {/* 链接转存：服务端抓取外部链接文件，不受浏览器跨域限制 */}
+        <div className="w-full mt-2 flex gap-2">
+          <input
+            value={transferUrl}
+            onChange={(e) => setTransferUrl(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleTransfer()}
+            placeholder="链接转存：粘贴网上文件直链，转存为本站直链"
+            className="flex-1 min-w-0 h-10 border border-gray-300 rounded px-3 text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+          />
+          <button
+            onClick={handleTransfer}
+            disabled={transferring}
+            className="h-10 px-4 bg-blue-500 text-white rounded text-xs sm:text-sm whitespace-nowrap hover:bg-blue-600 disabled:opacity-50"
+          >
+            {transferring ? '转存中…' : '转存'}
+          </button>
         </div>
 
         {uploadedImages.length > 0 && (
