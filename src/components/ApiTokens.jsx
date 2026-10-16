@@ -312,8 +312,11 @@ export default function ApiTokens() {
           </div>
         </div>
 
-        {/* 创建密钥：窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        {/* 密钥管理：创建 + 列表统一包进边框 */}
+        <div className="rounded-lg border border-gray-200 p-3">
+          <p className="text-xs font-medium text-gray-600 mb-2">密钥管理</p>
+          {/* 窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
+          <div className="flex flex-wrap gap-2 mb-3">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -367,6 +370,7 @@ export default function ApiTokens() {
             ))}
           </div>
         )}
+        </div>
         </>)}
       </div>
     </div>
