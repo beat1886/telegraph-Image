@@ -189,7 +189,8 @@ export default function ApiTokens() {
           </div>
         </div>
 
-        {/* 请求说明 */}
+        {/* 请求说明 + curl 示例：统一包进边框 */}
+        <div className="mb-3 rounded-lg border border-gray-200 p-3">
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
           <div className="text-xs text-gray-600 space-y-0.5 mb-2">
@@ -242,8 +243,7 @@ export default function ApiTokens() {
           </table>
         </div>
 
-        {/* 请求代码示例 */}
-        <div className="mb-3">
+        <div>
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例（curl）</p>
           <div className="relative rounded-lg bg-slate-900 text-slate-100 text-xs p-3 pr-10 overflow-x-auto">
             <pre className="whitespace-pre-wrap break-all leading-5">{curlExample}</pre>
@@ -256,9 +256,10 @@ export default function ApiTokens() {
             </button>
           </div>
         </div>
+        </div>
 
-        {/* 返回说明 */}
-        <div className="mb-3">
+        {/* 返回说明：独立边框 */}
+        <div className="rounded-lg border border-gray-200 p-3 mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">返回说明</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
