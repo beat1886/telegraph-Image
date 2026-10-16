@@ -80,6 +80,31 @@ function CodeTabs({ examples }) {
   );
 }
 
+// 返回示例：标题栏（JSON 标识 + 复制）+ 行号代码块
+function RespExample({ title, code }) {
+  const lineNums = code.split('\n').map((_, i) => i + 1).join('\n');
+  return (
+    <div className="rounded-lg overflow-hidden border border-slate-700 mb-2">
+      <div className="flex items-center justify-between bg-slate-800 text-slate-300 text-xs px-3 py-1.5">
+        <span>{title}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-slate-500">JSON</span>
+          <button
+            onClick={async () => { (await copyText(code)) ? toast.success('已复制') : toast.error('复制失败'); }}
+            className="text-slate-400 hover:text-blue-300 transition-colors"
+          >
+            复制
+          </button>
+        </div>
+      </div>
+      <div className="bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto flex">
+        <pre aria-hidden="true" className="text-slate-600 text-right pr-3 select-none leading-5 shrink-0">{lineNums}</pre>
+        <pre className="whitespace-pre-wrap break-all leading-5 flex-1">{code}</pre>
+      </div>
+    </div>
+  );
+}
+
 function fmtTime(iso) {
   if (!iso) return '从未使用';
   try {
@@ -484,9 +509,7 @@ int main() {
               </tr>
             </tbody>
           </table>
-          <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
-            <p className="text-slate-400 mb-1">返回示例（多文件时 data 含多个元素）</p>
-            <pre className="whitespace-pre-wrap break-all leading-5">{`{
+          <RespExample title="返回示例（多文件时 data 含多个元素）" code={`{
   "success": true,
   "data": [
     {
@@ -499,8 +522,7 @@ int main() {
     }
   ],
   "url": "首个链接"
-}`}</pre>
-          </div>
+}`} />
         </div>
 
         {/* 链接转存接口：独立边框（公开接口，无需密钥） */}
@@ -539,18 +561,15 @@ int main() {
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
           <p className="text-xs text-gray-400 mb-1.5">示例以两个链接演示；单个链接 <code className="text-gray-500">urls</code> 里只写一个元素即可。</p>
           <CodeTabs examples={transferExamples} />
-          <div className="rounded-lg bg-slate-900 text-slate-100 text-xs p-3 overflow-x-auto">
-            <p className="text-slate-400 mb-1">返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）</p>
-            <pre className="whitespace-pre-wrap break-all leading-5 mb-2">{`{
+          <RespExample title="返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）" code={`{
   "success": true,
   "count": 1,
   "results": [
     { "url": "转存后的直链", "name": "文件名" }
   ],
   "failures": []
-}`}</pre>
-            <p className="text-slate-400 mb-1">多链接示例（failures 为失败明细，全部成功时为空；部分失败时 success=false）</p>
-            <pre className="whitespace-pre-wrap break-all leading-5">{`{
+}`} />
+          <RespExample title="多链接示例（failures 为失败明细，全部成功时为空；部分失败时 success=false）" code={`{
   "success": true,
   "count": 2,
   "results": [
@@ -558,8 +577,7 @@ int main() {
     { "url": "直链2", "name": "文件2" }
   ],
   "failures": []
-}`}</pre>
-          </div>
+}`} />
         </div>
 
         </>)}
