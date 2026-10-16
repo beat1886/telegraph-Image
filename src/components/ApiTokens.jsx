@@ -409,8 +409,9 @@ int main() {
         )}
         </div>
 
-        {/* 请求说明 + 请求代码示例：统一包进边框 */}
+        {/* 文件上传接口：请求说明 + 代码示例 + 返回说明，统一一块区域 */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
+        <p className="text-xs font-medium text-gray-600 mb-1.5">文件上传接口</p>
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
           <div className="text-xs text-gray-600 space-y-0.5 mb-2">
@@ -463,15 +464,13 @@ int main() {
           </table>
         </div>
 
-        <div>
+        <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
           <p className="text-xs text-gray-400 mb-1.5">示例以两个文件演示；单个文件只传一个 <code className="text-gray-500">file[]</code> 即可，多个文件继续追加。使用前请替换密钥与文件路径。</p>
           <CodeTabs examples={uploadExamples} />
         </div>
-        </div>
 
-        {/* 返回说明：独立边框 */}
-        <div className="rounded-lg border border-gray-200 p-3 mb-3">
+        <div>
           <p className="text-xs font-medium text-gray-600 mb-1.5">返回说明</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
@@ -523,6 +522,7 @@ int main() {
   ],
   "url": "首个链接"
 }`} />
+        </div>
         </div>
 
         {/* 链接转存接口：独立边框（公开接口，无需密钥） */}
