@@ -2,11 +2,14 @@
 // 入参 JSON：{ urls: string[], channel? }
 //   单个链接也使用 urls（传只含一个元素的数组）
 // 返回：{ success, count, results:[{url,name}], failures:[{src,message}] }
-// 权限：公开（与网页上传一致），记录归属 ml_uid 访客
+// 权限：外部调用需 API Token（Authorization: Bearer <token>，或 ?token=），
+//       记录归属 token 绑定的 uid；首页同源调用（浏览器自动带 Sec-Fetch-Site）免密钥，
+//       记录归属 ml_uid 访客
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getContentType } from '@/lib/mime';
 import { getUidFromRequest } from '@/lib/uid';
+import { authenticateToken, touchToken } from '@/lib/apiToken';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
 const CHANNELS = ['tgchannel', 'tg'];
@@ -87,8 +90,25 @@ async function transferOne(src, channel, origin, uid) {
 }
 
 export async function POST(request) {
+  const { env, ctx } = getRequestContext();
   const origin = new URL(request.url).origin;
-  const uid = getUidFromRequest(request);
+
+  // 鉴权：外部调用需 API Token；首页同源调用（Sec-Fetch-Site: same-origin/same-site）免密钥走访客 uid
+  const hasCred = (request.headers.get('authorization') || '').trim()
+    || (() => { try { return new URL(request.url).searchParams.get('token'); } catch { return ''; } })();
+  let uid = '';
+  if (hasCred) {
+    const auth = await authenticateToken(env, request);
+    if (!auth.ok) return json({ success: false, message: auth.message }, auth.status);
+    try { ctx.waitUntil(touchToken(env, auth.token.id)); } catch { /* 无 waitUntil 时忽略 */ }
+    uid = auth.token.uid || '';
+  } else {
+    const secFetchSite = (request.headers.get('sec-fetch-site') || '').toLowerCase();
+    if (secFetchSite !== 'same-origin' && secFetchSite !== 'same-site') {
+      return json({ success: false, message: '缺少 API Token，请在请求头携带 Authorization: Bearer <token>' }, 401);
+    }
+    uid = getUidFromRequest(request);
+  }
 
   let body;
   try { body = await request.json(); } catch {

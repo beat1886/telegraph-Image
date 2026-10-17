@@ -284,15 +284,17 @@ int main() {
     return 0;
 }`,
   };
-  // 链接转存请求示例（多语言）：单个链接 urls 也只写一个元素，公开接口无需密钥
+  // 链接转存请求示例（多语言）：单个链接 urls 也只写一个元素，外部调用需 Bearer 密钥
   const transferExamples = {
     Bash: `curl -X POST ${base}/api/transfer \\
+  -H "Authorization: Bearer ml_你的密钥" \\
   -H "Content-Type: application/json" \\
   -d '{"urls":["https://example.com/a.jpg","https://example.com/b.mp4"],"channel":"tgchannel"}'`,
     Python: `import requests
 
 resp = requests.post(
     "${base}/api/transfer",
+    headers={"Authorization": "Bearer ml_你的密钥"},
     json={
         "urls": ["https://example.com/a.jpg", "https://example.com/b.mp4"],
         "channel": "tgchannel",
@@ -309,6 +311,7 @@ public class TransferExample {
         String json = "{\\"urls\\":[\\"https://example.com/a.jpg\\",\\"https://example.com/b.mp4\\"],\\"channel\\":\\"tgchannel\\"}";
         Request request = new Request.Builder()
                 .url("${base}/api/transfer")
+                .header("Authorization", "Bearer ml_你的密钥")
                 .post(RequestBody.create(json, MediaType.parse("application/json")))
                 .build();
         try (Response resp = client.newCall(request).execute()) {
@@ -328,6 +331,7 @@ int main() {
     // 单个链接：urls 只写一个元素
     std::string body = "{\\"urls\\":[\\"https://example.com/a.jpg\\",\\"https://example.com/b.mp4\\"],\\"channel\\":\\"tgchannel\\"}";
     struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Authorization: Bearer ml_你的密钥");
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
     curl_easy_setopt(curl, CURLOPT_URL, "${base}/api/transfer");
@@ -539,11 +543,26 @@ int main() {
         </div>
         </div>
 
-        {/* 链接转存接口：独立边框（公开接口，无需密钥） */}
+        {/* 链接转存接口：独立边框（外部调用需密钥；首页同源调用免密钥） */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
-          <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口（首页「链接转存」使用，无需密钥）</p>
+          <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口（首页「链接转存」免密钥；外部调用需密钥）</p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
           <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
+          <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
+          <table className="w-full text-xs border border-gray-200 rounded mb-2">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">参数</th>
+                <th className="text-left px-2 py-1.5 font-medium text-gray-600">值</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-t border-gray-100">
+                <td className="px-2 py-1.5 font-mono text-gray-800">Authorization</td>
+                <td className="px-2 py-1.5 font-mono">Bearer ml_你的密钥</td>
+              </tr>
+            </tbody>
+          </table>
           <p className="text-xs text-gray-500 mb-1">Body 参数（JSON；单个、多个统一使用 urls 数组）：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
