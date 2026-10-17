@@ -105,6 +105,16 @@ function RespExample({ title, code }) {
   );
 }
 
+// 请求行：方法徽标 + URL，类似 markdown 代码块样式
+function MethodUrl({ method, url }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 mb-2 text-xs overflow-x-auto">
+      <span className="shrink-0 px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">{method}</span>
+      <code className="text-gray-800 whitespace-nowrap">{url}</code>
+    </div>
+  );
+}
+
 function fmtTime(iso) {
   if (!iso) return '从未使用';
   try {
@@ -414,10 +424,7 @@ int main() {
         <p className="text-xs font-medium text-gray-600 mb-1.5">文件上传接口</p>
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
-          <div className="text-xs text-gray-600 space-y-0.5 mb-2">
-            <p>HTTP 方法：<code className="text-gray-800">POST</code></p>
-            <p>请求 URL：<code className="text-gray-800 break-all">{origin || 'https://你的域名'}/api/upload</code></p>
-          </div>
+          <MethodUrl method="POST" url={`${origin || 'https://你的域名'}/api/upload`} />
 
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
@@ -528,11 +535,8 @@ int main() {
         {/* 链接转存接口：独立边框（公开接口，无需密钥） */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口（首页「链接转存」使用，无需密钥）</p>
-          <div className="text-xs text-gray-600 space-y-0.5 mb-2">
-            <p>HTTP 方法：<code className="text-gray-800">POST</code></p>
-            <p>请求 URL：<code className="text-gray-800 break-all">{base}/api/transfer</code></p>
-            <p>Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
-          </div>
+          <MethodUrl method="POST" url={`${base}/api/transfer`} />
+          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
           <p className="text-xs text-gray-500 mb-1">Body 参数（JSON；单个、多个统一使用 urls 数组）：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
