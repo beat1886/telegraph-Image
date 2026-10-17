@@ -45,16 +45,9 @@ export default function Admin() {
   // 登录角色：undefined=探测中，null=未登录，'admin'/'user'=已登录
   const [role, setRole] = useState(undefined);
   const isAdmin = role === 'admin';
-  // R2 用量卡片折叠状态（默认收起，选择记忆在 localStorage）
+  // R2 用量卡片折叠状态（每次进入页面默认收起）
   const [r2Open, setR2Open] = useState(false);
-  useEffect(() => {
-    try { if (localStorage.getItem('ml_r2_open') === '1') setR2Open(true); } catch { /* 忽略 */ }
-  }, []);
-  const toggleR2Open = () => setR2Open((o) => {
-    const n = !o;
-    try { localStorage.setItem('ml_r2_open', n ? '1' : '0'); } catch { /* 忽略 */ }
-    return n;
-  });
+  const toggleR2Open = () => setR2Open((o) => !o);
 
   // 确保访客 uid cookie 存在（匿名管理"我的文件"依赖它），并探测登录角色
   useEffect(() => {
