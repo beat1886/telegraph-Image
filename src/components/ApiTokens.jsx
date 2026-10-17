@@ -87,7 +87,7 @@ function RespExample({ title, code }) {
     <div className="mb-2">
       <p className="text-xs text-gray-500 mb-1">{title}</p>
       <div className="rounded-lg overflow-hidden border border-slate-700">
-        <div className="flex items-center justify-end gap-2 bg-slate-800 text-slate-300 text-xs px-3 py-1.5">
+        <div className="flex items-center justify-between bg-slate-800 text-slate-300 text-xs px-3 py-1.5">
           <span className="text-slate-500">JSON</span>
           <button
             onClick={async () => { (await copyText(code)) ? toast.success('已复制') : toast.error('复制失败'); }}
