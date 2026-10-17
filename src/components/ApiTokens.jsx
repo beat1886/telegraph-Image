@@ -595,7 +595,10 @@ int main() {
   "success": true,
   "count": 1,
   "results": [
-    { "url": "转存后的直链", "name": "文件名" }
+    {
+      "url": "转存后的直链",
+      "name": "文件名"
+    }
   ],
   "failures": []
 }`} />
@@ -603,8 +606,14 @@ int main() {
   "success": true,
   "count": 2,
   "results": [
-    { "url": "直链1", "name": "文件1" },
-    { "url": "直链2", "name": "文件2" }
+    {
+      "url": "直链1",
+      "name": "文件1"
+    },
+    {
+      "url": "直链2",
+      "name": "文件2"
+    }
   ],
   "failures": []
 }`} />
