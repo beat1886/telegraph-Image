@@ -105,12 +105,19 @@ function RespExample({ title, code }) {
   );
 }
 
-// 请求行：方法徽标 + URL，类似 markdown 代码块样式
+// 请求行：方法徽标 + URL，类似 markdown 代码块样式，URL 可复制
 function MethodUrl({ method, url }) {
   return (
     <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 mb-2 text-xs overflow-x-auto">
       <span className="shrink-0 px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">{method}</span>
-      <code className="text-gray-800 whitespace-nowrap">{url}</code>
+      <code className="text-gray-800 whitespace-nowrap flex-1">{url}</code>
+      <button
+        onClick={async () => { (await copyText(url)) ? toast.success('已复制') : toast.error('复制失败'); }}
+        className="p-1 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+        title="复制 URL"
+      >
+        <CopyIcon />
+      </button>
     </div>
   );
 }
