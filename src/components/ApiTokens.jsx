@@ -635,7 +635,7 @@ curl_close($ch);`,
           </button>
         </div>
         <p className="text-xs text-gray-500 mb-1.5">
-          在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">点击进入</a>
+          <a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">在线调试</a>
         </p>
         <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
@@ -763,7 +763,7 @@ curl_close($ch);`,
             </button>
           </div>
           <p className="text-xs text-gray-500 mb-1.5">
-            在线调试：<a href="/#link-transfer" className="text-blue-500 hover:underline">点击进入</a>
+            <a href="/#link-transfer" className="text-blue-500 hover:underline">在线调试</a>
           </p>
           <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
