@@ -133,6 +133,8 @@ export default function HomePage({ initialRole, authButton }) {
   // 链接转存输入与进行中状态
   const [transferUrl, setTransferUrl] = useState('');
   const [transferring, setTransferring] = useState(false);
+  // 功能切换：file=文件上传 / transfer=链接转存
+  const [uploadTab, setUploadTab] = useState('file');
   // 以 File 对象为键缓存预览 URL，保证同一文件多次渲染时 blob 地址稳定，
   // 避免在渲染中反复 createObjectURL 导致缩略图不断重载而空白
   const previewUrlsRef = useRef(new WeakMap());
@@ -715,7 +717,26 @@ export default function HomePage({ initialRole, authButton }) {
           </select>
         </div>
 
+        {/* 功能切换：文件上传 / 链接转存 */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setUploadTab('file')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${uploadTab === 'file' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            文件上传
+          </button>
+          <button
+            type="button"
+            onClick={() => setUploadTab('transfer')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${uploadTab === 'transfer' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            链接转存
+          </button>
+        </div>
+
         {/* 文件上传区域 */}
+        {uploadTab === 'file' && (
         <section className="border border-gray-200 rounded-lg p-3 mb-4">
           <div className="text-gray-800 text-sm sm:text-base font-medium mb-2">文件上传</div>
         <div
@@ -836,8 +857,10 @@ export default function HomePage({ initialRole, authButton }) {
           </div>
         </div>
         </section>
+        )}
 
         {/* 链接转存区域：服务端抓取外部链接文件，不受浏览器跨域限制 */}
+        {uploadTab === 'transfer' && (
         <section id="link-transfer" className="border border-gray-200 rounded-lg p-3 mb-4">
           <div className="text-gray-800 text-sm sm:text-base font-medium mb-1">链接转存</div>
           <p className="text-xs text-gray-500 mb-2">粘贴网上文件直链，转存为本站直链（使用上方上传接口）；支持多个链接，每行一个</p>
@@ -862,6 +885,7 @@ export default function HomePage({ initialRole, authButton }) {
             </button>
           </div>
         </section>
+        )}
 
         {uploadedImages.length > 0 && (
           <div className="w-full mt-4 min-h-[200px] mb-[60px]">
