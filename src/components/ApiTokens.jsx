@@ -403,6 +403,26 @@ int main() {
     curl_easy_cleanup(curl);
     return 0;
 }`,
+    PHP: `<?php
+// PHP curl 无法重复同名字段，多个文件用 file[0]、file[1] 索引形式；单个文件只写一个
+$url = "${base}/api/upload";
+$headers = ["Authorization: Bearer ml_你的密钥"];
+
+$postFields = [
+    'channel' => 'tgchannel',
+    'file[0]' => new CURLFile('图片1.jpg', 'image/jpeg', '图片1.jpg'),
+    'file[1]' => new CURLFile('图片2.jpg', 'image/jpeg', '图片2.jpg'),
+];
+
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_POST           => true,
+    CURLOPT_HTTPHEADER     => $headers,
+    CURLOPT_POSTFIELDS     => $postFields,
+    CURLOPT_RETURNTRANSFER => true,
+]);
+echo curl_exec($ch);
+curl_close($ch);`,
   };
   // 链接转存请求示例（多语言）：单个链接 urls 也只写一个元素，外部调用需 Bearer 密钥
   const transferExamples = {
@@ -464,6 +484,27 @@ int main() {
     curl_easy_cleanup(curl);
     return 0;
 }`,
+    PHP: `<?php
+// 单个链接：urls 只写一个元素
+$url = "${base}/api/transfer";
+$headers = [
+    "Authorization: Bearer ml_你的密钥",
+    "Content-Type: application/json",
+];
+$body = json_encode([
+    "urls"    => ["https://example.com/a.jpg", "https://example.com/b.mp4"],
+    "channel" => "tgchannel",
+]);
+
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_POST           => true,
+    CURLOPT_HTTPHEADER     => $headers,
+    CURLOPT_POSTFIELDS     => $body,
+    CURLOPT_RETURNTRANSFER => true,
+]);
+echo curl_exec($ch);
+curl_close($ch);`,
   };
 
   // 折叠收纳：每次进入页面默认收起
