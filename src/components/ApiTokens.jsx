@@ -552,7 +552,7 @@ int main() {
         )}
         </div>
 
-        {/* 接口文档切换按钮 + 复制 Markdown */}
+        {/* 接口文档切换按钮 */}
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -568,20 +568,22 @@ int main() {
           >
             链接转存接口
           </button>
-          <button
-            type="button"
-            onClick={() => handleCopy(buildDocMarkdown(docTab))}
-            className="ml-auto px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center gap-1"
-            title="复制当前接口说明的 Markdown 文本"
-          >
-            <CopyIcon /> 复制 Markdown
-          </button>
         </div>
 
         {/* 文件上传接口：请求说明 + 代码示例 + 返回说明，统一一块区域 */}
         {docTab === 'upload' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
-        <p className="text-xs font-medium text-gray-600 mb-1.5">文件上传接口</p>
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-medium text-gray-600">文件上传接口</p>
+          <button
+            type="button"
+            onClick={() => handleCopy(buildDocMarkdown('upload'))}
+            className="p-1 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+            title="复制本接口说明的 Markdown 文本"
+          >
+            <CopyIcon />
+          </button>
+        </div>
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
           <MethodUrl method="POST" url={`${origin || 'https://你的域名'}/api/upload`} />
@@ -696,7 +698,17 @@ int main() {
         {/* 链接转存接口：独立边框（外部调用需密钥；首页同源调用免密钥） */}
         {docTab === 'transfer' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
-          <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口</p>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-xs font-medium text-gray-600">链接转存接口</p>
+            <button
+              type="button"
+              onClick={() => handleCopy(buildDocMarkdown('transfer'))}
+              className="p-1 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+              title="复制本接口说明的 Markdown 文本"
+            >
+              <CopyIcon />
+            </button>
+          </div>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
           <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限</p>
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
