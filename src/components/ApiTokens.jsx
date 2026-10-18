@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 // 管理页：API Token 管理卡片
 // 管理员可创建带 R2 权限的密钥；访客创建的密钥仅 TG.ph / TG_Channel，上传记录归属"我的文件"
 
@@ -683,7 +683,7 @@ curl_close($ch);`,
                 <td className="px-2 py-1.5">否</td>
                 <td className="px-2 py-1.5">string</td>
                 <td className="px-2 py-1.5">
-                  上传通道：<code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code></> : ''}，默认 <code className="text-gray-500">tgchannel</code>
+                  上传通道：<code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code>（仅管理员密钥）</> : ''}，默认 <code className="text-gray-500">tgchannel</code>
                 </td>
               </tr>
             </tbody>
