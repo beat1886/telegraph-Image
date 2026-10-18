@@ -491,7 +491,7 @@ int main() {
         {open && (<>
         {/* 密钥管理：创建 + 列表统一包进边框 */}
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
-          <p className="text-xs font-medium text-gray-600 mb-1">密钥管理</p>
+          <p className="text-sm font-semibold text-gray-700 mb-1">密钥管理</p>
           <p className="text-xs text-gray-500 mb-2">
             在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
           </p>
