@@ -469,8 +469,8 @@ int main() {
   // 折叠收纳：每次进入页面默认收起
   const [open, setOpen] = useState(false);
   const toggleOpen = () => setOpen((o) => !o);
-  // 接口文档切换：upload=文件上传接口，transfer=链接转存接口
-  const [docTab, setDocTab] = useState('upload');
+  // 区域切换：keys=密钥管理，upload=文件上传接口，transfer=链接转存接口
+  const [docTab, setDocTab] = useState('keys');
 
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
@@ -489,7 +489,33 @@ int main() {
         </button>
 
         {open && (<>
+        {/* 区域切换按钮：密钥管理 / 文件上传接口 / 链接转存接口 */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setDocTab('keys')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'keys' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            密钥管理
+          </button>
+          <button
+            type="button"
+            onClick={() => setDocTab('upload')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'upload' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            文件上传接口
+          </button>
+          <button
+            type="button"
+            onClick={() => setDocTab('transfer')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'transfer' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            链接转存接口
+          </button>
+        </div>
+
         {/* 密钥管理：创建 + 列表统一包进边框 */}
+        {docTab === 'keys' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <p className="text-sm font-semibold text-gray-700 mb-1">密钥管理</p>
           <p className="text-xs text-gray-500 mb-2">
@@ -551,24 +577,7 @@ int main() {
           </div>
         )}
         </div>
-
-        {/* 接口文档切换按钮 */}
-        <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setDocTab('upload')}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'upload' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
-          >
-            文件上传接口
-          </button>
-          <button
-            type="button"
-            onClick={() => setDocTab('transfer')}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'transfer' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
-          >
-            链接转存接口
-          </button>
-        </div>
+        )}
 
         {/* 文件上传接口：请求说明 + 代码示例 + 返回说明，统一一块区域 */}
         {docTab === 'upload' && (
