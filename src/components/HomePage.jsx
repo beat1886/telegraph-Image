@@ -838,7 +838,7 @@ export default function HomePage({ initialRole, authButton }) {
         </section>
 
         {/* 链接转存区域：服务端抓取外部链接文件，不受浏览器跨域限制 */}
-        <section className="border border-gray-200 rounded-lg p-3 mb-4">
+        <section id="link-transfer" className="border border-gray-200 rounded-lg p-3 mb-4">
           <div className="text-gray-800 text-sm sm:text-base font-medium mb-1">链接转存</div>
           <p className="text-xs text-gray-500 mb-2">粘贴网上文件直链，转存为本站直链（使用上方上传接口）；支持多个链接，每行一个</p>
           <div className="w-full flex gap-2 items-start">

@@ -637,7 +637,7 @@ curl_close($ch);`,
         <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
           <p className="text-xs text-gray-500 mb-1.5">
-            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
+            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">点击进入</a>
           </p>
           <MethodUrl method="POST" url={`${origin || 'https://你的域名'}/api/upload`} />
 
@@ -765,7 +765,7 @@ curl_close($ch);`,
           <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
           <p className="text-xs text-gray-500 mb-1.5">
-            在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
+            在线调试：<a href="/#link-transfer" className="text-blue-500 hover:underline">点击进入</a>
           </p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
           <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限</p>
