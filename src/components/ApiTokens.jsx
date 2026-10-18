@@ -635,7 +635,7 @@ int main() {
 
         <div className="mb-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
-          <p className="text-xs text-gray-400 mb-1.5">示例以两个文件演示；单个文件只传一个 <code className="text-gray-500">file[]</code> 即可，多个文件继续追加。使用前请替换密钥与文件路径。</p>
+          <p className="text-xs text-gray-400 mb-1.5">示例以两个文件演示；<code className="text-gray-500">file[]</code> 是字段名而非数组容器——单个文件写一个 <code className="text-gray-500">file[]</code> 字段，多个文件重复写多个 <code className="text-gray-500">file[]</code> 字段。使用前请替换密钥与文件路径。</p>
           <CodeTabs examples={uploadExamples} />
         </div>
 
