@@ -554,6 +554,9 @@ int main() {
                 </div>
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <code className="text-xs text-gray-500 truncate flex-1 font-mono">{t.token}</code>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${t.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {t.role === 'admin' ? 'TG.ph / TG_Channel / R2' : 'TG.ph / TG_Channel'}
+                  </span>
                   <button
                     onClick={() => handleCopy(t.token)}
                     className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
