@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 // 管理页：API Token 管理卡片
 // 管理员可创建带 R2 权限的密钥；访客创建的密钥仅 TG.ph / TG_Channel，上传记录归属"我的文件"
 
@@ -574,7 +574,7 @@ int main() {
         {docTab === 'upload' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
         <div className="flex items-center justify-between mb-1.5">
-          <p className="text-xs font-medium text-gray-600">文件上传接口</p>
+          <p className="text-sm font-semibold text-gray-700">文件上传接口</p>
           <button
             type="button"
             onClick={() => handleCopy(buildDocMarkdown('upload'))}
@@ -585,7 +585,7 @@ int main() {
           </button>
         </div>
         <div className="mb-3">
-          <p className="text-xs font-medium text-gray-600 mb-1.5">请求说明</p>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
           <MethodUrl method="POST" url={`${origin || 'https://你的域名'}/api/upload`} />
 
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
@@ -634,13 +634,13 @@ int main() {
         </div>
 
         <div className="mb-3">
-          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">请求代码示例</p>
           <p className="text-xs text-gray-400 mb-1.5">示例以两个文件演示；<code className="text-gray-500">file[]</code> 是字段名而非数组容器——单个文件写一个 <code className="text-gray-500">file[]</code> 字段，多个文件重复写多个 <code className="text-gray-500">file[]</code> 字段。使用前请替换密钥与文件路径。</p>
           <CodeTabs examples={uploadExamples} />
         </div>
 
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-1.5">返回说明</p>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">返回说明</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
               <tr className="bg-gray-50">
@@ -699,7 +699,7 @@ int main() {
         {docTab === 'transfer' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs font-medium text-gray-600">链接转存接口</p>
+            <p className="text-sm font-semibold text-gray-700">链接转存接口</p>
             <button
               type="button"
               onClick={() => handleCopy(buildDocMarkdown('transfer'))}
@@ -751,7 +751,7 @@ int main() {
               </tr>
             </tbody>
           </table>
-          <p className="text-xs font-medium text-gray-600 mb-1.5">请求代码示例</p>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">请求代码示例</p>
           <p className="text-xs text-gray-400 mb-1.5">示例以两个链接演示；单个链接 <code className="text-gray-500">urls</code> 里只写一个元素即可。</p>
           <CodeTabs examples={transferExamples} />
           <RespExample title="返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）" code={`{
