@@ -718,6 +718,8 @@ int main() {
               <CopyIcon />
             </button>
           </div>
+          <div className="mb-3">
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
           <p className="text-xs text-gray-500 mb-1.5">
             在线调试：<a href="/api-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">网页上传测试页 →</a>
           </p>
@@ -763,9 +765,12 @@ int main() {
               </tr>
             </tbody>
           </table>
+          </div>
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求代码示例</p>
           <p className="text-xs text-gray-400 mb-1.5">示例以两个链接演示；单个链接 <code className="text-gray-500">urls</code> 里只写一个元素即可。</p>
           <CodeTabs examples={transferExamples} />
+          <div>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">返回说明</p>
           <RespExample title="返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）" code={`{
   "success": true,
   "count": 1,
@@ -792,6 +797,7 @@ int main() {
   ],
   "failures": []
 }`} />
+          </div>
         </div>
         )}
 
