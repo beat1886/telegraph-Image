@@ -264,7 +264,7 @@ ${uploadExamples.Bash}
 
 首页「链接转存」免密钥；外部调用需密钥。
 
-[在线调试](${base}/#link-transfer)
+[在线调试](${base}/transfer-test.html)
 
 \`POST\` \`${base}/api/transfer\`
 
@@ -767,7 +767,7 @@ curl_close($ch);`,
             </button>
           </div>
           <p className="text-xs text-gray-500 mb-1.5">
-            <a href="/#link-transfer" className="text-blue-500 hover:underline">在线调试</a>
+            <a href="/transfer-test.html" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">在线调试</a>
           </p>
           <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>

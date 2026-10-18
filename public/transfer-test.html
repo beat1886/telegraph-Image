@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>喵链 API 链接转存测试</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f1f5f9; color: #1e293b; }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .desc { font-size: 12px; color: #64748b; margin: 0 0 16px; line-height: 1.6; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: #475569; margin: 10px 0 4px; }
+  input[type="password"], input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: #3b82f6; }
+  textarea { resize: vertical; min-height: 90px; font-family: inherit; }
+  button { width: 100%; margin-top: 14px; padding: 10px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .result { margin-top: 8px; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; font-size: 12px; }
+  .item.ok { border-color: #86efac; background: #f0fdf4; }
+  .item.fail { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+  .item .url { flex: 1; min-width: 0; word-break: break-all; color: #0f172a; }
+  .item a { color: #2563eb; }
+  .copy { border: 1px solid #cbd5e1; background: #fff; color: #475569; width: auto; margin: 0; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+  .copy.done { background: #22c55e; border-color: #22c55e; color: #fff; }
+  .tip { font-size: 12px; color: #94a3b8; margin-top: 10px; line-height: 1.7; }
+  code { background: #f1f5f9; padding: 1px 4px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>喵链 API 链接转存测试</h1>
+  <p class="desc">通过 POST（application/json）调用 <code>/api/transfer</code> 接口，由服务器抓取源文件后转存为本站直链。本页从站点内发起请求免密钥；如需模拟外部调用，可填写 API 密钥（管理页「API 接口」卡片创建），仅用于本浏览器发起请求，不会上传保存。</p>
+
+  <div class="card">
+    <label>API 密钥（可选，留空则按站内请求处理）</label>
+    <input type="password" id="token" placeholder="ml_开头的密钥（管理页创建）">
+
+    <label>转存通道</label>
+    <select id="channel">
+      <option value="tgchannel">TG_Channel（长期｜图片≤10MB / 其他≤50MB）</option>
+      <option value="tg">TG.ph（临时｜图片/视频｜≤15MB）</option>
+    </select>
+
+    <label>文件直链（每行一个，数量不限）</label>
+    <textarea id="urls" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
+
+    <button id="btn" onclick="doTransfer()">转存</button>
+
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<script>
+  // 部署在站点上时用当前域名；本地 file:// 双击打开时回退到线上域名
+  var BASE = (location.protocol === 'https:' || location.protocol === 'http:')
+    ? location.origin : 'https://image.beat1888.dpdns.org';
+
+  var tokenInput = document.getElementById('token');
+  try { tokenInput.value = localStorage.getItem('ml_api_test_token') || ''; } catch (e) {}
+  tokenInput.addEventListener('change', function () {
+    try { localStorage.setItem('ml_api_test_token', tokenInput.value.trim()); } catch (e) {}
+  });
+
+  function copyText(text, btn) {
+    var done = function () {
+      btn.textContent = '已复制'; btn.classList.add('done');
+      setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('done'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  // 渲染转存结果：results 成功列表 + failures 失败列表
+  function renderResults(box, r) {
+    var data = r.data || {};
+    var ok = !!data.success;
+    var results = data.results || [];
+    var failures = data.failures || [];
+    if (results.length === 0 && failures.length === 0 && data.message) {
+      failures = [{ src: '转存失败', message: data.message }];
+    }
+    var html = '';
+    for (var i = 0; i < results.length; i++) {
+      var it = results[i];
+      html += '<div class="item ok"><span class="url"><a href="' + it.url + '" target="_blank" rel="noopener">' + it.url + '</a></span>' +
+              '<button class="copy" data-url="' + it.url + '">复制</button></div>';
+    }
+    for (var j = 0; j < failures.length; j++) {
+      var f = failures[j];
+      html += '<div class="item fail"><span class="url">' + (f.src || '链接') + '：' + (f.message || '失败') + '</span></div>';
+    }
+    if (!ok && results.length === 0 && failures.length === 0) {
+      html += '<div class="item fail"><span class="url">接口返回 ' + r.status + (data.message ? '：' + data.message : '') + '</span></div>';
+    }
+    box.innerHTML = html;
+    var btns = box.querySelectorAll('.copy');
+    for (var k = 0; k < btns.length; k++) {
+      (function (b) { b.onclick = function () { copyText(b.getAttribute('data-url'), b); }; })(btns[k]);
+    }
+  }
+
+  function doTransfer() {
+    var token = tokenInput.value.trim();
+    var channel = document.getElementById('channel').value;
+    var raw = document.getElementById('urls').value;
+    var btn = document.getElementById('btn');
+    var box = document.getElementById('result');
+    // 按换行/空白拆分，去空去重
+    var urls = raw.split(/[\s,]+/).map(function (s) { return s.trim(); }).filter(function (s) { return /^https?:\/\//.test(s); });
+    if (!urls.length) { alert('请填写至少一个 http(s) 文件直链'); return; }
+
+    btn.disabled = true; btn.textContent = '转存中…';
+    box.innerHTML = '';
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    fetch(BASE + '/api/transfer', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ urls: urls, channel: channel })
+    }).then(function (res) {
+      return res.json().then(function (data) { return { status: res.status, data: data }; });
+    }).then(function (r) {
+      renderResults(box, r);
+    }).catch(function (err) {
+      box.innerHTML = '<div class="item fail"><span class="url">请求失败：' + err.message + '</span></div>';
+    }).finally(function () {
+      btn.disabled = false; btn.textContent = '转存';
+    });
+  }
+</script>
+</body>
+</html>
