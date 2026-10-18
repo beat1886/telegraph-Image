@@ -221,7 +221,7 @@ Body（form-data）：
 
 | 参数 | 是否必选 | 类型 | 说明 |
 | --- | --- | --- | --- |
-| file[] | 是 | file[] | 上传的文件；单个、多个统一使用 file[] 数组字段，多个文件重复该字段（可混合图片/视频/音频等类型）；PHP/Java 等无法重复同名字段的语言，可用 file[0]、file[1] 索引形式代替 |
+| file[] | 是 | file[] | 上传的文件；多个文件重复该字段（可混合图片/视频/音频等类型）；如所用语言写不了重复字段（如 PHP、Java），把字段名改为 file[0]、file[1] 按顺序编号即可，服务端同样识别 |
 | channel | 否 | string | 上传通道：tg / tgchannel${isAdmin ? ' / r2' : ''}，默认 tgchannel |
 
 ### 请求代码示例
@@ -672,7 +672,7 @@ curl_close($ch);`,
                 <td className="px-2 py-1.5 font-mono text-gray-800">file[]</td>
                 <td className="px-2 py-1.5">是</td>
                 <td className="px-2 py-1.5">file[]</td>
-                <td className="px-2 py-1.5">上传的文件；单个、多个统一使用 <code className="text-gray-500">file[]</code> 数组字段，多个文件重复该字段（可混合图片/视频/音频等类型）；PHP/Java 等无法重复同名字段的语言，可用 <code className="text-gray-500">file[0]</code>、<code className="text-gray-500">file[1]</code> 索引形式代替</td>
+                <td className="px-2 py-1.5">上传的文件；多个文件重复该字段（可混合图片/视频/音频等类型）；如所用语言写不了重复字段（如 PHP、Java），把字段名改为 <code className="text-gray-500">file[0]</code>、<code className="text-gray-500">file[1]</code> 按顺序编号即可，服务端同样识别</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
