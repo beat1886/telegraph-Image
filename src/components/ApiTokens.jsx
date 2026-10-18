@@ -349,6 +349,8 @@ int main() {
   // 折叠收纳：每次进入页面默认收起
   const [open, setOpen] = useState(false);
   const toggleOpen = () => setOpen((o) => !o);
+  // 接口文档切换：upload=文件上传接口，transfer=链接转存接口
+  const [docTab, setDocTab] = useState('upload');
 
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 mb-4">
@@ -430,7 +432,26 @@ int main() {
         )}
         </div>
 
+        {/* 接口文档切换按钮 */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setDocTab('upload')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'upload' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            文件上传接口
+          </button>
+          <button
+            type="button"
+            onClick={() => setDocTab('transfer')}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'transfer' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
+          >
+            链接转存接口
+          </button>
+        </div>
+
         {/* 文件上传接口：请求说明 + 代码示例 + 返回说明，统一一块区域 */}
+        {docTab === 'upload' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
         <p className="text-xs font-medium text-gray-600 mb-1.5">文件上传接口</p>
         <div className="mb-3">
@@ -542,8 +563,10 @@ int main() {
 }`} />
         </div>
         </div>
+        )}
 
         {/* 链接转存接口：独立边框（外部调用需密钥；首页同源调用免密钥） */}
+        {docTab === 'transfer' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口（首页「链接转存」免密钥；外部调用需密钥）</p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
@@ -618,6 +641,7 @@ int main() {
   "failures": []
 }`} />
         </div>
+        )}
 
         </>)}
       </div>
