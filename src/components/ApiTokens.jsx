@@ -203,6 +203,126 @@ export default function ApiTokens() {
     else toast.error('复制失败');
   };
 
+  // 生成当前接口说明的 Markdown 文本（供「复制 Markdown」按钮使用）
+  const buildDocMarkdown = (tab) => {
+    const uploadMd = `## 文件上传接口
+
+### 请求说明
+
+\`POST\` \`${base}/api/upload\`
+
+Header：
+
+| 参数 | 值 |
+| --- | --- |
+| Authorization | Bearer ml_你的密钥 |
+
+Body（form-data）：
+
+| 参数 | 是否必选 | 类型 | 说明 |
+| --- | --- | --- | --- |
+| file[] | 是 | file[] | 上传的文件（数组字段）；单个文件也传 file[]，多个文件重复多个 file[] 字段，可混合类型；PHP/Java 等可用 file[0]、file[1] 索引形式 |
+| channel | 否 | string | 上传通道：tg / tgchannel${isAdmin ? ' / r2' : ''}，默认 tgchannel |
+
+### 请求代码示例
+
+\`\`\`bash
+${uploadExamples.Bash}
+\`\`\`
+
+### 返回说明
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| success | boolean | 是否上传成功 |
+| data | array[] | 上传结果数组，多文件时含多个元素 |
+| + url | string | 文件直链 |
+| + name | string | 文件名 |
+| url | string | 首个文件的直链（便捷字段） |
+
+返回示例：
+
+\`\`\`json
+{
+  "success": true,
+  "data": [
+    {
+      "url": "链接1",
+      "name": "文件1"
+    },
+    {
+      "url": "链接2",
+      "name": "文件2"
+    }
+  ],
+  "url": "首个链接"
+}
+\`\`\``;
+    const transferMd = `## 链接转存接口
+
+首页「链接转存」免密钥；外部调用需密钥。
+
+\`POST\` \`${base}/api/transfer\`
+
+Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接。
+
+Header：
+
+| 参数 | 值 |
+| --- | --- |
+| Authorization | Bearer ml_你的密钥 |
+
+Body（JSON，单个、多个统一使用 urls 数组）：
+
+| 参数 | 是否必选 | 类型 | 说明 |
+| --- | --- | --- | --- |
+| urls | 是 | string[] | 文件直链 http(s) URL 数组；单个链接也传数组（含一个元素），多个链接传多个元素，单次最多 20 个 |
+| channel | 否 | string | tg / tgchannel，默认 tgchannel |
+
+### 请求代码示例
+
+\`\`\`bash
+${transferExamples.Bash}
+\`\`\`
+
+返回示例（单个、多个格式完全一致；单链接时 count 为 1、results 含一个元素）：
+
+\`\`\`json
+{
+  "success": true,
+  "count": 1,
+  "results": [
+    {
+      "url": "转存后的直链",
+      "name": "文件名"
+    }
+  ],
+  "failures": []
+}
+\`\`\`
+
+多链接示例（failures 为失败明细，全部成功时为空；部分失败时 success=false）：
+
+\`\`\`json
+{
+  "success": true,
+  "count": 2,
+  "results": [
+    {
+      "url": "直链1",
+      "name": "文件1"
+    },
+    {
+      "url": "直链2",
+      "name": "文件2"
+    }
+  ],
+  "failures": []
+}
+\`\`\``;
+    return tab === 'upload' ? uploadMd : transferMd;
+  };
+
   const base = origin || 'https://你的域名';
   // 文件上传请求示例（多语言）：单个文件只放一个 file[]，多个文件重复/追加
   const uploadExamples = {
@@ -432,7 +552,7 @@ int main() {
         )}
         </div>
 
-        {/* 接口文档切换按钮 */}
+        {/* 接口文档切换按钮 + 复制 Markdown */}
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -447,6 +567,14 @@ int main() {
             className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${docTab === 'transfer' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-500'}`}
           >
             链接转存接口
+          </button>
+          <button
+            type="button"
+            onClick={() => handleCopy(buildDocMarkdown(docTab))}
+            className="ml-auto px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center gap-1"
+            title="复制当前接口说明的 Markdown 文本"
+          >
+            <CopyIcon /> 复制 Markdown
           </button>
         </div>
 
