@@ -628,10 +628,10 @@ curl_close($ch);`,
           <button
             type="button"
             onClick={() => handleCopy(buildDocMarkdown('upload'))}
-            className="p-1 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors shrink-0"
             title="复制本接口说明的 Markdown 文本"
           >
-            <CopyIcon />
+            <CopyIcon /> 复制 Markdown
           </button>
         </div>
         <p className="text-xs text-gray-500 mb-1.5">
@@ -756,10 +756,10 @@ curl_close($ch);`,
             <button
               type="button"
               onClick={() => handleCopy(buildDocMarkdown('transfer'))}
-              className="p-1 text-gray-400 hover:text-blue-500 transition-colors shrink-0"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors shrink-0"
               title="复制本接口说明的 Markdown 文本"
             >
-              <CopyIcon />
+              <CopyIcon /> 复制 Markdown
             </button>
           </div>
           <p className="text-xs text-gray-500 mb-1.5">
