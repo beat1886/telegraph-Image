@@ -209,6 +209,8 @@ export default function ApiTokens() {
 
 ### 请求说明
 
+[在线调试](${base}/api-test.html)
+
 \`POST\` \`${base}/api/upload\`
 
 Header：
@@ -261,6 +263,8 @@ ${uploadExamples.Bash}
     const transferMd = `## 链接转存接口
 
 首页「链接转存」免密钥；外部调用需密钥。
+
+[在线调试](${base}/#link-transfer)
 
 \`POST\` \`${base}/api/transfer\`
 
