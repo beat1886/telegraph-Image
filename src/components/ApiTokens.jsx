@@ -264,7 +264,7 @@ ${uploadExamples.Bash}
 
 \`POST\` \`${base}/api/transfer\`
 
-Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），单次最多 20 个链接。
+Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限。
 
 Header：
 
@@ -276,7 +276,7 @@ Body（JSON，单个、多个统一使用 urls 数组）：
 
 | 参数 | 是否必选 | 类型 | 说明 |
 | --- | --- | --- | --- |
-| urls | 是 | string[] | 文件直链 http(s) URL 数组；单个链接也传数组（含一个元素），多个链接传多个元素，单次最多 20 个 |
+| urls | 是 | string[] | 文件直链 http(s) URL 数组；单个、多个统一使用该数组，单个链接传一个元素，多个链接传多个元素，数量不限 |
 | channel | 否 | string | tg / tgchannel，默认 tgchannel |
 
 ### 请求代码示例
@@ -698,7 +698,7 @@ int main() {
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口</p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
-          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），单次最多 20 个链接</p>
+          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限</p>
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
@@ -729,7 +729,7 @@ int main() {
                 <td className="px-2 py-1.5 font-mono text-gray-800">urls</td>
                 <td className="px-2 py-1.5">是</td>
                 <td className="px-2 py-1.5">string[]</td>
-                <td className="px-2 py-1.5">文件直链 http(s) URL 数组；<b>单个链接也传数组</b>（含一个元素），多个链接传多个元素，单次最多 20 个</td>
+                <td className="px-2 py-1.5">文件直链 http(s) URL 数组；单个、多个统一使用该数组，单个链接传一个元素，多个链接传多个元素，数量不限</td>
               </tr>
               <tr className="border-t border-gray-100">
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>

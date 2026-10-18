@@ -14,7 +14,6 @@ import { authenticateToken, touchToken } from '@/lib/apiToken';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
 const CHANNELS = ['tgchannel', 'tg'];
 const MAX_BYTES = 50 * 1024 * 1024; // TG Bot API 上传上限 50MB
-const MAX_URLS = 20;
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Content-Type': 'application/json' } });
@@ -127,9 +126,6 @@ export async function POST(request) {
   }
   if (urls.length === 0) {
     return json({ success: false, message: '请提供 urls（文件直链数组，单个链接也传数组）' }, 400);
-  }
-  if (urls.length > MAX_URLS) {
-    return json({ success: false, message: `单次最多转存 ${MAX_URLS} 个链接` }, 400);
   }
   for (const u of urls) {
     if (!/^https?:\/\//i.test(u)) {
