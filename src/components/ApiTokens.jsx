@@ -268,7 +268,7 @@ ${uploadExamples.Bash}
 
 \`POST\` \`${base}/api/transfer\`
 
-Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限。
+Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB，R2 ≤ 100MB），链接数量不限。
 
 Header：
 
@@ -281,7 +281,7 @@ Body（JSON，单个、多个统一使用 urls 数组）：
 | 参数 | 是否必选 | 类型 | 说明 |
 | --- | --- | --- | --- |
 | urls | 是 | string[] | 文件直链 http(s) URL 数组；单个、多个统一使用该数组，单个链接传一个元素，多个链接传多个元素，数量不限 |
-| channel | 否 | string | tg / tgchannel，默认 tgchannel |
+| channel | 否 | string | 上传通道：tg / tgchannel${isAdmin ? ' / r2（仅管理员密钥）' : ''}，默认 tgchannel |
 
 ### 请求代码示例
 
@@ -772,7 +772,7 @@ curl_close($ch);`,
           <div className="mb-3">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">请求说明</p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
-          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），链接数量不限</p>
+          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB，R2 ≤ 100MB），链接数量不限</p>
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
@@ -809,7 +809,7 @@ curl_close($ch);`,
                 <td className="px-2 py-1.5 font-mono text-gray-800">channel</td>
                 <td className="px-2 py-1.5">否</td>
                 <td className="px-2 py-1.5">string</td>
-                <td className="px-2 py-1.5"><code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>，默认 <code className="text-gray-500">tgchannel</code></td>
+                <td className="px-2 py-1.5">上传通道：<code className="text-gray-500">tg</code> / <code className="text-gray-500">tgchannel</code>{isAdmin ? <> / <code className="text-gray-500">r2</code>（仅管理员密钥）</> : ''}，默认 <code className="text-gray-500">tgchannel</code></td>
               </tr>
             </tbody>
           </table>

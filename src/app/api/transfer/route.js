@@ -12,8 +12,9 @@ import { getUidFromRequest } from '@/lib/uid';
 import { authenticateToken, touchToken } from '@/lib/apiToken';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
-const CHANNELS = ['tgchannel', 'tg'];
+const CHANNELS = ['tgchannel', 'tg', 'r2'];
 const MAX_BYTES = 50 * 1024 * 1024; // TG Bot API 上传上限 50MB
+const R2_MAX_BYTES = 100 * 1024 * 1024; // R2 通道：受边缘函数内存限制 100MB
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Content-Type': 'application/json' } });
@@ -45,7 +46,9 @@ function fileNameFromUrl(u, mime) {
 }
 
 // 抓取单个源链接并经站内通道上传，成功返回 { url, name }
-async function transferOne(src, channel, origin, uid) {
+// r2 通道经内部 /api/upload 透传管理员凭据；TG 系通道只带归属 cookie
+async function transferOne(src, channel, origin, uid, authHeader) {
+  const maxBytes = channel === 'r2' ? R2_MAX_BYTES : MAX_BYTES;
   let upstream, buf;
   try {
     upstream = await fetch(src, {
@@ -55,13 +58,13 @@ async function transferOne(src, channel, origin, uid) {
     });
     if (!upstream.ok) throw new Error(`源站返回 ${upstream.status}`);
     const len = Number(upstream.headers.get('content-length') || 0);
-    if (len > MAX_BYTES) throw new Error('文件超过 50MB 转存上限');
+    if (len > maxBytes) throw new Error(`文件超过 ${Math.round(maxBytes / 1024 / 1024)}MB 转存上限`);
     buf = await upstream.arrayBuffer();
   } catch (e) {
     throw new Error(e.name === 'AbortError' ? '抓取超时（30 秒）' : e.message.startsWith('源站') || e.message.startsWith('抓取') ? e.message : `抓取失败：${e.message}`);
   }
   if (buf.byteLength === 0) throw new Error('源文件内容为空');
-  if (buf.byteLength > MAX_BYTES) throw new Error('文件超过 50MB 转存上限');
+  if (buf.byteLength > maxBytes) throw new Error(`文件超过 ${Math.round(maxBytes / 1024 / 1024)}MB 转存上限`);
 
   const mime = (upstream.headers.get('content-type') || '').split(';')[0].trim();
   const name = fileNameFromUrl(src, mime);
@@ -71,6 +74,26 @@ async function transferOne(src, channel, origin, uid) {
     if (byExt !== 'application/octet-stream') type = byExt;
   }
   const file = new File([buf], name, { type });
+
+  if (channel === 'r2') {
+    const headers = new Headers();
+    headers.set('authorization', authHeader);
+    if (uid) headers.set('cookie', `ml_uid=${uid}`);
+    const fd = new FormData();
+    fd.append('channel', 'r2');
+    fd.append('file[]', file, name);
+    const res = await fetch(`${origin}/api/upload`, {
+      method: 'POST',
+      headers,
+      body: fd,
+      signal: AbortSignal.timeout(120000),
+    });
+    let out = null;
+    try { out = await res.json(); } catch { /* 非 JSON 响应 */ }
+    const first = Array.isArray(out?.data) ? out.data[0] : null;
+    if (!res.ok || !first?.url) throw new Error(out?.message || `R2 通道返回 ${res.status}`);
+    return { url: first.url, name: first.name || name };
+  }
 
   const internalHeaders = new Headers();
   if (uid) internalHeaders.set('cookie', `ml_uid=${uid}`);
@@ -95,12 +118,14 @@ export async function POST(request) {
   // 鉴权：外部调用需 API Token；首页同源调用（Sec-Fetch-Site: same-origin/same-site）免密钥走访客 uid
   const hasCred = (request.headers.get('authorization') || '').trim()
     || (() => { try { return new URL(request.url).searchParams.get('token'); } catch { return ''; } })();
+  const authHeader = (request.headers.get('authorization') || '').trim();
   let uid = '';
+  let authed = null;
   if (hasCred) {
-    const auth = await authenticateToken(env, request);
-    if (!auth.ok) return json({ success: false, message: auth.message }, auth.status);
-    try { ctx.waitUntil(touchToken(env, auth.token.id)); } catch { /* 无 waitUntil 时忽略 */ }
-    uid = auth.token.uid || '';
+    authed = await authenticateToken(env, request);
+    if (!authed.ok) return json({ success: false, message: authed.message }, authed.status);
+    try { ctx.waitUntil(touchToken(env, authed.token.id)); } catch { /* 无 waitUntil 时忽略 */ }
+    uid = authed.token.uid || '';
   } else {
     const secFetchSite = (request.headers.get('sec-fetch-site') || '').toLowerCase();
     if (secFetchSite !== 'same-origin' && secFetchSite !== 'same-site') {
@@ -134,12 +159,16 @@ export async function POST(request) {
   }
   let channel = (body.channel || 'tgchannel').toString();
   if (!CHANNELS.includes(channel)) channel = 'tgchannel';
+  // R2 通道仅管理员 API Token 可用（首页免密钥调用与普通密钥均不可用）
+  if (channel === 'r2' && (!authed || authed.token.role !== 'admin')) {
+    return json({ success: false, message: 'R2 通道仅管理员 API Token 可用' }, 403);
+  }
 
   const results = [];
   const failures = [];
   for (const src of urls) {
     try {
-      results.push(await transferOne(src, channel, origin, uid));
+      results.push(await transferOne(src, channel, origin, uid, authHeader));
     } catch (e) {
       failures.push({ src, message: e.message || String(e) });
     }
