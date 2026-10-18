@@ -60,11 +60,13 @@ export async function POST(request) {
     return json({ code: 400, success: false, message: '请求必须是 multipart/form-data 格式' }, 400);
   }
 
-  // 统一使用 file[] 数组字段（单个文件也传 file[]）；同时兼容 file、file[0]、file[1] 等写法
-  // （PHP/Java 等语言的 HTTP 库无法用重复同名字段，只能用 file[0]/file[1] 索引形式）
-  const files = [];
-  for (const [key, value] of formData.entries()) {
-    if (/^file(\[\d*\])?$/.test(key) && value instanceof Blob && value.size > 0) files.push(value);
+  // 统一使用 file[] 数组字段（单个文件也传 file[]）：按数组方式接收所有 file[] 字段；
+  // 同时兼容 file、file[0]、file[1] 等写法（PHP/Java 等语言的 HTTP 库无法用重复同名字段）
+  const files = formData.getAll('file[]').filter((v) => v instanceof Blob && v.size > 0);
+  if (files.length === 0) {
+    for (const [key, value] of formData.entries()) {
+      if (/^file(\[\d+\])?$/.test(key) && value instanceof Blob && value.size > 0) files.push(value);
+    }
   }
   if (files.length === 0) {
     return json({ code: 400, success: false, message: '缺少上传文件（字段名 file[]，单个文件也传 file[]）' }, 400);
