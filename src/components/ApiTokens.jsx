@@ -264,7 +264,7 @@ ${uploadExamples.Bash}
 
 \`POST\` \`${base}/api/transfer\`
 
-Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接。
+Content-Type：application/json；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），单次最多 20 个链接。
 
 Header：
 
@@ -698,7 +698,7 @@ int main() {
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
           <p className="text-xs font-medium text-gray-600 mb-1.5">链接转存接口</p>
           <MethodUrl method="POST" url={`${base}/api/transfer`} />
-          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制，单个文件 ≤ 50MB、单次最多 20 个链接</p>
+          <p className="text-xs text-gray-500 mb-1">Content-Type：<code className="text-gray-800">application/json</code>；由服务器抓取源文件，不受浏览器跨域限制；单个文件大小限制随所选通道而定（TG 系通道 ≤ 50MB），单次最多 20 个链接</p>
           <p className="text-xs text-gray-500 mb-1">Header 如下：</p>
           <table className="w-full text-xs border border-gray-200 rounded mb-2">
             <thead>
