@@ -479,11 +479,6 @@ int main() {
         <button type="button" onClick={toggleOpen} className={`w-full flex items-center justify-between ${open ? 'mb-3' : ''}`}>
           <h2 className="text-xs sm:text-sm font-medium text-gray-700">API 接口</h2>
           <span className="flex items-center gap-2">
-            {open && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
-              </span>
-            )}
             <ChevronIcon open={open} />
           </span>
         </button>
@@ -517,7 +512,12 @@ int main() {
         {/* 密钥管理：创建 + 列表统一包进边框 */}
         {docTab === 'keys' && (
         <div className="mb-3 rounded-lg border border-gray-200 p-3">
-          <p className="text-sm font-semibold text-gray-700 mb-1">密钥管理</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-semibold text-gray-700">密钥管理</p>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+              {isAdmin ? '管理员密钥可用 TG.ph / TG_Channel / R2' : '密钥可用 TG.ph / TG_Channel'}
+            </span>
+          </div>
           {/* 窄屏时输入框占满一行，按钮换行，避免备注提示字被挤压截断 */}
           <div className="flex flex-wrap gap-2 mb-3">
           <input
