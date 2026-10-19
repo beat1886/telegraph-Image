@@ -700,7 +700,7 @@ export default function HomePage({ initialRole, authButton }) {
         <div className="flex justify-between items-center w-full max-w-4xl px-3 sm:px-4">
           <nav className="flex items-center gap-2 text-xs sm:text-base font-medium whitespace-nowrap">
             <img src="/logo-miaolian.jpg" alt="喵链 logo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200 shrink-0" />
-            喵链 - 图片/视频/音频等任意文件的外链托管
+            喵链 - 图片/视频/音频的外链托管
           </nav>
           {authButton}
         </div>
