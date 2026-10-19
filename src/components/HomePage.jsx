@@ -698,7 +698,10 @@ export default function HomePage({ initialRole, authButton }) {
     <main className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
       <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
         <div className="flex justify-between items-center w-full max-w-4xl px-3 sm:px-4">
-          <nav className="text-xs sm:text-base font-medium whitespace-nowrap">喵链 - 图片/视频/音频的外链托管</nav>
+          <nav className="flex items-center gap-2 text-xs sm:text-base font-medium whitespace-nowrap">
+            <img src="/logo-miaolian.jpg" alt="喵链 logo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200 shrink-0" />
+            喵链 - 图片/视频/音频的外链托管
+          </nav>
           {authButton}
         </div>
       </header>
