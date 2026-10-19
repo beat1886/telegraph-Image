@@ -258,7 +258,8 @@ export default function Admin() {
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
         <header className="fixed top-0 left-0 w-full border-b bg-white z-50">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-[50px] flex items-center justify-between gap-2">
-            <Link href="/" className="text-xs sm:text-base font-medium text-gray-800 truncate hover:text-blue-600 whitespace-nowrap">
+            <Link href="/" className="flex items-center gap-2 text-xs sm:text-base font-medium text-gray-800 truncate hover:text-blue-600 whitespace-nowrap">
+              <img src="/logo-miaolian.jpg" alt="喵链" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200 shrink-0" />
               喵链 - 图片/视频/音频等任意文件的外链托管
             </Link>
             <div className="flex items-center gap-2">
